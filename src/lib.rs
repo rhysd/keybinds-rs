@@ -1,8 +1,9 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Error, Result};
 use bitflags::bitflags;
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
+use std::str::FromStr;
 use std::time::Instant;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -30,8 +31,10 @@ impl From<char> for Key {
     }
 }
 
-impl Key {
-    pub fn parse(s: &str) -> Result<Self> {
+impl FromStr for Key {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         {
             let mut c = s.chars();
             if let (Some(c), None) = (c.next(), c.next()) {
@@ -81,8 +84,12 @@ impl Mods {
     const MOD: Self = Self::CTRL;
     #[cfg(target_os = "macos")]
     const MOD: Self = Self::CMD;
+}
 
-    pub fn parse(s: &str) -> Result<Self> {
+impl FromStr for Mods {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
             "Control" | "Ctrl" | "ctrl" => Ok(Self::CTRL),
             "Command" | "command" | "Cmd" | "cmd" => Ok(Self::CMD),
@@ -107,8 +114,12 @@ impl KeyInput {
             mods,
         }
     }
+}
 
-    pub fn parse(s: &str) -> Result<Self> {
+impl FromStr for KeyInput {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut s = s.split('+');
         let Some(mut cur) = s.next() else {
             bail!("Key definition is empty");
@@ -116,10 +127,10 @@ impl KeyInput {
         let mut mods = Mods::NONE;
         loop {
             if let Some(next) = s.next() {
-                mods |= Mods::parse(cur)?;
+                mods |= cur.parse()?;
                 cur = next;
             } else {
-                let key = Key::parse(cur)?;
+                let key = cur.parse()?;
                 return Ok(Self { key, mods });
             }
         }
@@ -130,19 +141,23 @@ impl KeyInput {
 pub struct KeySeq(Vec<KeyInput>);
 
 impl KeySeq {
-    pub fn parse(s: &str) -> Result<Self> {
+    pub fn matches(&self, inputs: &[KeyInput]) -> bool {
+        self.0.iter().eq(inputs.iter())
+    }
+}
+
+impl FromStr for KeySeq {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let inputs = s
             .split_whitespace()
-            .map(KeyInput::parse)
+            .map(str::parse)
             .collect::<Result<Vec<_>, _>>()?;
         if inputs.is_empty() {
             bail!("Key sequence is empty");
         }
         Ok(Self(inputs))
-    }
-
-    pub fn matches(&self, inputs: &[KeyInput]) -> bool {
-        self.0.iter().eq(inputs.iter())
     }
 }
 
@@ -158,7 +173,7 @@ impl<'de> Deserialize<'de> for KeySeq {
             }
 
             fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
-                KeySeq::parse(v).map_err(E::custom)
+                v.parse().map_err(E::custom)
             }
         }
 
@@ -304,7 +319,7 @@ mod tests {
         ];
 
         for (input, expected) in tests {
-            let actual = KeyInput::parse(input).unwrap();
+            let actual: KeyInput = input.parse().unwrap();
             assert_eq!(actual, expected, "input={input:?}");
         }
     }
