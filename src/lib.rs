@@ -137,10 +137,20 @@ impl FromStr for KeyInput {
     }
 }
 
+impl From<char> for KeyInput {
+    fn from(c: char) -> Self {
+        Self::new(c, Mods::NONE)
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeySeq(Vec<KeyInput>);
 
 impl KeySeq {
+    pub fn new(v: Vec<KeyInput>) -> Self {
+        Self(v)
+    }
+
     pub fn matches(&self, inputs: &[KeyInput]) -> bool {
         self.0.iter().eq(inputs.iter())
     }
@@ -158,6 +168,12 @@ impl FromStr for KeySeq {
             bail!("Key sequence is empty");
         }
         Ok(Self(inputs))
+    }
+}
+
+impl From<char> for KeySeq {
+    fn from(c: char) -> Self {
+        Self::new(vec![c.into()])
     }
 }
 
