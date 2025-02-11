@@ -4,7 +4,7 @@ use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
 use std::str::FromStr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Key {
@@ -256,6 +256,7 @@ pub struct KeyBindMatcher<A> {
     binds: KeyBinds<A>,
     current: Vec<KeyInput>,
     last_input: Option<Instant>,
+    timeout: Duration,
 }
 
 impl<A> KeyBindMatcher<A> {
@@ -264,7 +265,13 @@ impl<A> KeyBindMatcher<A> {
             binds,
             current: vec![],
             last_input: None,
+            timeout: Duration::from_secs(1),
         }
+    }
+
+    pub fn timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = timeout;
+        self
     }
 
     pub fn reset(&mut self) {
@@ -276,7 +283,7 @@ impl<A> KeyBindMatcher<A> {
         let now = Instant::now();
         let timeout = self
             .last_input
-            .is_some_and(|t| now.duration_since(t).as_secs() > 0);
+            .is_some_and(|t| now.duration_since(t) > self.timeout);
         if timeout {
             self.reset();
         } else {
