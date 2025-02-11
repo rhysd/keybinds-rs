@@ -1,3 +1,6 @@
+#![forbid(unsafe_code)]
+#![doc = include_str!("../README.md")]
+
 use anyhow::{bail, Error, Result};
 use bitflags::bitflags;
 use serde::de::{MapAccess, Visitor};
@@ -204,15 +207,12 @@ pub struct KeyBind<A> {
 }
 
 impl<A> KeyBind<A> {
-    pub fn multiple(seq: Vec<KeyInput>, action: A) -> Self {
-        Self {
-            seq: KeySeq(seq),
-            action,
-        }
+    pub fn multiple(seq: KeySeq, action: A) -> Self {
+        Self { seq, action }
     }
 
     pub fn single(input: KeyInput, action: A) -> Self {
-        Self::multiple(vec![input], action)
+        Self::multiple(KeySeq::new(vec![input]), action)
     }
 }
 
@@ -295,9 +295,9 @@ impl<A> KeyBindMatcher<A> {
         }
     }
 
-    pub fn find(&mut self, input: KeyInput) -> Option<&A> {
+    pub fn trigger<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         self.handle_timeout();
-        self.current.push(input);
+        self.current.push(input.into());
 
         let action = self.binds.find(&self.current).map(|b| &b.action)?;
 
@@ -357,10 +357,10 @@ mod tests {
             KeyBind::single(KeyInput::new('a', Mods::NONE), A::Action1),
             KeyBind::single(KeyInput::new('a', Mods::CTRL | Mods::SHIFT), A::Action2),
             KeyBind::multiple(
-                vec![
+                KeySeq::new(vec![
                     KeyInput::new('b', Mods::NONE),
                     KeyInput::new('c', Mods::NONE),
-                ],
+                ]),
                 A::Action3,
             ),
             KeyBind::single(KeyInput::new(Key::Up, Mods::NONE), A::Action4),
@@ -374,7 +374,7 @@ mod tests {
             for (idx, input) in bind.seq.0.iter().enumerate() {
                 let is_last = idx + 1 == len;
                 let expected = is_last.then_some(bind.action);
-                let actual = keybinds.find(input.clone());
+                let actual = keybinds.trigger(input.clone());
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
             }
         }
@@ -393,18 +393,18 @@ mod tests {
         let expected = [
             KeyBind::single(KeyInput::new('j', Mods::NONE), A::Action1),
             KeyBind::multiple(
-                vec![
+                KeySeq::new(vec![
                     KeyInput::new('g', Mods::NONE),
                     KeyInput::new('g', Mods::NONE),
-                ],
+                ]),
                 A::Action2,
             ),
             KeyBind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
             KeyBind::multiple(
-                vec![
+                KeySeq::new(vec![
                     KeyInput::new('s', Mods::CTRL),
                     KeyInput::new('g', Mods::ALT | Mods::SHIFT),
-                ],
+                ]),
                 A::Action4,
             ),
         ];
