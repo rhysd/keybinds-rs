@@ -1,0 +1,12 @@
+[package]
+name = "keybinds"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+bitflags = "2.8.0"
+serde = { version = "1.0.217", features = ["derive"] }
+
+[dev-dependencies]
+toml = "0.8.20"
