@@ -204,7 +204,7 @@ pub struct KeyBind<A> {
 }
 
 impl<A> KeyBind<A> {
-    pub fn new(seq: Vec<KeyInput>, action: A) -> Self {
+    pub fn multiple(seq: Vec<KeyInput>, action: A) -> Self {
         Self {
             seq: KeySeq(seq),
             action,
@@ -212,7 +212,7 @@ impl<A> KeyBind<A> {
     }
 
     pub fn single(input: KeyInput, action: A) -> Self {
-        Self::new(vec![input], action)
+        Self::multiple(vec![input], action)
     }
 }
 
@@ -220,6 +220,10 @@ impl<A> KeyBind<A> {
 pub struct KeyBinds<A>(Vec<KeyBind<A>>);
 
 impl<A> KeyBinds<A> {
+    pub fn new(v: Vec<KeyBind<A>>) -> Self {
+        Self(v)
+    }
+
     pub fn find(&self, seq: &[KeyInput]) -> Option<&KeyBind<A>> {
         self.0.iter().find(|bind| bind.seq.matches(seq))
     }
@@ -352,7 +356,7 @@ mod tests {
         let binds = vec![
             KeyBind::single(KeyInput::new('a', Mods::NONE), A::Action1),
             KeyBind::single(KeyInput::new('a', Mods::CTRL | Mods::SHIFT), A::Action2),
-            KeyBind::new(
+            KeyBind::multiple(
                 vec![
                     KeyInput::new('b', Mods::NONE),
                     KeyInput::new('c', Mods::NONE),
@@ -388,7 +392,7 @@ mod tests {
         let actual: KeyBinds<A> = toml::from_str(input).unwrap();
         let expected = [
             KeyBind::single(KeyInput::new('j', Mods::NONE), A::Action1),
-            KeyBind::new(
+            KeyBind::multiple(
                 vec![
                     KeyInput::new('g', Mods::NONE),
                     KeyInput::new('g', Mods::NONE),
@@ -396,7 +400,7 @@ mod tests {
                 A::Action2,
             ),
             KeyBind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
-            KeyBind::new(
+            KeyBind::multiple(
                 vec![
                     KeyInput::new('s', Mods::CTRL),
                     KeyInput::new('g', Mods::ALT | Mods::SHIFT),
