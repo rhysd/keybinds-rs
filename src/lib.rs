@@ -267,15 +267,13 @@ impl<A> KeyBindMatcher<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ::serde::Deserialize;
 
-    #[derive(Clone, Copy, PartialEq, Eq, Deserialize, Debug)]
-    pub enum A {
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    enum A {
         Action1,
         Action2,
         Action3,
         Action4,
-        Action5,
     }
 
     #[test]
@@ -335,49 +333,5 @@ mod tests {
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
             }
         }
-    }
-
-    #[test]
-    fn deserialize_key_binds() {
-        let input = r#"
-        "j" = "Action1"
-        "g g" = "Action2"
-        "Ctrl+o" = "Action3"
-        "Ctrl+S Alt+Shift+G" = "Action4"
-        "#;
-
-        let actual: KeyBinds<A> = toml::from_str(input).unwrap();
-        let expected = [
-            KeyBind::single(KeyInput::new('j', Mods::NONE), A::Action1),
-            KeyBind::multiple(
-                KeySeq::new(vec![
-                    KeyInput::new('g', Mods::NONE),
-                    KeyInput::new('g', Mods::NONE),
-                ]),
-                A::Action2,
-            ),
-            KeyBind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
-            KeyBind::multiple(
-                KeySeq::new(vec![
-                    KeyInput::new('s', Mods::CTRL),
-                    KeyInput::new('g', Mods::ALT | Mods::SHIFT),
-                ]),
-                A::Action4,
-            ),
-        ];
-        assert_eq!(actual.0, expected);
-    }
-
-    #[test]
-    fn deserialize_mod_key_bind() {
-        let input = r#""Mod+x" = "Action1""#;
-        let actual: KeyBinds<A> = toml::from_str(input).unwrap();
-        let expected = [
-            #[cfg(target_os = "macos")]
-            KeyBind::single(KeyInput::new('x', Mods::CMD), A::Action1),
-            #[cfg(not(target_os = "macos"))]
-            KeyBind::single(KeyInput::new('x', Mods::CTRL), A::Action1),
-        ];
-        assert_eq!(actual.0, expected);
     }
 }

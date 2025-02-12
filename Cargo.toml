@@ -3,7 +3,7 @@ name = "keybinds"
 version = "0.0.0"
 edition = "2021"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
-description = "Platform-agnostic key bindings parser and matcher"
+description = "Platform&Framework-agnostic key bindings parser and matcher"
 license = "MIT"
 homepage = "https://github.com/rhysd/keybinds-rs#readme"
 repository = "https://github.com/rhysd/keybinds-rs"
@@ -11,7 +11,8 @@ keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
 
 [features]
-default = ["serde"]
+default = []
+serde = ["dep:serde"]
 
 [dependencies]
 bitflags = "2.8.0"
@@ -20,3 +21,8 @@ serde = { version = "1.0.217", optional = true }
 [dev-dependencies]
 toml = { version = "0.8.20", default-features = false, features = ["parse"] }
 serde = { version = "1.0.217", features = ["derive"] }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+features = ["serde"]
+rustdoc-args = ["--cfg", "docsrs"]

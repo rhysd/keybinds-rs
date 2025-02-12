@@ -10,18 +10,26 @@ keybinds-rs
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+A`
 - Support key sequences like `Ctrl+X Ctrl+S`
 - Parse/Generate the key bindings configuration using [serde][]
-- Platform-agnostic core API with minimal dependencies
-- **TODO:** Support several platforms as optional features
+- Core API independent from any platforms and frameworks with minimal dependencies
+- **TODO:** Support several platforms and frameworks as optional features
 
 [Documentation][api-doc]
 
 ## Installation
 
+Use `cargo add` to update your `Cargo.toml`.
+
 ```sh
 cargo add keybinds
 ```
 
-## Usage
+If some additional features are needed, use `--features` flag.
+
+```sh
+cargo add keybinds --features=serde
+```
+
+## Basic usage
 
 This crate is platform-agnostic. Define key bindings by `KeyBinds` and build `KeyBindMatcher` instance with it.
 Pass each key input to the `trigger` method and it returns a triggered action. Key sequence and key combination
@@ -48,6 +56,7 @@ let keybinds = KeyBinds::new(vec![
     KeyBind::multiple("Ctrl+x Ctrl+c".parse().unwrap(), Action::ExitApp),
 ]);
 
+// Create a matcher to trigger actions for upcoming key inputs
 let mut matcher = KeyBindMatcher::new(keybinds);
 
 // Trigger `SayHello` action
@@ -86,30 +95,29 @@ The following modifier keys are available:
 
 Here are some examples of key combinations:
 
-```ignore
-a
-Enter
-Mod+x
-Ctrl+Shift+Left
-```
+- `a`
+- `Enter`
+- `Mod+x`
+- `Ctrl+Shift+Left`
 
 Key combinations are joint with whitespaces as a key sequence. When key combinations are input in the order, they
 trigger the action.
 
 Here are some examples of key sequences:
 
-```ignore
-h e l l o
-Ctrl+x Ctrl+c
-```
+- `h e l l o`
+- `Ctrl+x Ctrl+c`
 
 ## [serde][] support
 
+See the document for `serde` module.
+The serde support requires the `serde` feature enabled.
+
 ### Parsing key bindings configurations
 
-`KeyBinds` implements serde's `Deserialize` trait. This is an example to parse key bindings as TOML.
+`KeyBinds` implements serde's `Deserialize` trait. This is an example to parse key bindings with [toml][] crate.
 
-```rust
+```rust,ignore
 use serde::Deserialize;
 use keybinds::{KeyBinds, KeyBindMatcher, Key, Mods, KeyInput};
 
@@ -122,8 +130,8 @@ enum Action {
 
 // Configuration file format of your application
 #[derive(Deserialize)]
-pub struct Config {
-    pub bindings: KeyBinds<Action>,
+struct Config {
+    bindings: KeyBinds<Action>,
 }
 
 let configuration = r#"
@@ -150,3 +158,4 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
+[toml]: https://crates.io/crates/toml
