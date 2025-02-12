@@ -10,9 +10,13 @@ repository = "https://github.com/rhysd/keybinds-rs"
 keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
 
+[features]
+default = ["serde"]
+
 [dependencies]
 bitflags = "2.8.0"
-serde = { version = "1.0.217", features = ["derive"] }
+serde = { version = "1.0.217", optional = true }
 
 [dev-dependencies]
 toml = { version = "0.8.20", default-features = false, features = ["parse"] }
+serde = { version = "1.0.217", features = ["derive"] }
