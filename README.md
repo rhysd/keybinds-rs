@@ -7,16 +7,24 @@ keybinds-rs
 [keybinds-rs][crates-io] is a small Rust crate to define/parse/match key bindings.
 
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+A`
-- Support key sequences like `Ctrl+X CtrolS`
+- Support key sequences like `Ctrl+X Ctrl+S`
 - Parse/Generate the key bindings configuration using [serde][]
 - Platform-agnostic core API with minimal dependencies
 - **TODO:** Support several platforms as optional features
+
+[Documentation][api-doc]
+
+## Installation
+
+```sh
+cargo add keybinds
+```
 
 ## Usage
 
 This crate is platform-agnostic. Define key bindings by `KeyBinds` and build `KeyBindMatcher` instance with it.
 Pass each key input to the `trigger` method and it returns a triggered action. Key sequence and key combination
-can be parsed using `FromStr` trait.
+can be parsed using `FromStr` trait. See the [API documentation][api-doc] for more details.
 
 ```rust
 use keybinds::{KeyBind, KeyBinds, KeyBindMatcher, KeyInput, Key, Mods};
@@ -75,7 +83,7 @@ The following modifier keys are available:
 - `Alt`: Alt key
 - `Option`: An alias to Alt key
 
-here are some examples of key combinations:
+Here are some examples of key combinations:
 
 ```ignore
 a
@@ -138,3 +146,4 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 
 [crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
+[api-doc]: https://docs.rs/keybinds/latest/keybinds/
