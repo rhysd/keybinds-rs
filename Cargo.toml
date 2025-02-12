@@ -11,7 +11,6 @@ keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
 
 [dependencies]
-anyhow = "1.0.95"
 bitflags = "2.8.0"
 serde = { version = "1.0.217", features = ["derive"] }
 

@@ -1,7 +1,10 @@
 #![forbid(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
-use anyhow::{bail, Error, Result};
+mod error;
+
+pub use error::{Error, Result};
+
 use bitflags::bitflags;
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
@@ -65,7 +68,7 @@ impl FromStr for Key {
             "pagedown" | "PageDown" => Ok(Self::PageDown),
             "esc" | "Esc" => Ok(Self::Esc),
             "tab" | "Tab" => Ok(Self::Tab),
-            _ => bail!("Unexpected key {s:?} in key sequence"),
+            _ => Err(Error::UnknownKey(s.into())),
         }
     }
 }
@@ -99,7 +102,7 @@ impl FromStr for Mods {
             "Mod" | "mod" => Ok(Self::MOD),
             "Shift" | "shift" => Ok(Self::SHIFT),
             "Alt" | "alt" | "Option" | "option" => Ok(Self::ALT),
-            _ => bail!("Unexpected modifier key {s:?} in key sequence"),
+            _ => Err(Error::UnknownModifier(s.into())),
         }
     }
 }
@@ -125,7 +128,7 @@ impl FromStr for KeyInput {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let mut s = s.split('+');
         let Some(mut cur) = s.next() else {
-            bail!("Key definition is empty");
+            return Err(Error::EmptyKeyInput);
         };
         let mut mods = Mods::NONE;
         loop {
@@ -168,7 +171,7 @@ impl FromStr for KeySeq {
             .map(str::parse)
             .collect::<Result<Vec<_>, _>>()?;
         if inputs.is_empty() {
-            bail!("Key sequence is empty");
+            return Err(Error::EmptyKeySequence);
         }
         Ok(Self(inputs))
     }
