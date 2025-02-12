@@ -1,5 +1,6 @@
 keybinds-rs
 ===========
+[![CI][ci-badge]][ci]
 
 > [!CAUTION]
 > This crate is work in progress yet.
@@ -144,6 +145,8 @@ assert_eq!(action, Some(&Action::OpenFile));
 
 This crate is licensed under [the MIT license](./LICENSE.txt).
 
+[ci-badge]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml/badge.svg
+[ci]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml
 [crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
