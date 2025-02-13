@@ -19,7 +19,7 @@ impl From<KeyCode> for Key {
             KeyCode::Delete => Self::Delete,
             KeyCode::Insert => Self::Insert,
             KeyCode::F(i) => Self::F(i),
-            KeyCode::Char(c) => Self::Char(c),
+            KeyCode::Char(c) => Self::Char(c.to_ascii_lowercase()),
             KeyCode::Null => Self::Unidentified,
             KeyCode::Esc => Self::Esc,
             KeyCode::ScrollLock => Self::ScrollLock,
