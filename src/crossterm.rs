@@ -20,7 +20,6 @@ impl From<KeyCode> for Key {
             KeyCode::Insert => Self::Insert,
             KeyCode::F(i) => Self::F(i),
             KeyCode::Char(c) => Self::Char(c.to_ascii_lowercase()),
-            KeyCode::Null => Self::Unidentified,
             KeyCode::Esc => Self::Esc,
             KeyCode::ScrollLock => Self::ScrollLock,
             KeyCode::NumLock => Self::NumLock,
@@ -82,5 +81,74 @@ impl From<Event> for KeyInput {
             Event::Key(event) => event.into(),
             _ => Key::Unidentified.into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crossterm::event::{KeyEventKind, KeyEventState};
+
+    #[test]
+    fn convert_key_code() {
+        assert_eq!(Key::from(KeyCode::Backspace), Key::Backspace);
+        assert_eq!(Key::from(KeyCode::Char('a')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::Null), Key::Unidentified);
+        assert_eq!(Key::from(KeyCode::Media(MediaKeyCode::Play)), Key::Play);
+        assert_eq!(Key::from(KeyCode::F(12)), Key::F(12));
+    }
+
+    #[test]
+    fn convert_modifiers() {
+        assert_eq!(Mods::from(KeyModifiers::NONE), Mods::NONE);
+        assert_eq!(
+            Mods::from(
+                KeyModifiers::CONTROL
+                    | KeyModifiers::SHIFT
+                    | KeyModifiers::ALT
+                    | KeyModifiers::META
+            ),
+            Mods::CTRL | Mods::SHIFT | Mods::ALT | Mods::CMD,
+        );
+        #[cfg(not(target_os = "macos"))]
+        {
+            assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::WIN);
+        }
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::CMD);
+        }
+    }
+
+    #[test]
+    fn convert_key_event() {
+        assert_eq!(
+            KeyInput::from(KeyEvent {
+                code: KeyCode::Char('A'),
+                modifiers: KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            }),
+            KeyInput::new('a', Mods::CTRL | Mods::SHIFT),
+        );
+    }
+
+    #[test]
+    fn convert_event() {
+        assert_eq!(
+            KeyInput::from(Event::Key(KeyEvent {
+                code: KeyCode::Char('A'),
+                modifiers: KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            })),
+            KeyInput::new('a', Mods::CTRL | Mods::SHIFT),
+        );
+        assert_eq!(
+            KeyInput::from(Event::FocusGained),
+            KeyInput::new(Key::Unidentified, Mods::NONE),
+        );
     }
 }
