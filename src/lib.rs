@@ -76,11 +76,12 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
     pub struct Mods: u8 {
-        const NONE     = 0b00000000;
-        const CTRL     = 0b00000001;
-        const CMD      = 0b00000010;
-        const SHIFT    = 0b00000100;
-        const ALT      = 0b00001000;
+        const NONE  = 0b00000000;
+        const CTRL  = 0b00000001;
+        const CMD   = 0b00000010;
+        const SHIFT = 0b00000100;
+        const ALT   = 0b00001000;
+        const WIN   = 0b00010000;
     }
 }
 
@@ -89,6 +90,10 @@ impl Mods {
     const MOD: Self = Self::CTRL;
     #[cfg(target_os = "macos")]
     const MOD: Self = Self::CMD;
+    #[cfg(not(target_os = "macos"))]
+    const SUPER: Self = Self::WIN;
+    #[cfg(target_os = "macos")]
+    const SUPER: Self = Self::CMD;
 }
 
 impl FromStr for Mods {
@@ -101,6 +106,7 @@ impl FromStr for Mods {
             "Mod" | "mod" => Ok(Self::MOD),
             "Shift" | "shift" => Ok(Self::SHIFT),
             "Alt" | "alt" | "Option" | "option" => Ok(Self::ALT),
+            "Super" | "super" => Ok(Self::SUPER),
             _ => Err(Error::UnknownModifier(s.into())),
         }
     }
@@ -289,6 +295,10 @@ mod tests {
             ("Mod+x", KeyInput::new('x', Mods::CMD)),
             #[cfg(not(target_os = "macos"))]
             ("Mod+x", KeyInput::new('x', Mods::CTRL)),
+            #[cfg(target_os = "macos")]
+            ("Super+x", KeyInput::new('x', Mods::CMD)),
+            #[cfg(not(target_os = "macos"))]
+            ("Super+x", KeyInput::new('x', Mods::WIN)),
             ("F", KeyInput::new('f', Mods::NONE)),
             ("F1", KeyInput::new(Key::F(1), Mods::NONE)),
             ("Ctrl+F1", KeyInput::new(Key::F(1), Mods::CTRL)),

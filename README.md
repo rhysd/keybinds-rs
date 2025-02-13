@@ -86,12 +86,13 @@ specify `Shift` modifier key.
 
 The following modifier keys are available:
 
-- `Ctrl`: Ctrl key
-- `Cmd`: Command key
-- `Mod`: Command key on macOS, Ctrl key on other platforms
-- `Shift`: Shift key
-- `Alt`: Alt key
-- `Option`: An alias to Alt key
+- `Ctrl`: "Ctrl" key
+- `Cmd`: "Command" key
+- `Mod`: "Command" key on macOS, "Ctrl" key on other platforms
+- `Super`: "Windows" key on platforms other than macOS, Command key on macOS
+- `Shift`: "Shift" key
+- `Alt`: "Alt" key
+- `Option`: An alias to "Alt" key
 
 Here are some examples of key combinations:
 
