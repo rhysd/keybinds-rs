@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
+#[cfg(feature = "crossterm")]
+mod crossterm;
 mod error;
 #[cfg(feature = "serde")]
 mod serde;
@@ -27,7 +29,24 @@ pub enum Key {
     PageDown,
     Esc,
     Tab,
+    Backtab,
+    Insert,
+    ScrollLock,
+    NumLock,
+    PrintScreen,
+    Menu,
+    Play,
+    Pause,
+    PlayPause,
+    Stop,
+    Rewind,
+    NextTrack,
+    PrevTrack,
+    VolumeUp,
+    VolumeDown,
+    Mute,
     F(u8),
+    Unidentified,
 }
 
 impl From<char> for Key {
@@ -53,6 +72,7 @@ impl FromStr for Key {
             }
         }
 
+        // TODO: Use phf for O(1) switch
         match s {
             "up" | "Up" => Ok(Self::Up),
             "right" | "Right" => Ok(Self::Right),
@@ -67,6 +87,22 @@ impl FromStr for Key {
             "pagedown" | "PageDown" => Ok(Self::PageDown),
             "esc" | "Esc" => Ok(Self::Esc),
             "tab" | "Tab" => Ok(Self::Tab),
+            "backtab" | "Backtab" => Ok(Self::Tab),
+            "insert" | "Insert" => Ok(Self::Insert),
+            "scrolllock" | "ScrollLock" => Ok(Self::ScrollLock),
+            "numlock" | "NumLock" => Ok(Self::ScrollLock),
+            "printscreen" | "PrintScreen" => Ok(Self::PrintScreen),
+            "menu" | "Menu" => Ok(Self::Menu),
+            "play" | "Play" => Ok(Self::Play),
+            "pause" | "Pause" => Ok(Self::Pause),
+            "playpause" | "PlayPause" => Ok(Self::PlayPause),
+            "stop" | "Stop" => Ok(Self::Stop),
+            "rewind" | "Rewind" => Ok(Self::Rewind),
+            "nexttrack" | "NextTrack" => Ok(Self::NextTrack),
+            "prevtrack" | "PrevTrack" => Ok(Self::PrevTrack),
+            "volumeup" | "VolumeUp" => Ok(Self::VolumeUp),
+            "volumedown" | "VolumeDown" => Ok(Self::VolumeDown),
+            "mute" | "Mute" => Ok(Self::Mute),
             _ => Err(Error::UnknownKey(s.into())),
         }
     }
@@ -112,6 +148,7 @@ impl FromStr for Mods {
     }
 }
 
+// TODO: Rename this to `KeyEvent`
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeyInput {
     key: Key,
@@ -148,9 +185,9 @@ impl FromStr for KeyInput {
     }
 }
 
-impl From<char> for KeyInput {
-    fn from(c: char) -> Self {
-        Self::new(c, Mods::NONE)
+impl<K: Into<Key>> From<K> for KeyInput {
+    fn from(k: K) -> Self {
+        Self::new(k.into(), Mods::NONE)
     }
 }
 

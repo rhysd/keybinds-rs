@@ -9,9 +9,10 @@ keybinds-rs
 
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+A`
 - Support key sequences like `Ctrl+X Ctrl+S`
-- Parse/Generate the key bindings configuration using [serde][]
+- Support to parse/generate the key bindings configuration using [serde][] optionally
 - Core API independent from any platforms and frameworks with minimal dependencies
 - **TODO:** Support several platforms and frameworks as optional features
+  - [crossterm][] ([example](./examples/crossterm.rs))
 
 [Documentation][api-doc]
 
@@ -158,5 +159,6 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [ci]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml
 [crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
+[crossterm]: https://crates.io/crates/crossterm
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [toml]: https://crates.io/crates/toml

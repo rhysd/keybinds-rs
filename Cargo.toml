@@ -10,12 +10,18 @@ repository = "https://github.com/rhysd/keybinds-rs"
 keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
 
+[[example]]
+name = "crossterm"
+required-features = ["crossterm"]
+
 [features]
 default = []
 serde = ["dep:serde"]
+crossterm = ["dep:crossterm"]
 
 [dependencies]
 bitflags = "2.8.0"
+crossterm = { version = "0.28.1", optional = true }
 serde = { version = "1.0.217", optional = true }
 
 [dev-dependencies]
