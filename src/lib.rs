@@ -148,7 +148,6 @@ impl FromStr for Mods {
     }
 }
 
-// TODO: Rename this to `KeyEvent`
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeyInput {
     key: Key,
@@ -257,7 +256,7 @@ impl<A> KeyBinds<A> {
 #[derive(Default)]
 pub struct KeyBindMatcher<A> {
     binds: KeyBinds<A>,
-    current: Vec<KeyInput>,
+    ongoing: Vec<KeyInput>,
     last_input: Option<Instant>,
     timeout: Duration,
 }
@@ -266,7 +265,7 @@ impl<A> KeyBindMatcher<A> {
     pub fn new(binds: KeyBinds<A>) -> Self {
         Self {
             binds,
-            current: vec![],
+            ongoing: vec![],
             last_input: None,
             timeout: Duration::from_secs(1),
         }
@@ -278,31 +277,31 @@ impl<A> KeyBindMatcher<A> {
     }
 
     pub fn reset(&mut self) {
+        self.ongoing.clear();
         self.last_input = None;
-        self.current.clear();
     }
 
     fn handle_timeout(&mut self) {
         let now = Instant::now();
-        let timeout = self
+        let is_timeout = self
             .last_input
             .is_some_and(|t| now.duration_since(t) > self.timeout);
-        if timeout {
-            self.reset();
-        } else {
-            self.last_input = Some(now);
+        if is_timeout {
+            self.ongoing.clear();
         }
+        self.last_input = Some(now);
     }
 
     pub fn trigger<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         self.handle_timeout();
-        self.current.push(input.into());
+        self.ongoing.push(input.into());
 
-        let action = self.binds.find(&self.current).map(|b| &b.action)?;
+        // TODO: When no keybind is prefix-matched, call `self.reset()`
+        let action = self.binds.find(&self.ongoing).map(|b| &b.action)?;
 
-        // `self.reset()` cannot be called here because the borrow checker depends on field splitting.
+        // `self.reset` cannot be called because the borrow checker needs to split field lifetimes.
+        self.ongoing.clear();
         self.last_input = None;
-        self.current.clear();
         Some(action)
     }
 }
