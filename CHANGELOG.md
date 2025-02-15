@@ -1,3 +1,15 @@
+<a id="v0.0.2"></a>
+# [v0.0.2](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.2) - 2025-02-15
+
+- Support [winit](https://crates.io/crates/winit).
+- Add `Key::Ignored` special key to ignore on checking key bindings. This is used when converting events which are actually not related to key inputs.
+- Fix key release is not ignored.
+- Fix modifier-only keys are converted to `Key::Unidentified`.
+- Fix converting crossterm key event with shift modifier pressed.
+
+[Changes][v0.0.2]
+
+
 <a id="v0.0.1"></a>
 # [v0.0.1](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.1) - 2025-02-13
 
@@ -18,6 +30,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.2]: https://github.com/rhysd/keybinds-rs/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/rhysd/keybinds-rs/compare/v0.0.0...v0.0.1
 [v0.0.0]: https://github.com/rhysd/keybinds-rs/tree/v0.0.0
 
