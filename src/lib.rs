@@ -1,11 +1,14 @@
 #![forbid(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
-#[cfg(feature = "crossterm")]
-mod crossterm;
 mod error;
+
+#[cfg(feature = "crossterm")]
+pub mod crossterm;
 #[cfg(feature = "serde")]
-mod serde;
+pub mod serde;
+#[cfg(feature = "winit")]
+pub mod winit;
 
 pub use error::{Error, Result};
 
@@ -31,8 +34,17 @@ pub enum Key {
     Tab,
     Backtab,
     Insert,
+    Copy,
+    Cut,
+    Paste,
+    Clear,
+    Undo,
+    Redo,
+    ZoomIn,
+    ZoomOut,
     ScrollLock,
     NumLock,
+    FnLock,
     PrintScreen,
     Menu,
     Play,
@@ -89,7 +101,16 @@ impl FromStr for Key {
             "tab" | "Tab" => Ok(Self::Tab),
             "backtab" | "Backtab" => Ok(Self::Tab),
             "insert" | "Insert" => Ok(Self::Insert),
+            "copy" | "Copy" => Ok(Self::Copy),
+            "cut" | "Cut" => Ok(Self::Cut),
+            "paste" | "Paste" => Ok(Self::Paste),
+            "clear" | "Clear" => Ok(Self::Clear),
+            "undo" | "Undo" => Ok(Self::Undo),
+            "redo" | "Redo" => Ok(Self::Redo),
+            "zoomin" | "ZoomIn" => Ok(Self::ZoomIn),
+            "zoomout" | "ZoomOut" => Ok(Self::ZoomOut),
             "scrolllock" | "ScrollLock" => Ok(Self::ScrollLock),
+            "fnlock" | "FnLock" => Ok(Self::FnLock),
             "numlock" | "NumLock" => Ok(Self::ScrollLock),
             "printscreen" | "PrintScreen" => Ok(Self::PrintScreen),
             "menu" | "Menu" => Ok(Self::Menu),

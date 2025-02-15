@@ -2,8 +2,7 @@ keybinds-rs
 ===========
 [![CI][ci-badge]][ci]
 
-> [!CAUTION]
-> This crate is work in progress yet.
+**THIS CRATE IS WORK IN PROGRESS YET.**
 
 [keybinds-rs][crates-io] is a small Rust crate to define/parse/match key bindings.
 
@@ -11,8 +10,9 @@ keybinds-rs
 - Support key sequences like `Ctrl+X Ctrl+S`
 - Support to parse/generate the key bindings configuration using [serde][] optionally
 - Core API independent from any platforms and frameworks with minimal dependencies
-- **TODO:** Support several platforms and frameworks as optional features
+- Support several platforms and frameworks as optional features
   - [crossterm][] ([example](./examples/crossterm.rs))
+  - [winit][] ([example](./examples/winit.rs))
 
 [Documentation][api-doc]
 
@@ -160,5 +160,6 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
 [crossterm]: https://crates.io/crates/crossterm
+[winit]: https://crates.io/crates/winit
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [toml]: https://crates.io/crates/toml

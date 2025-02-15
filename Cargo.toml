@@ -14,15 +14,21 @@ categories = ["config"]
 name = "crossterm"
 required-features = ["crossterm"]
 
+[[example]]
+name = "winit"
+required-features = ["winit"]
+
 [features]
 default = []
 serde = ["dep:serde"]
 crossterm = ["dep:crossterm"]
+winit = ["dep:winit"]
 
 [dependencies]
 bitflags = "2.8.0"
 crossterm = { version = "0.28.1", optional = true }
 serde = { version = "1.0.217", optional = true }
+winit = { version = "0.30.9", optional = true }
 
 [dev-dependencies]
 toml = { version = "0.8.20", default-features = false, features = ["parse"] }
@@ -30,5 +36,5 @@ serde = { version = "1.0.217", features = ["derive"] }
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
-features = ["serde"]
+features = ["serde", "crossterm", "winit"]
 rustdoc-args = ["--cfg", "docsrs"]

@@ -52,13 +52,8 @@ impl From<KeyModifiers> for Mods {
         if from.contains(KeyModifiers::ALT) {
             to |= Mods::ALT;
         }
-        #[cfg(not(target_os = "macos"))]
         if from.contains(KeyModifiers::SUPER) {
-            to |= Mods::WIN;
-        }
-        #[cfg(target_os = "macos")]
-        if from.contains(KeyModifiers::SUPER) {
-            to |= Mods::CMD;
+            to |= Mods::SUPER;
         }
         if from.contains(KeyModifiers::META) {
             to |= Mods::CMD;
@@ -67,20 +62,32 @@ impl From<KeyModifiers> for Mods {
     }
 }
 
-impl From<KeyEvent> for KeyInput {
-    fn from(event: KeyEvent) -> Self {
+impl From<&KeyEvent> for KeyInput {
+    fn from(event: &KeyEvent) -> Self {
         let key = event.code.into();
         let mods = event.modifiers.into();
         Self { key, mods }
     }
 }
 
-impl From<Event> for KeyInput {
-    fn from(event: Event) -> Self {
+impl From<KeyEvent> for KeyInput {
+    fn from(event: KeyEvent) -> Self {
+        Self::from(&event)
+    }
+}
+
+impl From<&Event> for KeyInput {
+    fn from(event: &Event) -> Self {
         match event {
             Event::Key(event) => event.into(),
             _ => Key::Unidentified.into(),
         }
+    }
+}
+
+impl From<Event> for KeyInput {
+    fn from(event: Event) -> Self {
+        Self::from(&event)
     }
 }
 
