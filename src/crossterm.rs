@@ -35,6 +35,7 @@ impl From<KeyCode> for Key {
             KeyCode::Media(MediaKeyCode::LowerVolume) => Self::VolumeDown,
             KeyCode::Media(MediaKeyCode::RaiseVolume) => Self::VolumeUp,
             KeyCode::Media(MediaKeyCode::MuteVolume) => Self::Mute,
+            KeyCode::Modifier(_) | KeyCode::Null => Self::Ignored,
             _ => Self::Unidentified,
         }
     }
@@ -94,7 +95,7 @@ impl From<Event> for KeyInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crossterm::event::{KeyEventKind, KeyEventState};
+    use crossterm::event::{KeyEventKind, KeyEventState, ModifierKeyCode};
 
     #[test]
     fn convert_key_code() {
@@ -102,7 +103,11 @@ mod tests {
         assert_eq!(Key::from(KeyCode::Char('a')), Key::Char('a'));
         assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
         assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
-        assert_eq!(Key::from(KeyCode::Null), Key::Unidentified);
+        assert_eq!(Key::from(KeyCode::Null), Key::Ignored);
+        assert_eq!(
+            Key::from(KeyCode::Modifier(ModifierKeyCode::LeftControl)),
+            Key::Ignored,
+        );
         assert_eq!(Key::from(KeyCode::Media(MediaKeyCode::Play)), Key::Play);
         assert_eq!(Key::from(KeyCode::F(12)), Key::F(12));
     }

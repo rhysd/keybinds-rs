@@ -3,15 +3,15 @@ use keybinds::{KeyBind, KeyBindMatcher, KeyBinds};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
-use winit::window::{Window, WindowId};
+use winit::window::{Theme, Window, WindowId};
 
 // Actions triggered by key bindings
 #[derive(Debug)]
 enum Action {
     SayHi,
     ToggleMaximized,
-    ToggleVisible,
-    ExitApp,
+    ToggleTheme,
+    Exit,
 }
 
 struct App {
@@ -26,8 +26,8 @@ impl Default for App {
         let keybinds = KeyBinds::new(vec![
             KeyBind::multiple("h i".parse().unwrap(), Action::SayHi),
             KeyBind::single("Mod+m".parse().unwrap(), Action::ToggleMaximized),
-            KeyBind::single("Mod+Shift+v".parse().unwrap(), Action::ToggleVisible),
-            KeyBind::multiple("Mod+x Mod+c".parse().unwrap(), Action::ExitApp),
+            KeyBind::single("Mod+Shift+t".parse().unwrap(), Action::ToggleTheme),
+            KeyBind::multiple("Mod+x Mod+c".parse().unwrap(), Action::Exit),
         ]);
         Self {
             window: None,
@@ -39,31 +39,32 @@ impl Default for App {
 
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let window = event_loop
-            .create_window(Window::default_attributes())
-            .unwrap();
+        let attrs = Window::default_attributes().with_theme(Some(Theme::Dark));
+        let window = event_loop.create_window(attrs).unwrap();
         self.window = Some(window);
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        if let Some(input) = self.converter.convert(&event) {
-            println!("Key input: {input:?}");
+        let input = self.converter.convert(&event);
 
-            if let Some(action) = self.matcher.trigger(input) {
-                println!("Action: {action:?}");
+        if let Some(action) = self.matcher.trigger(input) {
+            println!("Action: {action:?}");
 
-                match action {
-                    Action::SayHi => println!("Hi!"),
-                    Action::ToggleMaximized => {
-                        let window = self.window.as_ref().unwrap();
-                        window.set_maximized(!window.is_maximized());
-                    }
-                    Action::ToggleVisible => {
-                        let window = self.window.as_ref().unwrap();
-                        window.set_visible(!window.is_visible().unwrap_or(false));
-                    }
-                    Action::ExitApp => event_loop.exit(),
+            match action {
+                Action::SayHi => println!("Hi!"),
+                Action::ToggleMaximized => {
+                    let window = self.window.as_ref().unwrap();
+                    window.set_maximized(!window.is_maximized());
                 }
+                Action::ToggleTheme => {
+                    let window = self.window.as_ref().unwrap();
+                    let theme = match window.theme() {
+                        Some(Theme::Dark) => Theme::Light,
+                        _ => Theme::Dark,
+                    };
+                    window.set_theme(Some(theme));
+                }
+                Action::Exit => event_loop.exit(),
             }
         }
 

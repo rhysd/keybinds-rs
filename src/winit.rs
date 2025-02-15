@@ -61,6 +61,13 @@ impl From<&WinitKey> for Key {
                 NamedKey::F18 => Self::F(18),
                 NamedKey::F19 => Self::F(19),
                 NamedKey::F20 => Self::F(20),
+                NamedKey::Alt
+                | NamedKey::Control
+                | NamedKey::Shift
+                | NamedKey::Super
+                | NamedKey::Hyper
+                | NamedKey::Meta
+                | NamedKey::Symbol => Self::Ignored,
                 _ => Self::Unidentified,
             },
             WinitKey::Character(s) => {
@@ -108,33 +115,33 @@ impl From<ModifiersState> for Mods {
 }
 
 pub trait KeyInputConvertible {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput>;
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput;
 }
 
 impl KeyInputConvertible for WindowEvent {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput> {
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput {
         match self {
             WindowEvent::ModifiersChanged(mods) => {
                 conv.on_modifiers_changed(mods);
-                None
+                Key::Ignored.into()
             }
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
-                Some(KeyInput {
+                KeyInput {
                     key: Key::from(&event.logical_key),
                     mods: conv.mods,
-                })
+                }
             }
-            _ => None,
+            _ => Key::Ignored.into(),
         }
     }
 }
 
 impl<T> KeyInputConvertible for Event<T> {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput> {
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput {
         if let Event::WindowEvent { event, .. } = self {
             event.convert_key_input(conv)
         } else {
-            None
+            Key::Ignored.into()
         }
     }
 }
@@ -153,7 +160,7 @@ impl KeyEventConverter {
         self.mods = mods.state().into();
     }
 
-    pub fn convert<C: KeyInputConvertible>(&mut self, event: &C) -> Option<KeyInput> {
+    pub fn convert<C: KeyInputConvertible>(&mut self, event: &C) -> KeyInput {
         event.convert_key_input(self)
     }
 }

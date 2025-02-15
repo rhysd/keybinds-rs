@@ -59,6 +59,7 @@ pub enum Key {
     Mute,
     F(u8),
     Unidentified,
+    Ignored,
 }
 
 impl From<char> for Key {
@@ -181,6 +182,10 @@ impl KeyInput {
             key: key.into(),
             mods,
         }
+    }
+
+    fn is_ignored(&self) -> bool {
+        self.key == Key::Ignored
     }
 }
 
@@ -314,8 +319,12 @@ impl<A> KeyBindMatcher<A> {
     }
 
     pub fn trigger<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
+        let input = input.into();
+        if input.is_ignored() {
+            return None;
+        }
         self.handle_timeout();
-        self.ongoing.push(input.into());
+        self.ongoing.push(input);
 
         // TODO: When no keybind is prefix-matched, call `self.reset()`
         let action = self.binds.find(&self.ongoing).map(|b| &b.action)?;
