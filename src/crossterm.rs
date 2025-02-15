@@ -80,7 +80,7 @@ impl From<&Event> for KeyInput {
     fn from(event: &Event) -> Self {
         match event {
             Event::Key(event) => event.into(),
-            _ => Key::Unidentified.into(),
+            _ => Key::Ignored.into(),
         }
     }
 }
@@ -155,7 +155,7 @@ mod tests {
         );
         assert_eq!(
             KeyInput::from(Event::FocusGained),
-            KeyInput::new(Key::Unidentified, Mods::NONE),
+            KeyInput::new(Key::Ignored, Mods::NONE),
         );
     }
 }

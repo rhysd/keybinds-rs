@@ -1,4 +1,4 @@
-use keybinds::winit::WinitEventConverter;
+use keybinds::winit::KeyEventConverter;
 use keybinds::{KeyBind, KeyBindMatcher, KeyBinds};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
@@ -17,7 +17,7 @@ enum Action {
 struct App {
     window: Option<Window>,
     matcher: KeyBindMatcher<Action>,
-    converter: WinitEventConverter,
+    converter: KeyEventConverter,
 }
 
 impl Default for App {
@@ -32,7 +32,7 @@ impl Default for App {
         Self {
             window: None,
             matcher: KeyBindMatcher::new(keybinds),
-            converter: WinitEventConverter::default(),
+            converter: KeyEventConverter::default(),
         }
     }
 }
@@ -46,24 +46,24 @@ impl ApplicationHandler for App {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        // Convert `WindowEvent` into `KeyInput` for checking key bindings. This returns "Unidentified"
-        // key when the event is not for keyboard inputs.
-        let input = self.converter.convert_window_event(&event);
-        println!("Key input: {input:?}");
+        if let Some(input) = self.converter.convert(&event) {
+            println!("Key input: {input:?}");
 
-        if let Some(action) = self.matcher.trigger(input) {
-            println!("Action: {action:?}");
-            match action {
-                Action::SayHi => println!("Hi!"),
-                Action::ToggleMaximized => {
-                    let window = self.window.as_ref().unwrap();
-                    window.set_maximized(!window.is_maximized());
+            if let Some(action) = self.matcher.trigger(input) {
+                println!("Action: {action:?}");
+
+                match action {
+                    Action::SayHi => println!("Hi!"),
+                    Action::ToggleMaximized => {
+                        let window = self.window.as_ref().unwrap();
+                        window.set_maximized(!window.is_maximized());
+                    }
+                    Action::ToggleVisible => {
+                        let window = self.window.as_ref().unwrap();
+                        window.set_visible(!window.is_visible().unwrap_or(false));
+                    }
+                    Action::ExitApp => event_loop.exit(),
                 }
-                Action::ToggleVisible => {
-                    let window = self.window.as_ref().unwrap();
-                    window.set_visible(!window.is_visible().unwrap_or(false));
-                }
-                Action::ExitApp => event_loop.exit(),
             }
         }
 

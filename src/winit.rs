@@ -66,7 +66,7 @@ impl From<&WinitKey> for Key {
             WinitKey::Character(s) => {
                 let mut chars = s.chars();
                 if let (Some(c), None) = (chars.next(), chars.next()) {
-                    Self::Char(c)
+                    Self::Char(c.to_ascii_lowercase())
                 } else {
                     Self::Unidentified
                 }
@@ -107,12 +107,44 @@ impl From<ModifiersState> for Mods {
     }
 }
 
+pub trait KeyInputConvertible {
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput>;
+}
+
+impl KeyInputConvertible for WindowEvent {
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput> {
+        match self {
+            WindowEvent::ModifiersChanged(mods) => {
+                conv.on_modifiers_changed(mods);
+                None
+            }
+            WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
+                Some(KeyInput {
+                    key: Key::from(&event.logical_key),
+                    mods: conv.mods,
+                })
+            }
+            _ => None,
+        }
+    }
+}
+
+impl<T> KeyInputConvertible for Event<T> {
+    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> Option<KeyInput> {
+        if let Event::WindowEvent { event, .. } = self {
+            event.convert_key_input(conv)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Default)]
-pub struct WinitEventConverter {
+pub struct KeyEventConverter {
     mods: Mods,
 }
 
-impl WinitEventConverter {
+impl KeyEventConverter {
     pub fn mods(&self) -> Mods {
         self.mods
     }
@@ -121,27 +153,7 @@ impl WinitEventConverter {
         self.mods = mods.state().into();
     }
 
-    pub fn convert_window_event(&mut self, event: &WindowEvent) -> KeyInput {
-        match event {
-            WindowEvent::ModifiersChanged(mods) => {
-                self.on_modifiers_changed(mods);
-                Key::Unidentified.into()
-            }
-            WindowEvent::KeyboardInput { event, .. } if event.state != ElementState::Pressed => {
-                KeyInput {
-                    key: Key::from(&event.logical_key),
-                    mods: self.mods,
-                }
-            }
-            _ => Key::Unidentified.into(),
-        }
-    }
-
-    pub fn convert_event<T>(&mut self, event: &Event<T>) -> KeyInput {
-        if let Event::WindowEvent { event, .. } = event {
-            self.convert_window_event(event)
-        } else {
-            Key::Unidentified.into()
-        }
+    pub fn convert<C: KeyInputConvertible>(&mut self, event: &C) -> Option<KeyInput> {
+        event.convert_key_input(self)
     }
 }
