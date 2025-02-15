@@ -103,6 +103,7 @@ mod tests {
         assert_eq!(Key::from(KeyCode::Char('a')), Key::Char('a'));
         assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
         assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::KeypadBegin), Key::Unidentified);
         assert_eq!(Key::from(KeyCode::Null), Key::Ignored);
         assert_eq!(
             Key::from(KeyCode::Modifier(ModifierKeyCode::LeftControl)),
@@ -124,14 +125,7 @@ mod tests {
             ),
             Mods::CTRL | Mods::SHIFT | Mods::ALT | Mods::CMD,
         );
-        #[cfg(not(target_os = "macos"))]
-        {
-            assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::WIN);
-        }
-        #[cfg(target_os = "macos")]
-        {
-            assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::CMD);
-        }
+        assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::SUPER);
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use crate::{Key, KeyInput, Mods};
-use winit::event::{ElementState, Event, Modifiers, WindowEvent};
+use winit::event::{ElementState, Event, KeyEvent, Modifiers, WindowEvent};
 use winit::keyboard::{Key as WinitKey, ModifiersState, NamedKey};
 
 impl From<&WinitKey> for Key {
@@ -114,32 +114,38 @@ impl From<ModifiersState> for Mods {
     }
 }
 
-pub trait KeyInputConvertible {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput;
+pub trait WinitEvent {
+    fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput;
 }
 
-impl KeyInputConvertible for WindowEvent {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput {
+impl WinitEvent for KeyEvent {
+    fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
+        KeyInput {
+            key: Key::from(&self.logical_key),
+            mods: conv.mods,
+        }
+    }
+}
+
+impl WinitEvent for WindowEvent {
+    fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
         match self {
             WindowEvent::ModifiersChanged(mods) => {
                 conv.on_modifiers_changed(mods);
                 Key::Ignored.into()
             }
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
-                KeyInput {
-                    key: Key::from(&event.logical_key),
-                    mods: conv.mods,
-                }
+                event.to_key_input(conv)
             }
             _ => Key::Ignored.into(),
         }
     }
 }
 
-impl<T> KeyInputConvertible for Event<T> {
-    fn convert_key_input(&self, conv: &mut KeyEventConverter) -> KeyInput {
+impl<T> WinitEvent for Event<T> {
+    fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
         if let Event::WindowEvent { event, .. } = self {
-            event.convert_key_input(conv)
+            event.to_key_input(conv)
         } else {
             Key::Ignored.into()
         }
@@ -147,11 +153,11 @@ impl<T> KeyInputConvertible for Event<T> {
 }
 
 #[derive(Default)]
-pub struct KeyEventConverter {
+pub struct WinitEventConverter {
     mods: Mods,
 }
 
-impl KeyEventConverter {
+impl WinitEventConverter {
     pub fn mods(&self) -> Mods {
         self.mods
     }
@@ -160,7 +166,77 @@ impl KeyEventConverter {
         self.mods = mods.state().into();
     }
 
-    pub fn convert<C: KeyInputConvertible>(&mut self, event: &C) -> KeyInput {
-        event.convert_key_input(self)
+    pub fn convert<E: WinitEvent>(&mut self, event: &E) -> KeyInput {
+        event.to_key_input(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use winit::keyboard::{NativeKey, SmolStr};
+    use NamedKey::*;
+    use WinitKey::*;
+
+    #[test]
+    fn convert_key() {
+        assert_eq!(Key::from(Named(Space)), Key::Char(' '));
+        assert_eq!(Key::from(Named(ArrowUp)), Key::Up);
+        assert_eq!(Key::from(Named(F1)), Key::F(1));
+        assert_eq!(Key::from(Named(Control)), Key::Ignored);
+        assert_eq!(Key::from(Named(TVInput)), Key::Unidentified);
+        assert_eq!(Key::from(Character(SmolStr::new("a"))), Key::Char('a'));
+        assert_eq!(Key::from(Character(SmolStr::new("A"))), Key::Char('a'));
+        assert_eq!(Key::from(Character(SmolStr::new("foo"))), Key::Unidentified);
+        assert_eq!(
+            Key::from(Unidentified(NativeKey::Unidentified)),
+            Key::Unidentified,
+        );
+        assert_eq!(Key::from(Dead(None)), Key::Unidentified);
+    }
+
+    #[test]
+    fn convert_modifiers_state() {
+        assert_eq!(Mods::from(ModifiersState::CONTROL), Mods::CTRL);
+        assert_eq!(
+            Mods::from(ModifiersState::CONTROL | ModifiersState::SHIFT | ModifiersState::ALT),
+            Mods::CTRL | Mods::SHIFT | Mods::ALT,
+        );
+        assert_eq!(Mods::from(ModifiersState::SUPER), Mods::SUPER);
+    }
+
+    // Unformatunately `WinitEventConverter::convert` is not testable because winit does not provide
+    // to create an instance of `KeyEvent`. It provides no constructor and contains some pvivate fields.
+    // Instead, we use `winit::keyboard::Key` directly.
+    impl WinitEvent for WinitKey {
+        fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
+            KeyInput {
+                key: self.into(),
+                mods: conv.mods,
+            }
+        }
+    }
+
+    #[test]
+    fn converter_mods_state() {
+        let mut conv = WinitEventConverter::default();
+
+        // We cannot test `on_modifiers_changed` because `winit::event::Modifiers` does not provide
+        // a constructor.
+        assert_eq!(conv.mods(), Mods::NONE);
+
+        assert_eq!(conv.convert(&Named(Space)), KeyInput::new(' ', Mods::NONE));
+        assert_eq!(
+            conv.convert(&Character(SmolStr::new("A"))),
+            KeyInput::new('a', Mods::NONE),
+        );
+        assert_eq!(
+            conv.convert(&Named(TVInputHDMI1)),
+            KeyInput::new(Key::Unidentified, Mods::NONE),
+        );
+        assert_eq!(
+            conv.convert(&Named(Control)),
+            KeyInput::new(Key::Ignored, Mods::NONE),
+        );
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "keybinds"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Platform&Framework-agnostic key bindings parser and matcher"

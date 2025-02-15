@@ -1,4 +1,4 @@
-use keybinds::winit::KeyEventConverter;
+use keybinds::winit::WinitEventConverter;
 use keybinds::{KeyBind, KeyBindMatcher, KeyBinds};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
@@ -17,7 +17,7 @@ enum Action {
 struct App {
     window: Option<Window>,
     matcher: KeyBindMatcher<Action>,
-    converter: KeyEventConverter,
+    converter: WinitEventConverter,
 }
 
 impl Default for App {
@@ -32,7 +32,7 @@ impl Default for App {
         Self {
             window: None,
             matcher: KeyBindMatcher::new(keybinds),
-            converter: KeyEventConverter::default(),
+            converter: WinitEventConverter::default(),
         }
     }
 }
@@ -45,8 +45,10 @@ impl ApplicationHandler for App {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        // Convert the window event into key input
         let input = self.converter.convert(&event);
 
+        // Check if the converted key input triggers some action
         if let Some(action) = self.matcher.trigger(input) {
             println!("Action: {action:?}");
 
