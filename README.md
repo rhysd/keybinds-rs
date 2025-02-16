@@ -12,6 +12,7 @@ keybinds-rs
 - Core API independent from any platforms and frameworks with minimal dependencies
 - Support several platforms and frameworks as optional features
   - [crossterm][] ([example](./examples/crossterm.rs))
+  - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
 
 [Documentation][api-doc]
@@ -161,5 +162,6 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [serde]: https://serde.rs/
 [crossterm]: https://crates.io/crates/crossterm
 [winit]: https://crates.io/crates/winit
+[termwiz]: https://crates.io/crates/termwiz
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [toml]: https://crates.io/crates/toml

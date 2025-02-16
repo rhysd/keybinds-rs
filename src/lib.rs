@@ -3,10 +3,16 @@
 
 mod error;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "crossterm")))]
 #[cfg(feature = "crossterm")]
 pub mod crossterm;
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 #[cfg(feature = "serde")]
 pub mod serde;
+#[cfg_attr(docsrs, doc(cfg(feature = "termwiz")))]
+#[cfg(feature = "termwiz")]
+pub mod termwiz;
+#[cfg_attr(docsrs, doc(cfg(feature = "winit")))]
 #[cfg(feature = "winit")]
 pub mod winit;
 
@@ -406,6 +412,7 @@ mod tests {
             ("Ctrl+F1", KeyInput::new(Key::F(1), Mods::CTRL)),
             ("F20", KeyInput::new(Key::F(20), Mods::NONE)),
             ("Up", KeyInput::new(Key::Up, Mods::NONE)),
+            ("Space", KeyInput::new(' ', Mods::NONE)),
             (
                 "Ctrl+Shift+Enter",
                 KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT),
