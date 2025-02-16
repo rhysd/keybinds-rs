@@ -216,6 +216,13 @@ impl<K: Into<Key>> From<K> for KeyInput {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub enum Match<T> {
+    Matched(T),
+    Prefix,
+    Unmatch,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeySeq(Vec<KeyInput>);
 
@@ -224,8 +231,18 @@ impl KeySeq {
         Self(v)
     }
 
-    pub fn matches(&self, inputs: &[KeyInput]) -> bool {
-        self.0.iter().eq(inputs.iter())
+    pub fn matches(&self, inputs: &[KeyInput]) -> Match<()> {
+        let mut ls = self.0.iter();
+        let mut rs = inputs.iter();
+        loop {
+            match (ls.next(), rs.next()) {
+                (Some(l), Some(r)) if l != r => return Match::Unmatch,
+                (Some(_), Some(_)) => continue,
+                (Some(_), None) => return Match::Prefix,
+                (None, Some(_)) => return Match::Unmatch,
+                (None, None) => return Match::Matched(()),
+            }
+        }
     }
 }
 
@@ -274,8 +291,20 @@ impl<A> KeyBinds<A> {
         Self(v)
     }
 
-    pub fn find(&self, seq: &[KeyInput]) -> Option<&KeyBind<A>> {
-        self.0.iter().find(|bind| bind.seq.matches(seq))
+    pub fn find(&self, seq: &[KeyInput]) -> Match<&KeyBind<A>> {
+        let mut saw_prefix = false;
+        for bind in self.0.iter() {
+            match bind.seq.matches(seq) {
+                Match::Matched(_) => return Match::Matched(bind),
+                Match::Prefix => saw_prefix = true,
+                Match::Unmatch => continue,
+            }
+        }
+        if saw_prefix {
+            Match::Prefix
+        } else {
+            Match::Unmatch
+        }
     }
 }
 
@@ -326,13 +355,20 @@ impl<A> KeyBindMatcher<A> {
         self.handle_timeout();
         self.ongoing.push(input);
 
-        // TODO: When no keybind is prefix-matched, call `self.reset()`
-        let action = self.binds.find(&self.ongoing).map(|b| &b.action)?;
-
         // `self.reset` cannot be called because the borrow checker needs to split field lifetimes.
-        self.ongoing.clear();
-        self.last_input = None;
-        Some(action)
+        match self.binds.find(&self.ongoing) {
+            Match::Matched(bind) => {
+                self.ongoing.clear();
+                self.last_input = None;
+                Some(&bind.action)
+            }
+            Match::Prefix => None, // Matching is still ongoing
+            Match::Unmatch => {
+                self.ongoing.clear();
+                self.last_input = None;
+                None
+            }
+        }
     }
 }
 
@@ -409,5 +445,17 @@ mod tests {
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
             }
         }
+    }
+
+    #[test]
+    fn discard_ongoing_nothing_matched() {
+        let binds = vec![KeyBind::single(KeyInput::new('a', Mods::NONE), A::Action1)];
+        let mut keybinds = KeyBindMatcher::new(KeyBinds(binds.clone()));
+
+        assert_eq!(keybinds.trigger(KeyInput::from('x')), None);
+        assert_eq!(keybinds.trigger(KeyInput::from('y')), None);
+        assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
+        assert_eq!(keybinds.trigger(KeyInput::from('z')), None);
+        assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
     }
 }
