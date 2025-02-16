@@ -34,6 +34,9 @@ winit = { version = "0.30.9", optional = true }
 toml = { version = "0.8.20", default-features = false, features = ["parse"] }
 serde = { version = "1.0.217", features = ["derive"] }
 
+[workspace]
+members = [".", "bench"]
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 features = ["serde", "crossterm", "winit"]

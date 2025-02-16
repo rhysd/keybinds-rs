@@ -1,0 +1,15 @@
+[package]
+name = "keybinds-bench"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bench]]
+name = "parse"
+harness = false
+
+[dependencies]
+keybinds = { path = ".." }
+
+[dev-dependencies]
+criterion = "0.5.1"
