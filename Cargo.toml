@@ -27,7 +27,6 @@ winit = ["dep:winit"]
 [dependencies]
 bitflags = "2.8.0"
 crossterm = { version = "0.28.1", optional = true }
-phf = { version = "0.11.3", features = ["macros"] }
 serde = { version = "1.0.217", optional = true }
 winit = { version = "0.30.9", optional = true }
 
