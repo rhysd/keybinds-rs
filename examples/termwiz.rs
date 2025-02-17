@@ -1,4 +1,4 @@
-use keybinds::{KeyBind, KeyBindMatcher, KeyBinds, KeyInput};
+use keybinds::{KeyBindMatcher, KeyInput};
 use termwiz::caps::Capabilities;
 use termwiz::cell::AttributeChange;
 use termwiz::color::{AnsiColor, ColorAttribute};
@@ -17,16 +17,14 @@ enum Action {
 }
 
 fn main() -> Result<(), Error> {
-    // Key bindings to trigger the actions
-    let keybinds = KeyBinds::new(vec![
-        KeyBind::multiple("h i".parse().unwrap(), Action::SayHi),
-        KeyBind::single("Left".parse().unwrap(), Action::MoveLeft),
-        KeyBind::single("Ctrl+p".parse().unwrap(), Action::Paste),
-        KeyBind::multiple("Ctrl+x Ctrl+c".parse().unwrap(), Action::ExitApp),
-    ]);
-
     // Create a matcher to trigger actions for upcoming key inputs
-    let mut matcher = KeyBindMatcher::new(keybinds);
+    let mut matcher = KeyBindMatcher::default();
+
+    // Key bindings to trigger the actions
+    matcher.bind("h i", Action::SayHi).unwrap();
+    matcher.bind("Left", Action::MoveLeft).unwrap();
+    matcher.bind("Ctrl+p", Action::Paste).unwrap();
+    matcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
     let caps = Capabilities::new_from_env()?;
     let terminal = new_terminal(caps)?;

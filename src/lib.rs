@@ -289,8 +289,14 @@ impl<A> KeyBind<A> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Default, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeyBinds<A>(Vec<KeyBind<A>>);
+
+impl<A> Default for KeyBinds<A> {
+    fn default() -> Self {
+        Self(vec![])
+    }
+}
 
 impl<A> KeyBinds<A> {
     pub fn new(v: Vec<KeyBind<A>>) -> Self {
@@ -314,12 +320,17 @@ impl<A> KeyBinds<A> {
     }
 }
 
-#[derive(Default)]
 pub struct KeyBindMatcher<A> {
     binds: KeyBinds<A>,
     ongoing: Vec<KeyInput>,
     last_input: Option<Instant>,
     timeout: Duration,
+}
+
+impl<A> Default for KeyBindMatcher<A> {
+    fn default() -> Self {
+        Self::new(KeyBinds::default())
+    }
 }
 
 impl<A> KeyBindMatcher<A> {
@@ -332,9 +343,19 @@ impl<A> KeyBindMatcher<A> {
         }
     }
 
-    pub fn timeout(mut self, timeout: Duration) -> Self {
+    pub fn add<K: Into<KeySeq>>(&mut self, key: K, action: A) {
+        let seq = key.into();
+        self.binds.0.push(KeyBind::multiple(seq, action));
+    }
+
+    pub fn bind(&mut self, key: &str, action: A) -> Result<()> {
+        let seq: KeySeq = key.parse()?;
+        self.add(seq, action);
+        Ok(())
+    }
+
+    pub fn set_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
-        self
     }
 
     pub fn reset(&mut self) {

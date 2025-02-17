@@ -1,5 +1,5 @@
 use keybinds::winit::WinitEventConverter;
-use keybinds::{KeyBind, KeyBindMatcher, KeyBinds};
+use keybinds::KeyBindMatcher;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -22,16 +22,17 @@ struct App {
 
 impl Default for App {
     fn default() -> Self {
+        let mut matcher = KeyBindMatcher::default();
+
         // Key bindings to trigger the actions
-        let keybinds = KeyBinds::new(vec![
-            KeyBind::multiple("h i".parse().unwrap(), Action::SayHi),
-            KeyBind::single("Mod+m".parse().unwrap(), Action::ToggleMaximized),
-            KeyBind::single("Mod+Shift+t".parse().unwrap(), Action::ToggleTheme),
-            KeyBind::multiple("Mod+x Mod+c".parse().unwrap(), Action::Exit),
-        ]);
+        matcher.bind("h i", Action::SayHi).unwrap();
+        matcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
+        matcher.bind("Mod+Shift+t", Action::ToggleTheme).unwrap();
+        matcher.bind("Mod+x Mod+c", Action::Exit).unwrap();
+
         Self {
             window: None,
-            matcher: KeyBindMatcher::new(keybinds),
+            matcher,
             converter: WinitEventConverter::default(),
         }
     }

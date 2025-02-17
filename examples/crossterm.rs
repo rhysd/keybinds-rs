@@ -1,6 +1,6 @@
 use crossterm::event::{read, Event};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use keybinds::{KeyBind, KeyBindMatcher, KeyBinds, KeyInput};
+use keybinds::{KeyBindMatcher, KeyInput};
 use std::io;
 
 // Actions triggered by key bindings
@@ -13,16 +13,14 @@ enum Action {
 }
 
 fn main() -> io::Result<()> {
-    // Key bindings to trigger the actions
-    let keybinds = KeyBinds::new(vec![
-        KeyBind::multiple("h i".parse().unwrap(), Action::SayHi),
-        KeyBind::single("Left".parse().unwrap(), Action::MoveLeft),
-        KeyBind::single("Ctrl+p".parse().unwrap(), Action::Paste),
-        KeyBind::multiple("Ctrl+x Ctrl+c".parse().unwrap(), Action::ExitApp),
-    ]);
-
     // Create a matcher to trigger actions for upcoming key inputs
-    let mut matcher = KeyBindMatcher::new(keybinds);
+    let mut matcher = KeyBindMatcher::default();
+
+    // Key bindings to trigger the actions
+    matcher.bind("h i", Action::SayHi).unwrap();
+    matcher.bind("Left", Action::MoveLeft).unwrap();
+    matcher.bind("Ctrl+p", Action::Paste).unwrap();
+    matcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
     println!("Type Ctrl+X → Ctrl+C to exit");
     enable_raw_mode()?;

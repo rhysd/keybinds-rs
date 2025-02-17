@@ -2,7 +2,8 @@ keybinds-rs
 ===========
 [![CI][ci-badge]][ci]
 
-**THIS CRATE IS WORK IN PROGRESS YET.**
+**THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
+library can be buggy and have arbitrary breaking changes.**
 
 [keybinds-rs][crates-io] is a small Rust crate to define/parse/match key bindings.
 
@@ -48,18 +49,17 @@ enum Action {
     ExitApp,
 }
 
-// Key bindings to trigger the actions
-let keybinds = KeyBinds::new(vec![
-    // Key sequence "hello"
-    KeyBind::multiple("h e l l o".parse().unwrap(), Action::SayHello),
-    // Key combination "Ctrl + Shift + Enter"
-    KeyBind::single("Ctrl+Shift+Enter".parse().unwrap(), Action::OpenFile),
-    // Sequence of key combinations
-    KeyBind::multiple("Ctrl+x Ctrl+c".parse().unwrap(), Action::ExitApp),
-]);
-
 // Create a matcher to trigger actions for upcoming key inputs
-let mut matcher = KeyBindMatcher::new(keybinds);
+let mut matcher = KeyBindMatcher::default();
+
+// Register key bindings to trigger the actions
+
+// Key sequence "hello"
+matcher.bind("h e l l o", Action::SayHello).unwrap();
+// Key combination "Ctrl + Shift + Enter"
+matcher.bind("Ctrl+Shift+Enter", Action::OpenFile).unwrap();
+// Sequence of key combinations
+matcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
 // Trigger `SayHello` action
 assert_eq!(matcher.trigger(KeyInput::from('h')), None);
@@ -134,6 +134,7 @@ enum Action {
 // Configuration file format of your application
 #[derive(Deserialize)]
 struct Config {
+    // `KeyBinds` implements serde's `Deserialize`
     bindings: KeyBinds<Action>,
 }
 
