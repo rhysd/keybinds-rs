@@ -1,7 +1,24 @@
+<a id="v0.0.3"></a>
+# [v0.0.3](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.3) - 2025-02-17
+
+- **BREAKING:** Key bindings API was renamed.
+  - `KeyBindMatcher` → `KeybindDispatcher`
+  - `KeyBinds` → `Keybinds`
+  - `KeyBind` → `Keybind`
+- **BREAKING:** Some methods were renamed.
+  - `KeybindDispatcher::trigger` → `KeybindDispatcher::dispatch`
+  - `KeybindDispatcher::timeout` → `KeybindDispatcher::set_timeout`
+- Support [termwiz](https://crates.io/crates/termwiz) as optional `termwiz` feature.
+- Allow modifiers in upper case like `CTRL`.
+- Implement `KeybindDispatcher::bind` and `KeybindDispatcher::add` methods for easily defining key bindings.
+
+[Changes][v0.0.3]
+
+
 <a id="v0.0.2"></a>
 # [v0.0.2](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.2) - 2025-02-15
 
-- Support [winit](https://crates.io/crates/winit).
+- Support [winit](https://crates.io/crates/winit) as optional `winit` feature.
 - Add `Key::Ignored` special key to ignore on checking key bindings. This is used when converting events which are actually not related to key inputs.
 - Fix key release is not ignored.
 - Fix modifier-only keys are converted to `Key::Unidentified`.
@@ -30,6 +47,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.3]: https://github.com/rhysd/keybinds-rs/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/rhysd/keybinds-rs/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/rhysd/keybinds-rs/compare/v0.0.0...v0.0.1
 [v0.0.0]: https://github.com/rhysd/keybinds-rs/tree/v0.0.0
