@@ -165,12 +165,12 @@ impl FromStr for Mods {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
-            "Control" | "Ctrl" | "ctrl" => Ok(Self::CTRL),
-            "Command" | "command" | "Cmd" | "cmd" => Ok(Self::CMD),
-            "Mod" | "mod" => Ok(Self::MOD),
-            "Shift" | "shift" => Ok(Self::SHIFT),
-            "Alt" | "alt" | "Option" | "option" => Ok(Self::ALT),
-            "Super" | "super" => Ok(Self::SUPER),
+            "Control" | "control" | "CONTROL" | "Ctrl" | "ctrl" | "CTRL" => Ok(Self::CTRL),
+            "Command" | "command" | "COMMAND" | "Cmd" | "cmd" | "CMD" => Ok(Self::CMD),
+            "Mod" | "mod" | "MOD" => Ok(Self::MOD),
+            "Shift" | "shift" | "SHIFT" => Ok(Self::SHIFT),
+            "Alt" | "alt" | "ALT" | "Option" | "option" | "OPTION" => Ok(Self::ALT),
+            "Super" | "super" | "SUPER" => Ok(Self::SUPER),
             _ => Err(Error::UnknownModifier(s.into())),
         }
     }
@@ -399,6 +399,10 @@ mod tests {
             ("Ctrl+x", KeyInput::new('x', Mods::CTRL)),
             ("Ctrl+Shift+x", KeyInput::new('x', Mods::CTRL | Mods::SHIFT)),
             ("shift+ctrl+x", KeyInput::new('x', Mods::CTRL | Mods::SHIFT)),
+            (
+                "ALT+SUPER+DOWN",
+                KeyInput::new(Key::Down, Mods::ALT | Mods::SUPER),
+            ),
             #[cfg(target_os = "macos")]
             ("Mod+x", KeyInput::new('x', Mods::CMD)),
             #[cfg(not(target_os = "macos"))]
