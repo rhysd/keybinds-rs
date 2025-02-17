@@ -399,6 +399,12 @@ impl<A> KeybindDispatcher<A> {
     }
 }
 
+impl<A> FromIterator<Keybind<A>> for KeybindDispatcher<A> {
+    fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
+        Self::new(Keybinds(iter.into_iter().collect()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -489,5 +495,22 @@ mod tests {
         assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
         assert_eq!(keybinds.trigger(KeyInput::from('z')), None);
         assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
+    }
+
+    #[test]
+    fn dispatcher_from_iter() {
+        let expected = vec![
+            Keybind::single('a'.into(), A::Action1),
+            Keybind::multiple(
+                KeySeq::new(vec![
+                    KeyInput::new('b', Mods::CTRL),
+                    KeyInput::new('c', Mods::MOD),
+                ]),
+                A::Action2,
+            ),
+        ];
+
+        let actual: KeybindDispatcher<_> = expected.clone().into_iter().collect();
+        assert_eq!(actual.binds.0, expected);
     }
 }

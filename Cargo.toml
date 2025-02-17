@@ -9,6 +9,12 @@ homepage = "https://github.com/rhysd/keybinds-rs#readme"
 repository = "https://github.com/rhysd/keybinds-rs"
 keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
+include = [
+    "/src",
+    "/examples",
+    "/LICENSE.txt",
+    "/README.md",
+]
 
 [[example]]
 name = "crossterm"
