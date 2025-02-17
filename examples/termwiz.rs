@@ -1,4 +1,4 @@
-use keybinds::{KeyBindMatcher, KeyInput};
+use keybinds::{KeyInput, KeybindDispatcher};
 use termwiz::caps::Capabilities;
 use termwiz::cell::AttributeChange;
 use termwiz::color::{AnsiColor, ColorAttribute};
@@ -17,14 +17,14 @@ enum Action {
 }
 
 fn main() -> Result<(), Error> {
-    // Create a matcher to trigger actions for upcoming key inputs
-    let mut matcher = KeyBindMatcher::default();
+    // Create an action dispatcher to trigger actions for upcoming key inputs
+    let mut dispatcher = KeybindDispatcher::default();
 
     // Key bindings to trigger the actions
-    matcher.bind("h i", Action::SayHi).unwrap();
-    matcher.bind("Left", Action::MoveLeft).unwrap();
-    matcher.bind("Ctrl+p", Action::Paste).unwrap();
-    matcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+    dispatcher.bind("h i", Action::SayHi).unwrap();
+    dispatcher.bind("Left", Action::MoveLeft).unwrap();
+    dispatcher.bind("Ctrl+p", Action::Paste).unwrap();
+    dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
     let caps = Capabilities::new_from_env()?;
     let terminal = new_terminal(caps)?;
@@ -43,7 +43,7 @@ fn main() -> Result<(), Error> {
         };
 
         // Trigger action by matching the key input
-        let action = matcher.trigger(&input);
+        let action = dispatcher.trigger(&input);
 
         buf.add_change(Change::CursorPosition {
             x: Position::Absolute(0),

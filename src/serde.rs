@@ -1,4 +1,4 @@
-use crate::{KeyBind, KeyBinds, KeyInput, KeySeq};
+use crate::{KeyInput, KeySeq, Keybind, Keybinds};
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 use std::fmt;
@@ -43,14 +43,14 @@ impl<'de> Deserialize<'de> for KeySeq {
     }
 }
 
-impl<'de, A: Deserialize<'de>> Deserialize<'de> for KeyBinds<A> {
+impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use std::marker::PhantomData;
 
         struct V<A>(PhantomData<A>);
 
         impl<'de, A: Deserialize<'de>> Visitor<'de> for V<A> {
-            type Value = KeyBinds<A>;
+            type Value = Keybinds<A>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("key bindings object as pairs of key sequences and actions")
@@ -59,9 +59,9 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for KeyBinds<A> {
             fn visit_map<M: MapAccess<'de>>(self, mut access: M) -> Result<Self::Value, M::Error> {
                 let mut binds = vec![];
                 while let Some((seq, action)) = access.next_entry()? {
-                    binds.push(KeyBind { seq, action });
+                    binds.push(Keybind { seq, action });
                 }
-                Ok(KeyBinds(binds))
+                Ok(Keybinds(binds))
             }
         }
 
@@ -86,7 +86,7 @@ mod tests {
 
     #[derive(Deserialize, Debug)]
     struct Config {
-        bindings: KeyBinds<A>,
+        bindings: Keybinds<A>,
     }
 
     #[test]
@@ -102,16 +102,16 @@ mod tests {
         let config: Config = toml::from_str(input).unwrap();
         let actual = config.bindings;
         let expected = [
-            KeyBind::single(KeyInput::new('j', Mods::NONE), A::Action1),
-            KeyBind::multiple(
+            Keybind::single(KeyInput::new('j', Mods::NONE), A::Action1),
+            Keybind::multiple(
                 KeySeq::new(vec![
                     KeyInput::new('g', Mods::NONE),
                     KeyInput::new('g', Mods::NONE),
                 ]),
                 A::Action2,
             ),
-            KeyBind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
-            KeyBind::multiple(
+            Keybind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
+            Keybind::multiple(
                 KeySeq::new(vec![
                     KeyInput::new('s', Mods::CTRL),
                     KeyInput::new('g', Mods::ALT | Mods::SHIFT),
@@ -125,12 +125,12 @@ mod tests {
     #[test]
     fn deserialize_mod_key_bind() {
         let input = r#""Mod+x" = "Action1""#;
-        let actual: KeyBinds<A> = toml::from_str(input).unwrap();
+        let actual: Keybinds<A> = toml::from_str(input).unwrap();
         let expected = [
             #[cfg(target_os = "macos")]
-            KeyBind::single(KeyInput::new('x', Mods::CMD), A::Action1),
+            Keybind::single(KeyInput::new('x', Mods::CMD), A::Action1),
             #[cfg(not(target_os = "macos"))]
-            KeyBind::single(KeyInput::new('x', Mods::CTRL), A::Action1),
+            Keybind::single(KeyInput::new('x', Mods::CTRL), A::Action1),
         ];
         assert_eq!(actual.0, expected);
     }

@@ -1,5 +1,5 @@
 use keybinds::winit::WinitEventConverter;
-use keybinds::KeyBindMatcher;
+use keybinds::KeybindDispatcher;
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -16,23 +16,23 @@ enum Action {
 
 struct App {
     window: Option<Window>,
-    matcher: KeyBindMatcher<Action>,
+    dispatcher: KeybindDispatcher<Action>,
     converter: WinitEventConverter,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let mut matcher = KeyBindMatcher::default();
+        let mut dispatcher = KeybindDispatcher::default();
 
         // Key bindings to trigger the actions
-        matcher.bind("h i", Action::SayHi).unwrap();
-        matcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
-        matcher.bind("Mod+Shift+t", Action::ToggleTheme).unwrap();
-        matcher.bind("Mod+x Mod+c", Action::Exit).unwrap();
+        dispatcher.bind("h i", Action::SayHi).unwrap();
+        dispatcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
+        dispatcher.bind("Mod+Shift+t", Action::ToggleTheme).unwrap();
+        dispatcher.bind("Mod+x Mod+c", Action::Exit).unwrap();
 
         Self {
             window: None,
-            matcher,
+            dispatcher,
             converter: WinitEventConverter::default(),
         }
     }
@@ -50,7 +50,7 @@ impl ApplicationHandler for App {
         let input = self.converter.convert(&event);
 
         // Check if the converted key input triggers some action
-        if let Some(action) = self.matcher.trigger(input) {
+        if let Some(action) = self.dispatcher.trigger(input) {
             println!("Action: {action:?}");
 
             match action {

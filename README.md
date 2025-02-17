@@ -5,7 +5,7 @@ keybinds-rs
 **THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
 library can be buggy and have arbitrary breaking changes.**
 
-[keybinds-rs][crates-io] is a small Rust crate to define/parse/match key bindings.
+[keybinds-rs][crates-io] is a small Rust crate to define/parse/dispatch key bindings.
 
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+A`
 - Support key sequences like `Ctrl+X Ctrl+S`
@@ -34,12 +34,12 @@ cargo add keybinds --features=serde
 
 ## Basic usage
 
-This crate is platform-agnostic. Define key bindings by `KeyBinds` and build `KeyBindMatcher` instance with it.
+This crate is platform-agnostic. Define key bindings by `Keybinds` and build `KeybindDispatcher` instance with it.
 Pass each key input to the `trigger` method and it returns a triggered action. Key sequence and key combination
 can be parsed using `FromStr` trait. See the [API documentation][api-doc] for more details.
 
 ```rust
-use keybinds::{KeyBind, KeyBinds, KeyBindMatcher, KeyInput, Key, Mods};
+use keybinds::{KeybindDispatcher, KeyInput, Key, Mods};
 
 // Actions triggered by key bindings
 #[derive(PartialEq, Eq, Debug)]
@@ -49,32 +49,32 @@ enum Action {
     ExitApp,
 }
 
-// Create a matcher to trigger actions for upcoming key inputs
-let mut matcher = KeyBindMatcher::default();
+// Create a dispatcher to trigger actions for upcoming key inputs
+let mut dispatcher = KeybindDispatcher::default();
 
 // Register key bindings to trigger the actions
 
 // Key sequence "hello"
-matcher.bind("h e l l o", Action::SayHello).unwrap();
+dispatcher.bind("h e l l o", Action::SayHello).unwrap();
 // Key combination "Ctrl + Shift + Enter"
-matcher.bind("Ctrl+Shift+Enter", Action::OpenFile).unwrap();
+dispatcher.bind("Ctrl+Shift+Enter", Action::OpenFile).unwrap();
 // Sequence of key combinations
-matcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
 // Trigger `SayHello` action
-assert_eq!(matcher.trigger(KeyInput::from('h')), None);
-assert_eq!(matcher.trigger(KeyInput::from('e')), None);
-assert_eq!(matcher.trigger(KeyInput::from('l')), None);
-assert_eq!(matcher.trigger(KeyInput::from('l')), None);
-assert_eq!(matcher.trigger(KeyInput::from('o')), Some(&Action::SayHello));
+assert_eq!(dispatcher.trigger(KeyInput::from('h')), None);
+assert_eq!(dispatcher.trigger(KeyInput::from('e')), None);
+assert_eq!(dispatcher.trigger(KeyInput::from('l')), None);
+assert_eq!(dispatcher.trigger(KeyInput::from('l')), None);
+assert_eq!(dispatcher.trigger(KeyInput::from('o')), Some(&Action::SayHello));
 
 // Trigger `OpenFile` action
-let action = matcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
+let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
 assert_eq!(action, Some(&Action::OpenFile));
 
 // Trigger `ExitApp` action
-assert_eq!(matcher.trigger(KeyInput::new('x', Mods::CTRL)), None);
-assert_eq!(matcher.trigger(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
+assert_eq!(dispatcher.trigger(KeyInput::new('x', Mods::CTRL)), None);
+assert_eq!(dispatcher.trigger(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
 ```
 
 ## Syntax for key sequence and combination
@@ -118,11 +118,11 @@ The serde support requires the `serde` feature enabled.
 
 ### Parsing key bindings configurations
 
-`KeyBinds` implements serde's `Deserialize` trait. This is an example to parse key bindings with [toml][] crate.
+`Keybinds` implements serde's `Deserialize` trait. This is an example to parse key bindings with [toml][] crate.
 
 ```rust,ignore
 use serde::Deserialize;
-use keybinds::{KeyBinds, KeyBindMatcher, Key, Mods, KeyInput};
+use keybinds::{Keybinds, KeybindDispatcher, Key, Mods, KeyInput};
 
 // Actions triggered by key bindings
 #[derive(Deserialize, PartialEq, Eq, Debug)]
@@ -134,8 +134,8 @@ enum Action {
 // Configuration file format of your application
 #[derive(Deserialize)]
 struct Config {
-    // `KeyBinds` implements serde's `Deserialize`
-    bindings: KeyBinds<Action>,
+    // `Keybinds` implements serde's `Deserialize`
+    bindings: Keybinds<Action>,
 }
 
 let configuration = r#"
@@ -148,8 +148,8 @@ let configuration = r#"
 let config: Config = toml::from_str(configuration).unwrap();
 
 // Use the key bindings parsed from the TOML input
-let mut matcher = KeyBindMatcher::new(config.bindings);
-let action = matcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
+let mut dispatcher = KeybindDispatcher::new(config.bindings);
+let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
 assert_eq!(action, Some(&Action::OpenFile));
 ```
 

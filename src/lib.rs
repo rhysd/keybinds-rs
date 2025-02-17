@@ -274,12 +274,12 @@ impl From<char> for KeySeq {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct KeyBind<A> {
+pub struct Keybind<A> {
     seq: KeySeq,
     action: A,
 }
 
-impl<A> KeyBind<A> {
+impl<A> Keybind<A> {
     pub fn multiple(seq: KeySeq, action: A) -> Self {
         Self { seq, action }
     }
@@ -290,20 +290,20 @@ impl<A> KeyBind<A> {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct KeyBinds<A>(Vec<KeyBind<A>>);
+pub struct Keybinds<A>(Vec<Keybind<A>>);
 
-impl<A> Default for KeyBinds<A> {
+impl<A> Default for Keybinds<A> {
     fn default() -> Self {
         Self(vec![])
     }
 }
 
-impl<A> KeyBinds<A> {
-    pub fn new(v: Vec<KeyBind<A>>) -> Self {
+impl<A> Keybinds<A> {
+    pub fn new(v: Vec<Keybind<A>>) -> Self {
         Self(v)
     }
 
-    pub fn find(&self, seq: &[KeyInput]) -> Match<&KeyBind<A>> {
+    pub fn find(&self, seq: &[KeyInput]) -> Match<&Keybind<A>> {
         let mut saw_prefix = false;
         for bind in self.0.iter() {
             match bind.seq.matches(seq) {
@@ -320,21 +320,21 @@ impl<A> KeyBinds<A> {
     }
 }
 
-pub struct KeyBindMatcher<A> {
-    binds: KeyBinds<A>,
+pub struct KeybindDispatcher<A> {
+    binds: Keybinds<A>,
     ongoing: Vec<KeyInput>,
     last_input: Option<Instant>,
     timeout: Duration,
 }
 
-impl<A> Default for KeyBindMatcher<A> {
+impl<A> Default for KeybindDispatcher<A> {
     fn default() -> Self {
-        Self::new(KeyBinds::default())
+        Self::new(Keybinds::default())
     }
 }
 
-impl<A> KeyBindMatcher<A> {
-    pub fn new(binds: KeyBinds<A>) -> Self {
+impl<A> KeybindDispatcher<A> {
+    pub fn new(binds: Keybinds<A>) -> Self {
         Self {
             binds,
             ongoing: vec![],
@@ -345,7 +345,7 @@ impl<A> KeyBindMatcher<A> {
 
     pub fn add<K: Into<KeySeq>>(&mut self, key: K, action: A) {
         let seq = key.into();
-        self.binds.0.push(KeyBind::multiple(seq, action));
+        self.binds.0.push(Keybind::multiple(seq, action));
     }
 
     pub fn bind(&mut self, key: &str, action: A) -> Result<()> {
@@ -453,19 +453,19 @@ mod tests {
     #[test]
     fn handle_input() {
         let binds = vec![
-            KeyBind::single(KeyInput::new('a', Mods::NONE), A::Action1),
-            KeyBind::single(KeyInput::new('a', Mods::CTRL | Mods::SHIFT), A::Action2),
-            KeyBind::multiple(
+            Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1),
+            Keybind::single(KeyInput::new('a', Mods::CTRL | Mods::SHIFT), A::Action2),
+            Keybind::multiple(
                 KeySeq::new(vec![
                     KeyInput::new('b', Mods::NONE),
                     KeyInput::new('c', Mods::NONE),
                 ]),
                 A::Action3,
             ),
-            KeyBind::single(KeyInput::new(Key::Up, Mods::NONE), A::Action4),
+            Keybind::single(KeyInput::new(Key::Up, Mods::NONE), A::Action4),
         ];
 
-        let mut keybinds = KeyBindMatcher::new(KeyBinds(binds.clone()));
+        let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
 
         for bind in binds {
             keybinds.reset();
@@ -481,8 +481,8 @@ mod tests {
 
     #[test]
     fn discard_ongoing_nothing_matched() {
-        let binds = vec![KeyBind::single(KeyInput::new('a', Mods::NONE), A::Action1)];
-        let mut keybinds = KeyBindMatcher::new(KeyBinds(binds.clone()));
+        let binds = vec![Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1)];
+        let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
 
         assert_eq!(keybinds.trigger(KeyInput::from('x')), None);
         assert_eq!(keybinds.trigger(KeyInput::from('y')), None);
