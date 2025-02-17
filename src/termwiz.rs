@@ -4,7 +4,7 @@ use termwiz::input::{InputEvent, KeyCode, KeyEvent, Modifiers};
 impl From<KeyCode> for Key {
     fn from(code: KeyCode) -> Self {
         match code {
-            KeyCode::Char(c) => Self::Char(c),
+            KeyCode::Char(c) => Self::Char(c.to_ascii_lowercase()),
             KeyCode::Hyper
             | KeyCode::Super
             | KeyCode::Meta
@@ -111,5 +111,56 @@ impl From<&InputEvent> for KeyInput {
 impl From<InputEvent> for KeyInput {
     fn from(event: InputEvent) -> Self {
         Self::from(&event)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_keycode() {
+        assert_eq!(Key::from(KeyCode::Char('a')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::UpArrow), Key::Up);
+        assert_eq!(Key::from(KeyCode::Control), Key::Ignored);
+        assert_eq!(Key::from(KeyCode::Sleep), Key::Unidentified);
+    }
+
+    #[test]
+    fn convert_mods() {
+        assert_eq!(Mods::from(Modifiers::SHIFT), Mods::SHIFT);
+        assert_eq!(Mods::from(Modifiers::LEFT_SHIFT), Mods::SHIFT);
+        assert_eq!(
+            Mods::from(Modifiers::CTRL | Modifiers::SHIFT | Modifiers::ALT),
+            Mods::CTRL | Mods::SHIFT | Mods::ALT,
+        );
+        assert_eq!(
+            Mods::from(Modifiers::LEFT_CTRL | Modifiers::LEFT_SHIFT | Modifiers::LEFT_ALT),
+            Mods::CTRL | Mods::SHIFT | Mods::ALT,
+        );
+        assert_eq!(Mods::from(Modifiers::SUPER), Mods::SUPER);
+    }
+
+    #[test]
+    fn convert_key_event() {
+        let actual = KeyInput::from(KeyEvent {
+            key: KeyCode::Char('A'),
+            modifiers: Modifiers::CTRL | Modifiers::SHIFT,
+        });
+        let expected = KeyInput::new('a', Mods::CTRL | Mods::SHIFT);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn convert_input_event() {
+        let input = KeyInput::from(InputEvent::Key(KeyEvent {
+            key: KeyCode::Char('A'),
+            modifiers: Modifiers::CTRL | Modifiers::SHIFT,
+        }));
+        assert_eq!(input, KeyInput::new('a', Mods::CTRL | Mods::SHIFT));
+
+        let input = KeyInput::from(InputEvent::Resized { cols: 80, rows: 24 });
+        assert_eq!(input, KeyInput::from(Key::Ignored));
     }
 }
