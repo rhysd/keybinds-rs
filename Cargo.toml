@@ -17,6 +17,10 @@ include = [
 ]
 
 [[example]]
+name = "serde"
+required-features = ["serde"]
+
+[[example]]
 name = "crossterm"
 required-features = ["crossterm"]
 

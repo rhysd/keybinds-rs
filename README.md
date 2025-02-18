@@ -1,5 +1,6 @@
 keybinds-rs
 ===========
+[![crates.io][crate-badge]][crates-io]
 [![CI][ci-badge]][ci]
 
 **THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
@@ -9,7 +10,7 @@ library can be buggy and have arbitrary breaking changes.**
 
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
 - Support key sequences like `Ctrl+x Ctrl+s`
-- Support to parse/generate the key bindings configuration using [serde][] optionally
+- Support to parse/generate the key bindings configuration using [serde][] optionally ([example](./examples/serde))
 - Core API independent from any platforms and frameworks with minimal dependencies
 - Support several platforms and frameworks as optional features
   - [crossterm][] ([example](./examples/crossterm.rs))
@@ -20,16 +21,8 @@ library can be buggy and have arbitrary breaking changes.**
 
 ## Installation
 
-Use `cargo add` to update your `Cargo.toml`.
-
 ```sh
 cargo add keybinds
-```
-
-If some additional features are needed, use `--features` flag.
-
-```sh
-cargo add keybinds --features=serde
 ```
 
 ## Basic usage
@@ -121,47 +114,11 @@ Here are some examples of key sequences:
 See the document for `serde` module.
 The serde support requires the `serde` feature enabled.
 
-### Parsing key bindings configurations
-
-`Keybinds` implements serde's `Deserialize` trait. This is an example to parse key bindings with [toml][] crate.
-
-```rust,ignore
-use serde::Deserialize;
-use keybinds::{Keybinds, KeybindDispatcher, Key, Mods, KeyInput};
-
-// Actions triggered by key bindings
-#[derive(Deserialize, PartialEq, Eq, Debug)]
-enum Action {
-    OpenFile,
-    ExitApp,
-}
-
-// Configuration file format of your application
-#[derive(Deserialize)]
-struct Config {
-    // `Keybinds` implements serde's `Deserialize`
-    bindings: Keybinds<Action>,
-}
-
-let configuration = r#"
-[bindings]
-"Ctrl+Alt+Enter" = "OpenFile"
-"Ctrl+x Ctrl+c" = "ExitApp"
-"#;
-
-// Parse the TOML input
-let config: Config = toml::from_str(configuration).unwrap();
-
-// Use the key bindings parsed from the TOML input
-let mut dispatcher = KeybindDispatcher::new(config.bindings);
-let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
-assert_eq!(action, Some(&Action::OpenFile));
-```
-
 ## License
 
 This crate is licensed under [the MIT license](./LICENSE.txt).
 
+[crate-badge]: https://img.shields.io/crates/v/keybinds
 [ci-badge]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml/badge.svg
 [ci]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml
 [crates-io]: https://crates.io/crates/keybinds
