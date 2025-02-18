@@ -1,3 +1,57 @@
+//! Support for [`termwiz`] crate.
+//!
+//! This module provides the conversions from termwiz's event types to [`Key`], [`Mods`],
+//! and [`KeyInput`].
+//!
+//! ```no_run
+//! use keybinds::{KeyInput, KeybindDispatcher};
+//! use termwiz::caps::Capabilities;
+//! use termwiz::terminal::buffered::BufferedTerminal;
+//! use termwiz::terminal::{new_terminal, Terminal};
+//!
+//! // Actions dispatched by key bindings
+//! enum Action {
+//!     SayHi,
+//!     ExitApp,
+//! }
+//!
+//! // Create an action dispatcher to dispatch actions for upcoming key inputs
+//! let mut dispatcher = KeybindDispatcher::default();
+//!
+//! // Key bindings to dispatch the actions
+//! dispatcher.bind("h i", Action::SayHi).unwrap();
+//! dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+//!
+//! let caps = Capabilities::new_from_env().unwrap();
+//! let terminal = new_terminal(caps).unwrap();
+//!
+//! let mut buf = BufferedTerminal::new(terminal).unwrap();
+//! buf.flush().unwrap();
+//! buf.terminal().set_raw_mode().unwrap();
+//!
+//! loop {
+//!     let Some(input) = buf.terminal().poll_input(None).unwrap() else {
+//!         continue;
+//!     };
+//!
+//!     // Conversion from `InputEvent` to `KeyInput`
+//!     buf.add_change(format!("{:?}\r\n", KeyInput::from(&input)));
+//!
+//!     // Dispatch action by directly passing `InputEvent` to `dispatch` method.
+//!     let action = dispatcher.dispatch(&input);
+//!
+//!     if let Some(action) = action {
+//!         match action {
+//!             Action::SayHi => {
+//!                 buf.add_change("Hi!\r\n");
+//!             }
+//!             Action::ExitApp => break,
+//!         }
+//!     }
+//!
+//!     buf.flush().unwrap();
+//! }
+//! ```
 use crate::{Key, KeyInput, Mods};
 use termwiz::input::{InputEvent, KeyCode, KeyEvent, Modifiers};
 

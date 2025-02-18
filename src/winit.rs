@@ -1,3 +1,74 @@
+//! Support for [`winit`] crate.
+//!
+//! This module provides:
+//!
+//! - the conversion from winit's key and modifier types to [`Key`] and [`Mods`]
+//! - [`WinitEventConverter`] struct to track the modifier state and converts key events to [`KeyInput`]
+//!
+//! ```no_run
+//! use keybinds::winit::WinitEventConverter;
+//! use keybinds::KeybindDispatcher;
+//! use winit::application::ApplicationHandler;
+//! use winit::event::WindowEvent;
+//! use winit::event_loop::{ActiveEventLoop, EventLoop};
+//! use winit::window::{Theme, Window, WindowId};
+//!
+//! // Actions dispatched by key bindings
+//! #[derive(Debug)]
+//! enum Action {
+//!     SayHi,
+//!     Exit,
+//! }
+//!
+//! struct App {
+//!     window: Option<Window>,
+//!     dispatcher: KeybindDispatcher<Action>,
+//!     converter: WinitEventConverter,
+//! }
+//!
+//! impl Default for App {
+//!     fn default() -> Self {
+//!         let mut dispatcher = KeybindDispatcher::default();
+//!
+//!         // Key bindings to dispatch the actions
+//!         dispatcher.bind("h i", Action::SayHi).unwrap();
+//!         dispatcher.bind("Mod+q", Action::Exit).unwrap();
+//!
+//!         Self {
+//!             window: None,
+//!             dispatcher,
+//!             converter: WinitEventConverter::default(),
+//!         }
+//!     }
+//! }
+//!
+//! impl ApplicationHandler for App {
+//!     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+//!         let window = event_loop.create_window(Window::default_attributes()).unwrap();
+//!         self.window = Some(window);
+//!     }
+//!
+//!     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+//!         // Convert the window event into key input
+//!         let input = self.converter.convert(&event);
+//!
+//!         // Check if the converted key input dispatches some action
+//!         if let Some(action) = self.dispatcher.dispatch(input) {
+//!             match action {
+//!                 Action::SayHi => println!("Hi!"),
+//!                 Action::Exit => event_loop.exit(),
+//!             }
+//!         }
+//!
+//!         if let WindowEvent::CloseRequested = event {
+//!             event_loop.exit();
+//!         }
+//!     }
+//! }
+//!
+//! let event_loop = EventLoop::new().unwrap();
+//! event_loop.run_app(&mut App::default()).unwrap();
+//! ```
 use crate::{Key, KeyInput, Mods};
 use winit::event::{ElementState, Event, KeyEvent, Modifiers, WindowEvent};
 use winit::keyboard::{Key as WinitKey, ModifiersState, NamedKey};

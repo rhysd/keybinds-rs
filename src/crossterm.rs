@@ -1,3 +1,43 @@
+//! Support for [`crossterm`] crate.
+//!
+//! This module provides the conversions from crossterm's event types to [`Key`], [`Mods`],
+//! and [`KeyInput`].
+//!
+//! ```no_run
+//! use crossterm::event::{read, Event};
+//! use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+//! use keybinds::{KeyInput, KeybindDispatcher};
+//! use std::io;
+//!
+//! #[derive(PartialEq, Eq, Debug)]
+//! enum Action {
+//!     SayHi,
+//!     Exit,
+//! }
+//!
+//! let mut dispatcher = KeybindDispatcher::default();
+//! dispatcher.bind("h i", Action::SayHi).unwrap();
+//! dispatcher.bind("Ctrl+x Ctrl+c", Action::Exit).unwrap();
+//!
+//! enable_raw_mode().unwrap();
+//!
+//! while let Ok(event) = read() {
+//!     if let Event::Key(event) = event {
+//!         // Convert crossterm's `KeyEvent` into `KeyInput`
+//!         println!("Key input `{:?}`\r", KeyInput::from(event));
+//!
+//!         // `KeybindDispatcher::dispatch` accepts crossterm's `KeyEvent`
+//!         if let Some(action) = dispatcher.dispatch(event) {
+//!             match action {
+//!                 Action::SayHi => println!("Hi!"),
+//!                 Action::Exit => break,
+//!             }
+//!         }
+//!     }
+//! }
+//!
+//! disable_raw_mode().unwrap();
+//! ```
 use crate::{Key, KeyInput, Mods};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, MediaKeyCode};
 

@@ -1,3 +1,43 @@
+//! Support for [`serde`] crate.
+//!
+//! This module provides a `Deserialize` support for [`Keybinds`] to easily parse key bindings from
+//! a configuration file.
+//!
+//! ```
+//! use serde::Deserialize;
+//! use keybinds::{Keybinds, KeybindDispatcher, Key, Mods, KeyInput};
+//!
+//! // Actions dispatched by key bindings
+//! #[derive(Deserialize, PartialEq, Eq, Debug)]
+//! enum Action {
+//!     OpenFile,
+//!     ExitApp,
+//! }
+//!
+//! // Configuration file format of your application
+//! #[derive(Deserialize)]
+//! struct Config {
+//!     // `Keybinds` implements serde's `Deserialize`
+//!     bindings: Keybinds<Action>,
+//! }
+//!
+//! // Configuration file content
+//! let configuration = r#"
+//! [bindings]
+//! "Ctrl+Alt+Enter" = "OpenFile"
+//! "Ctrl+x Ctrl+c" = "ExitApp"
+//! "#;
+//!
+//! // Parse the TOML input
+//! let config: Config = toml::from_str(configuration).unwrap();
+//!
+//! // Create a dispatcher from the key bindings
+//! let mut dispatcher = KeybindDispatcher::new(config.bindings);
+//!
+//! // Use the key bindings
+//! let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
+//! assert_eq!(action, Some(&Action::OpenFile));
+//! ```
 use crate::{KeyInput, KeySeq, Keybind, Keybinds};
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
