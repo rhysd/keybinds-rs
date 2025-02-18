@@ -384,7 +384,7 @@ impl<A> KeybindDispatcher<A> {
         self.last_input = Some(now);
     }
 
-    pub fn trigger<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
+    pub fn dispatch<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         let input = input.into();
         if input.is_ignored() {
             return None;
@@ -488,7 +488,7 @@ mod tests {
             for (idx, input) in bind.seq.0.iter().enumerate() {
                 let is_last = idx + 1 == len;
                 let expected = is_last.then_some(bind.action);
-                let actual = keybinds.trigger(input.clone());
+                let actual = keybinds.dispatch(input.clone());
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
             }
         }
@@ -499,11 +499,11 @@ mod tests {
         let binds = vec![Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1)];
         let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
 
-        assert_eq!(keybinds.trigger(KeyInput::from('x')), None);
-        assert_eq!(keybinds.trigger(KeyInput::from('y')), None);
-        assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
-        assert_eq!(keybinds.trigger(KeyInput::from('z')), None);
-        assert_eq!(keybinds.trigger(KeyInput::from('a')), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch(KeyInput::from('x')), None);
+        assert_eq!(keybinds.dispatch(KeyInput::from('y')), None);
+        assert_eq!(keybinds.dispatch(KeyInput::from('a')), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch(KeyInput::from('z')), None);
+        assert_eq!(keybinds.dispatch(KeyInput::from('a')), Some(&A::Action1));
     }
 
     #[test]

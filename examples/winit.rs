@@ -5,7 +5,7 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
 use winit::window::{Theme, Window, WindowId};
 
-// Actions triggered by key bindings
+// Actions dispatched by key bindings
 #[derive(Debug)]
 enum Action {
     SayHi,
@@ -24,7 +24,7 @@ impl Default for App {
     fn default() -> Self {
         let mut dispatcher = KeybindDispatcher::default();
 
-        // Key bindings to trigger the actions
+        // Key bindings to dispatch the actions
         dispatcher.bind("h i", Action::SayHi).unwrap();
         dispatcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
         dispatcher.bind("Mod+Alt+t", Action::ToggleTheme).unwrap();
@@ -49,8 +49,8 @@ impl ApplicationHandler for App {
         // Convert the window event into key input
         let input = self.converter.convert(&event);
 
-        // Check if the converted key input triggers some action
-        if let Some(action) = self.dispatcher.trigger(input) {
+        // Check if the converted key input dispatches some action
+        if let Some(action) = self.dispatcher.dispatch(input) {
             println!("Action: {action:?}");
 
             match action {

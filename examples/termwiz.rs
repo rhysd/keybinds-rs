@@ -7,7 +7,7 @@ use termwiz::terminal::buffered::BufferedTerminal;
 use termwiz::terminal::{new_terminal, Terminal};
 use termwiz::Error;
 
-// Actions triggered by key bindings
+// Actions dispatched by key bindings
 #[derive(PartialEq, Eq, Debug)]
 enum Action {
     SayHi,
@@ -17,10 +17,10 @@ enum Action {
 }
 
 fn main() -> Result<(), Error> {
-    // Create an action dispatcher to trigger actions for upcoming key inputs
+    // Create an action dispatcher to dispatch actions for upcoming key inputs
     let mut dispatcher = KeybindDispatcher::default();
 
-    // Key bindings to trigger the actions
+    // Key bindings to dispatch the actions
     dispatcher.bind("h i", Action::SayHi).unwrap();
     dispatcher.bind("Left", Action::MoveLeft).unwrap();
     dispatcher.bind("Ctrl+p", Action::Paste).unwrap();
@@ -42,8 +42,8 @@ fn main() -> Result<(), Error> {
             continue;
         };
 
-        // Trigger action by matching the key input
-        let action = dispatcher.trigger(&input);
+        // Dispatch action by directly passing `InputEvent` to `dispatch` method.
+        let action = dispatcher.dispatch(&input);
 
         buf.add_change(Change::CursorPosition {
             x: Position::Absolute(0),

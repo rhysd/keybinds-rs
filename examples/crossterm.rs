@@ -3,7 +3,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use keybinds::{KeyInput, KeybindDispatcher};
 use std::io;
 
-// Actions triggered by key bindings
+// Actions dispatched by key bindings
 #[derive(PartialEq, Eq, Debug)]
 enum Action {
     SayHi,
@@ -13,10 +13,10 @@ enum Action {
 }
 
 fn main() -> io::Result<()> {
-    // Create a dispatcher to trigger actions for upcoming key inputs
+    // Create a dispatcher to dispatch actions for upcoming key inputs
     let mut dispatcher = KeybindDispatcher::default();
 
-    // Key bindings to trigger the actions
+    // Key bindings to dispatch the actions
     dispatcher.bind("h i", Action::SayHi).unwrap();
     dispatcher.bind("Left", Action::MoveLeft).unwrap();
     dispatcher.bind("Ctrl+p", Action::Paste).unwrap();
@@ -30,8 +30,8 @@ fn main() -> io::Result<()> {
             // Can convert crossterm's `KeyEvent` into `KeyInput`
             println!("Key input `{:?}`\r", KeyInput::from(event));
 
-            // `KeybindDispatcher::trigger` accepts crossterm's `KeyEvent`
-            if let Some(action) = dispatcher.trigger(event) {
+            // `KeybindDispatcher::dispatch` accepts crossterm's `KeyEvent`
+            if let Some(action) = dispatcher.dispatch(event) {
                 println!("Triggered action `{action:?}`\r");
                 if action == &Action::ExitApp {
                     break;

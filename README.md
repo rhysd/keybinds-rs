@@ -34,14 +34,14 @@ cargo add keybinds --features=serde
 
 ## Basic usage
 
-This crate is platform-agnostic. Define key bindings by `Keybinds` and build `KeybindDispatcher` instance with it.
-Pass each key input to the `trigger` method and it returns a triggered action. Key sequence and key combination
+This crate is platform-agnostic. Create `KeybindDispatcher` instance and define key bindings by `bind` method.
+Pass each key input to the `dispatch` method call. It returns a dispatched action. Key sequence and key combination
 can be parsed using `FromStr` trait. See the [API documentation][api-doc] for more details.
 
 ```rust
 use keybinds::{KeybindDispatcher, KeyInput, Key, Mods};
 
-// Actions triggered by key bindings
+// Actions dispatched by key bindings
 #[derive(PartialEq, Eq, Debug)]
 enum Action {
     SayHello,
@@ -49,10 +49,10 @@ enum Action {
     ExitApp,
 }
 
-// Create a dispatcher to trigger actions for upcoming key inputs
+// Create a dispatcher to dispatch actions for upcoming key inputs
 let mut dispatcher = KeybindDispatcher::default();
 
-// Register key bindings to trigger the actions
+// Register key bindings to dispatch the actions
 
 // Key sequence "h" → "e" → "l" → "l" → "o"
 dispatcher.bind("h e l l o", Action::SayHello).unwrap();
@@ -61,20 +61,20 @@ dispatcher.bind("Ctrl+Alt+Enter", Action::OpenFile).unwrap();
 // Sequence of key combinations
 dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
-// Trigger `SayHello` action
-assert_eq!(dispatcher.trigger(KeyInput::from('h')), None);
-assert_eq!(dispatcher.trigger(KeyInput::from('e')), None);
-assert_eq!(dispatcher.trigger(KeyInput::from('l')), None);
-assert_eq!(dispatcher.trigger(KeyInput::from('l')), None);
-assert_eq!(dispatcher.trigger(KeyInput::from('o')), Some(&Action::SayHello));
+// Dispatch `SayHello` action
+assert_eq!(dispatcher.dispatch(KeyInput::from('h')), None);
+assert_eq!(dispatcher.dispatch(KeyInput::from('e')), None);
+assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
+assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
+assert_eq!(dispatcher.dispatch(KeyInput::from('o')), Some(&Action::SayHello));
 
-// Trigger `OpenFile` action
-let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
+// Dispatch `OpenFile` action
+let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
 assert_eq!(action, Some(&Action::OpenFile));
 
-// Trigger `ExitApp` action
-assert_eq!(dispatcher.trigger(KeyInput::new('x', Mods::CTRL)), None);
-assert_eq!(dispatcher.trigger(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
+// Dispatch `ExitApp` action
+assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);
+assert_eq!(dispatcher.dispatch(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
 ```
 
 ## Syntax for key sequence and combination
