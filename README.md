@@ -7,8 +7,8 @@ library can be buggy and have arbitrary breaking changes.**
 
 [keybinds-rs][crates-io] is a small Rust crate to define/parse/dispatch key bindings.
 
-- Provide a syntax to easily define key bindings in a configuration file like `Ctrl+A`
-- Support key sequences like `Ctrl+X Ctrl+S`
+- Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
+- Support key sequences like `Ctrl+x Ctrl+s`
 - Support to parse/generate the key bindings configuration using [serde][] optionally
 - Core API independent from any platforms and frameworks with minimal dependencies
 - Support several platforms and frameworks as optional features
@@ -54,10 +54,10 @@ let mut dispatcher = KeybindDispatcher::default();
 
 // Register key bindings to trigger the actions
 
-// Key sequence "hello"
+// Key sequence "h" → "e" → "l" → "l" → "o"
 dispatcher.bind("h e l l o", Action::SayHello).unwrap();
-// Key combination "Ctrl + Shift + Enter"
-dispatcher.bind("Ctrl+Shift+Enter", Action::OpenFile).unwrap();
+// Key combination "Ctrl + Alt + Enter"
+dispatcher.bind("Ctrl+Alt+Enter", Action::OpenFile).unwrap();
 // Sequence of key combinations
 dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
@@ -69,7 +69,7 @@ assert_eq!(dispatcher.trigger(KeyInput::from('l')), None);
 assert_eq!(dispatcher.trigger(KeyInput::from('o')), Some(&Action::SayHello));
 
 // Trigger `OpenFile` action
-let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
+let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
 assert_eq!(action, Some(&Action::OpenFile));
 
 // Trigger `ExitApp` action
@@ -83,8 +83,11 @@ Keys are joint with `+` as a key combination like `Ctrl+a`. The last key must be
 keys.
 
 Normal keys are a single character (e.g. `a`, `X`, `あ`) or a special key name (e.g. `Up`, `Enter`, `Tab`). Note that
-upper case characters like `A` are equivalent to the lower case ones like `a`. For representing `A` key, explicitly
-specify `Shift` modifier key.
+the characters are case-sensitive. `A` means typing "A" and "Shift" keys on US keyboard.
+
+These are **logical** keys which are inputs as the result of key typing. In comparison, physical keys are actual keys on
+your keyboard. For example, typing the physical keys "Shift" and "9" produces the logical key `(` with US keyboard, and
+it also produces the logical key `)` with JP keyboard.
 
 The following modifier keys are available:
 
@@ -92,16 +95,18 @@ The following modifier keys are available:
 - `Cmd`: "Command" key
 - `Mod`: "Command" key on macOS, "Ctrl" key on other platforms
 - `Super`: "Windows" key on platforms other than macOS, Command key on macOS
-- `Shift`: "Shift" key
 - `Alt`: "Alt" key
 - `Option`: An alias to "Alt" key
 
 Here are some examples of key combinations:
 
 - `a`
+- `X`
+- `!`
 - `Enter`
+- `Ctrl+X`
 - `Mod+x`
-- `Ctrl+Shift+Left`
+- `Ctrl+Alt+Left`
 
 Key combinations are joint with whitespaces as a key sequence. When key combinations are input in the order, they
 trigger the action.
@@ -140,7 +145,7 @@ struct Config {
 
 let configuration = r#"
 [bindings]
-"Ctrl+Shift+Enter" = "OpenFile"
+"Ctrl+Alt+Enter" = "OpenFile"
 "Ctrl+x Ctrl+c" = "ExitApp"
 "#;
 
@@ -149,7 +154,7 @@ let config: Config = toml::from_str(configuration).unwrap();
 
 // Use the key bindings parsed from the TOML input
 let mut dispatcher = KeybindDispatcher::new(config.bindings);
-let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT));
+let action = dispatcher.trigger(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
 assert_eq!(action, Some(&Action::OpenFile));
 ```
 

@@ -86,7 +86,7 @@ impl FromStr for Key {
         {
             let mut c = s.chars();
             if let (Some(c), None) = (c.next(), c.next()) {
-                return Ok(Self::Char(c.to_ascii_lowercase()));
+                return Ok(Self::Char(c));
             }
         }
 
@@ -148,9 +148,8 @@ bitflags! {
         const NONE  = 0b00000000;
         const CTRL  = 0b00000001;
         const CMD   = 0b00000010;
-        const SHIFT = 0b00000100;
-        const ALT   = 0b00001000;
-        const WIN   = 0b00010000;
+        const ALT   = 0b00000100;
+        const WIN   = 0b00001000;
     }
 }
 
@@ -173,7 +172,6 @@ impl FromStr for Mods {
             "Control" | "control" | "CONTROL" | "Ctrl" | "ctrl" | "CTRL" => Ok(Self::CTRL),
             "Command" | "command" | "COMMAND" | "Cmd" | "cmd" | "CMD" => Ok(Self::CMD),
             "Mod" | "mod" | "MOD" => Ok(Self::MOD),
-            "Shift" | "shift" | "SHIFT" => Ok(Self::SHIFT),
             "Alt" | "alt" | "ALT" | "Option" | "option" | "OPTION" => Ok(Self::ALT),
             "Super" | "super" | "SUPER" => Ok(Self::SUPER),
             _ => Err(Error::UnknownModifier(s.into())),
@@ -234,6 +232,13 @@ pub enum Match<T> {
     Unmatch,
 }
 
+// TODO: Make this struct to the following to avoid heap allocation.
+// ```
+// enum KeySeq {
+//     Single(KeyInput),
+//     Multiple(Vec<KeyInput>),
+// }
+// ```
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeySeq(Vec<KeyInput>);
 
@@ -426,11 +431,11 @@ mod tests {
     fn parse_key_seq() {
         let tests = [
             ("x", KeyInput::new('x', Mods::NONE)),
-            ("A", KeyInput::new('a', Mods::NONE)),
+            ("A", KeyInput::new('A', Mods::NONE)),
             ("あ", KeyInput::new('あ', Mods::NONE)),
             ("Ctrl+x", KeyInput::new('x', Mods::CTRL)),
-            ("Ctrl+Shift+x", KeyInput::new('x', Mods::CTRL | Mods::SHIFT)),
-            ("shift+ctrl+x", KeyInput::new('x', Mods::CTRL | Mods::SHIFT)),
+            ("Ctrl+Alt+x", KeyInput::new('x', Mods::CTRL | Mods::ALT)),
+            ("alt+ctrl+x", KeyInput::new('x', Mods::CTRL | Mods::ALT)),
             (
                 "ALT+SUPER+DOWN",
                 KeyInput::new(Key::Down, Mods::ALT | Mods::SUPER),
@@ -443,15 +448,14 @@ mod tests {
             ("Super+x", KeyInput::new('x', Mods::CMD)),
             #[cfg(not(target_os = "macos"))]
             ("Super+x", KeyInput::new('x', Mods::WIN)),
-            ("F", KeyInput::new('f', Mods::NONE)),
             ("F1", KeyInput::new(Key::F(1), Mods::NONE)),
             ("Ctrl+F1", KeyInput::new(Key::F(1), Mods::CTRL)),
             ("F20", KeyInput::new(Key::F(20), Mods::NONE)),
             ("Up", KeyInput::new(Key::Up, Mods::NONE)),
             ("Space", KeyInput::new(' ', Mods::NONE)),
             (
-                "Ctrl+Shift+Enter",
-                KeyInput::new(Key::Enter, Mods::CTRL | Mods::SHIFT),
+                "Ctrl+Super+Enter",
+                KeyInput::new(Key::Enter, Mods::CTRL | Mods::SUPER),
             ),
         ];
 
@@ -465,10 +469,10 @@ mod tests {
     fn handle_input() {
         let binds = vec![
             Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1),
-            Keybind::single(KeyInput::new('a', Mods::CTRL | Mods::SHIFT), A::Action2),
+            Keybind::single(KeyInput::new('a', Mods::CTRL), A::Action2),
             Keybind::multiple(
                 KeySeq::new(vec![
-                    KeyInput::new('b', Mods::NONE),
+                    KeyInput::new('B', Mods::NONE),
                     KeyInput::new('c', Mods::NONE),
                 ]),
                 A::Action3,

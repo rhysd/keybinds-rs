@@ -13,7 +13,7 @@ fn parse_key_seq(c: &mut Criterion) {
         b.iter(|| black_box(KeySeq::from_str("Ctrl+A").unwrap()))
     });
     c.bench_function("multiple_chars_with_mod", |b| {
-        b.iter(|| black_box(KeySeq::from_str("Ctrl+H Shift+E Mod+L Alt+L Super+O").unwrap()))
+        b.iter(|| black_box(KeySeq::from_str("Ctrl+H Cmd+E Mod+L Alt+L Super+O").unwrap()))
     });
     c.bench_function("single_named_char", |b| {
         b.iter(|| black_box(KeySeq::from_str("Tab").unwrap()))

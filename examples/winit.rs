@@ -27,7 +27,7 @@ impl Default for App {
         // Key bindings to trigger the actions
         dispatcher.bind("h i", Action::SayHi).unwrap();
         dispatcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
-        dispatcher.bind("Mod+Shift+t", Action::ToggleTheme).unwrap();
+        dispatcher.bind("Mod+Alt+t", Action::ToggleTheme).unwrap();
         dispatcher.bind("Mod+x Mod+c", Action::Exit).unwrap();
 
         Self {

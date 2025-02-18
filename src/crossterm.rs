@@ -19,7 +19,7 @@ impl From<KeyCode> for Key {
             KeyCode::Delete => Self::Delete,
             KeyCode::Insert => Self::Insert,
             KeyCode::F(i) => Self::F(i),
-            KeyCode::Char(c) => Self::Char(c.to_ascii_lowercase()),
+            KeyCode::Char(c) => Self::Char(c),
             KeyCode::Esc => Self::Esc,
             KeyCode::ScrollLock => Self::ScrollLock,
             KeyCode::NumLock => Self::NumLock,
@@ -46,9 +46,6 @@ impl From<KeyModifiers> for Mods {
         let mut to = Mods::NONE;
         if from.contains(KeyModifiers::CONTROL) {
             to |= Mods::CTRL;
-        }
-        if from.contains(KeyModifiers::SHIFT) {
-            to |= Mods::SHIFT;
         }
         if from.contains(KeyModifiers::ALT) {
             to |= Mods::ALT;
@@ -101,8 +98,7 @@ mod tests {
     fn convert_key_code() {
         assert_eq!(Key::from(KeyCode::Backspace), Key::Backspace);
         assert_eq!(Key::from(KeyCode::Char('a')), Key::Char('a'));
-        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
-        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('a'));
+        assert_eq!(Key::from(KeyCode::Char('A')), Key::Char('A'));
         assert_eq!(Key::from(KeyCode::KeypadBegin), Key::Unidentified);
         assert_eq!(Key::from(KeyCode::Null), Key::Ignored);
         assert_eq!(
@@ -123,7 +119,7 @@ mod tests {
                     | KeyModifiers::ALT
                     | KeyModifiers::META
             ),
-            Mods::CTRL | Mods::SHIFT | Mods::ALT | Mods::CMD,
+            Mods::CTRL | Mods::ALT | Mods::CMD,
         );
         assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::SUPER);
     }
@@ -137,7 +133,7 @@ mod tests {
                 kind: KeyEventKind::Press,
                 state: KeyEventState::NONE,
             }),
-            KeyInput::new('a', Mods::CTRL | Mods::SHIFT),
+            KeyInput::new('A', Mods::CTRL),
         );
     }
 
@@ -150,7 +146,7 @@ mod tests {
                 kind: KeyEventKind::Press,
                 state: KeyEventState::NONE,
             })),
-            KeyInput::new('a', Mods::CTRL | Mods::SHIFT),
+            KeyInput::new('A', Mods::CTRL),
         );
         assert_eq!(
             KeyInput::from(Event::FocusGained),

@@ -73,7 +73,7 @@ impl From<&WinitKey> for Key {
             WinitKey::Character(s) => {
                 let mut chars = s.chars();
                 if let (Some(c), None) = (chars.next(), chars.next()) {
-                    Self::Char(c.to_ascii_lowercase())
+                    Self::Char(c)
                 } else {
                     Self::Unidentified
                 }
@@ -94,9 +94,6 @@ impl From<&ModifiersState> for Mods {
         let mut mods = Mods::NONE;
         if state.contains(ModifiersState::CONTROL) {
             mods |= Mods::CTRL;
-        }
-        if state.contains(ModifiersState::SHIFT) {
-            mods |= Mods::SHIFT;
         }
         if state.contains(ModifiersState::ALT) {
             mods |= Mods::ALT;
@@ -186,7 +183,7 @@ mod tests {
         assert_eq!(Key::from(Named(Control)), Key::Ignored);
         assert_eq!(Key::from(Named(TVInput)), Key::Unidentified);
         assert_eq!(Key::from(Character(SmolStr::new("a"))), Key::Char('a'));
-        assert_eq!(Key::from(Character(SmolStr::new("A"))), Key::Char('a'));
+        assert_eq!(Key::from(Character(SmolStr::new("A"))), Key::Char('A'));
         assert_eq!(Key::from(Character(SmolStr::new("foo"))), Key::Unidentified);
         assert_eq!(
             Key::from(Unidentified(NativeKey::Unidentified)),
@@ -199,8 +196,8 @@ mod tests {
     fn convert_modifiers_state() {
         assert_eq!(Mods::from(ModifiersState::CONTROL), Mods::CTRL);
         assert_eq!(
-            Mods::from(ModifiersState::CONTROL | ModifiersState::SHIFT | ModifiersState::ALT),
-            Mods::CTRL | Mods::SHIFT | Mods::ALT,
+            Mods::from(ModifiersState::CONTROL | ModifiersState::ALT),
+            Mods::CTRL | Mods::ALT,
         );
         assert_eq!(Mods::from(ModifiersState::SUPER), Mods::SUPER);
     }
@@ -218,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn converter_mods_state() {
+    fn converter_convert_keys() {
         let mut conv = WinitEventConverter::default();
 
         // We cannot test `on_modifiers_changed` because `winit::event::Modifiers` does not provide
@@ -227,8 +224,12 @@ mod tests {
 
         assert_eq!(conv.convert(&Named(Space)), KeyInput::new(' ', Mods::NONE));
         assert_eq!(
+            conv.convert(&Character(SmolStr::new("("))),
+            KeyInput::new('(', Mods::NONE),
+        );
+        assert_eq!(
             conv.convert(&Character(SmolStr::new("A"))),
-            KeyInput::new('a', Mods::NONE),
+            KeyInput::new('A', Mods::NONE),
         );
         assert_eq!(
             conv.convert(&Named(TVInputHDMI1)),

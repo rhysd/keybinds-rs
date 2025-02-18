@@ -96,7 +96,7 @@ mod tests {
         "j" = "Action1"
         "g g" = "Action2"
         "Ctrl+o" = "Action3"
-        "Ctrl+S Alt+Shift+G" = "Action4"
+        "Ctrl+S Alt+Ctrl+G" = "Action4"
         "#;
 
         let config: Config = toml::from_str(input).unwrap();
@@ -113,8 +113,8 @@ mod tests {
             Keybind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
             Keybind::multiple(
                 KeySeq::new(vec![
-                    KeyInput::new('s', Mods::CTRL),
-                    KeyInput::new('g', Mods::ALT | Mods::SHIFT),
+                    KeyInput::new('S', Mods::CTRL),
+                    KeyInput::new('G', Mods::ALT | Mods::CTRL),
                 ]),
                 A::Action4,
             ),
