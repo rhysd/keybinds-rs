@@ -24,6 +24,7 @@ pub mod winit;
 pub use error::{Error, Result};
 
 use bitflags::bitflags;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
@@ -308,6 +309,14 @@ impl<A> Default for Keybinds<A> {
     }
 }
 
+impl<A> Deref for Keybinds<A> {
+    type Target = [Keybind<A>];
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
+
 impl<A> Keybinds<A> {
     pub fn new(v: Vec<Keybind<A>>) -> Self {
         Self(v)
@@ -371,6 +380,10 @@ impl<A> KeybindDispatcher<A> {
     pub fn reset(&mut self) {
         self.ongoing.clear();
         self.last_input = None;
+    }
+
+    pub fn keybinds(&self) -> &Keybinds<A> {
+        &self.binds
     }
 
     fn handle_timeout(&mut self) {
