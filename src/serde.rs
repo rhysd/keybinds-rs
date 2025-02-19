@@ -98,10 +98,10 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
 
             fn visit_map<M: MapAccess<'de>>(self, mut access: M) -> Result<Self::Value, M::Error> {
                 let mut binds = vec![];
-                while let Some((seq, action)) = access.next_entry()? {
-                    binds.push(Keybind { seq, action });
+                while let Some((seq, action)) = access.next_entry::<KeySeq, A>()? {
+                    binds.push(Keybind::new(seq, action));
                 }
-                Ok(Keybinds(binds))
+                Ok(Keybinds::from(binds))
             }
         }
 
@@ -114,6 +114,7 @@ mod tests {
     use super::*;
     use crate::{KeyInput, Mods};
     use serde::Deserialize;
+    use std::ops::Deref;
 
     #[derive(Clone, Copy, PartialEq, Eq, Deserialize, Debug)]
     enum A {
@@ -143,7 +144,13 @@ mod tests {
         let actual = config.bindings;
         let expected = [
             Keybind::new('j', A::Action1),
-            Keybind::new(vec!['g', 'g'], A::Action2),
+            Keybind::new(
+                vec![
+                    KeyInput::new('g', Mods::NONE),
+                    KeyInput::new('g', Mods::NONE),
+                ],
+                A::Action2,
+            ),
             Keybind::new(KeyInput::new('o', Mods::CTRL), A::Action3),
             Keybind::new(
                 vec![
@@ -153,7 +160,7 @@ mod tests {
                 A::Action4,
             ),
         ];
-        assert_eq!(actual.0, expected);
+        assert_eq!(actual.deref(), &expected);
     }
 
     #[test]
@@ -164,8 +171,8 @@ mod tests {
             #[cfg(target_os = "macos")]
             Keybind::new(KeyInput::new('x', Mods::CMD), A::Action1),
             #[cfg(not(target_os = "macos"))]
-            Keybind::multiple(KeyInput::new('x', Mods::CTRL), A::Action1),
+            Keybind::new(KeyInput::new('x', Mods::CTRL), A::Action1),
         ];
-        assert_eq!(actual.0, expected);
+        assert_eq!(actual.deref(), expected);
     }
 }
