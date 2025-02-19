@@ -230,23 +230,23 @@ pub enum Match<T> {
     Unmatch,
 }
 
-// TODO: Make this struct to the following to avoid heap allocation.
-// ```
-// enum KeySeq {
-//     Single(KeyInput),
-//     Multiple(Vec<KeyInput>),
-// }
-// ```
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct KeySeq(Vec<KeyInput>);
+pub enum KeySeq {
+    Multiple(Vec<KeyInput>),
+    Single(KeyInput),
+}
 
 impl KeySeq {
-    pub fn new(v: Vec<KeyInput>) -> Self {
-        Self(v)
+    pub fn new(mut v: Vec<KeyInput>) -> Self {
+        if v.len() == 1 {
+            Self::Single(v.pop().unwrap())
+        } else {
+            Self::Multiple(v)
+        }
     }
 
     pub fn matches(&self, inputs: &[KeyInput]) -> Match<()> {
-        let mut ls = self.0.iter();
+        let mut ls = self.as_slice().iter();
         let mut rs = inputs.iter();
         loop {
             match (ls.next(), rs.next()) {
@@ -258,26 +258,44 @@ impl KeySeq {
             }
         }
     }
+
+    pub fn push(&mut self, input: KeyInput) {
+        *self = match *self {
+            Self::Multiple(v) if v.is_empty() => Self::Single(input),
+            Self::Multiple(mut v) => {
+                v.push(input);
+                Self::Multiple(v)
+            }
+            Self::Single(k) => Self::Multiple(vec![k, input]),
+        }
+    }
+
+    pub fn as_slice(&self) -> &[KeyInput] {
+        match self {
+            Self::Multiple(v) => v.as_slice(),
+            Self::Single(k) => std::slice::from_ref(k),
+        }
+    }
 }
 
 impl FromStr for KeySeq {
     type Err = Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let inputs = s
-            .split_whitespace()
-            .map(str::parse)
-            .collect::<Result<Vec<_>, _>>()?;
-        if inputs.is_empty() {
+        let mut seq = Self::Multiple(vec![]);
+        for s in s.split_whitespace() {
+            seq.push(s.parse()?);
+        }
+        if seq.as_slice().is_empty() {
             return Err(Error::EmptyKeySequence);
         }
-        Ok(Self(inputs))
+        Ok(seq)
     }
 }
 
 impl From<char> for KeySeq {
     fn from(c: char) -> Self {
-        Self::new(vec![c.into()])
+        Self::Single(c.into())
     }
 }
 
@@ -293,7 +311,7 @@ impl<A> Keybind<A> {
     }
 
     pub fn single(input: KeyInput, action: A) -> Self {
-        Self::multiple(KeySeq::new(vec![input]), action)
+        Self::multiple(KeySeq::Single(input), action)
     }
 }
 
@@ -494,8 +512,8 @@ mod tests {
 
         for bind in binds {
             keybinds.reset();
-            let len = bind.seq.0.len();
-            for (idx, input) in bind.seq.0.iter().enumerate() {
+            let len = bind.seq.as_slice().len();
+            for (idx, input) in bind.seq.as_slice().iter().enumerate() {
                 let is_last = idx + 1 == len;
                 let expected = is_last.then_some(bind.action);
                 let actual = keybinds.dispatch(input.clone());
