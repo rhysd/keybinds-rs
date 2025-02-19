@@ -1,3 +1,16 @@
+<a id="v0.0.4"></a>
+# [v0.0.4](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.4) - 2025-02-19
+
+- **BREAKING:** Use logical keys instead of physical keys. Now the characters in key sequence are case-sensitive. For example, logical key `A` means typing "A" and "Shift" physical keys and it is distinguished from `a` (only typing "A"). Along with this change, `Shift` modifier key was removed.
+- **BREAKING:** Rename `KeybindDispatcher::trigger` to `KeybindDispatcher::dispatch`.
+- Implement `FromIterator<Keybind<A>>` for `KeybindDispatcher<A>` to constructor a dispatcher instance from a list of key bindings easily.
+- Implement `Deref<Target=[KeyBind]>` for `Keybinds` and implement `KeybindDispatcher::keybinds` getter method.
+- Add API document for all optional features
+- Add `minimal` and `serde` examples
+
+[Changes][v0.0.4]
+
+
 <a id="v0.0.3"></a>
 # [v0.0.3](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.3) - 2025-02-17
 
@@ -6,7 +19,6 @@
   - `KeyBinds` → `Keybinds`
   - `KeyBind` → `Keybind`
 - **BREAKING:** Some methods were renamed.
-  - `KeybindDispatcher::trigger` → `KeybindDispatcher::dispatch`
   - `KeybindDispatcher::timeout` → `KeybindDispatcher::set_timeout`
 - Support [termwiz](https://crates.io/crates/termwiz) as optional `termwiz` feature.
 - Allow modifiers in upper case like `CTRL`.
@@ -47,6 +59,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.4]: https://github.com/rhysd/keybinds-rs/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/rhysd/keybinds-rs/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/rhysd/keybinds-rs/compare/v0.0.1...v0.0.2
 [v0.0.1]: https://github.com/rhysd/keybinds-rs/compare/v0.0.0...v0.0.1
