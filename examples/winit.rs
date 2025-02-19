@@ -1,5 +1,5 @@
 use keybinds::winit::WinitEventConverter;
-use keybinds::KeybindDispatcher;
+use keybinds::{Key, KeybindDispatcher};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -48,6 +48,9 @@ impl ApplicationHandler for App {
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         // Convert the window event into key input
         let input = self.converter.convert(&event);
+        if input.key != Key::Ignored {
+            println!("Key input: {input:?}");
+        }
 
         // Check if the converted key input dispatches some action
         if let Some(action) = self.dispatcher.dispatch(input) {

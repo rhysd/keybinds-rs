@@ -142,20 +142,14 @@ mod tests {
         let config: Config = toml::from_str(input).unwrap();
         let actual = config.bindings;
         let expected = [
-            Keybind::single(KeyInput::new('j', Mods::NONE), A::Action1),
-            Keybind::multiple(
-                KeySeq::new(vec![
-                    KeyInput::new('g', Mods::NONE),
-                    KeyInput::new('g', Mods::NONE),
-                ]),
-                A::Action2,
-            ),
-            Keybind::single(KeyInput::new('o', Mods::CTRL), A::Action3),
-            Keybind::multiple(
-                KeySeq::new(vec![
+            Keybind::new('j', A::Action1),
+            Keybind::new(vec!['g', 'g'], A::Action2),
+            Keybind::new(KeyInput::new('o', Mods::CTRL), A::Action3),
+            Keybind::new(
+                vec![
                     KeyInput::new('S', Mods::CTRL),
                     KeyInput::new('G', Mods::ALT | Mods::CTRL),
-                ]),
+                ],
                 A::Action4,
             ),
         ];
@@ -168,9 +162,9 @@ mod tests {
         let actual: Keybinds<A> = toml::from_str(input).unwrap();
         let expected = [
             #[cfg(target_os = "macos")]
-            Keybind::single(KeyInput::new('x', Mods::CMD), A::Action1),
+            Keybind::new(KeyInput::new('x', Mods::CMD), A::Action1),
             #[cfg(not(target_os = "macos"))]
-            Keybind::single(KeyInput::new('x', Mods::CTRL), A::Action1),
+            Keybind::multiple(KeyInput::new('x', Mods::CTRL), A::Action1),
         ];
         assert_eq!(actual.0, expected);
     }

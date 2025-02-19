@@ -22,9 +22,11 @@ pub use error::{Error, Result};
 
 use bitflags::bitflags;
 use std::ops::Deref;
+use std::slice;
 use std::str::FromStr;
 use std::time::{Duration, Instant};
 
+#[non_exhaustive]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Key {
     Char(char),
@@ -179,8 +181,8 @@ impl FromStr for Mods {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct KeyInput {
-    key: Key,
-    mods: Mods,
+    pub key: Key,
+    pub mods: Mods,
 }
 
 impl KeyInput {
@@ -237,14 +239,6 @@ pub enum KeySeq {
 }
 
 impl KeySeq {
-    pub fn new(mut v: Vec<KeyInput>) -> Self {
-        if v.len() == 1 {
-            Self::Single(v.pop().unwrap())
-        } else {
-            Self::Multiple(v)
-        }
-    }
-
     pub fn matches(&self, inputs: &[KeyInput]) -> Match<()> {
         let mut ls = self.as_slice().iter();
         let mut rs = inputs.iter();
@@ -259,8 +253,8 @@ impl KeySeq {
         }
     }
 
-    pub fn push(&mut self, input: KeyInput) {
-        *self = match *self {
+    fn push(self, input: KeyInput) -> Self {
+        match self {
             Self::Multiple(v) if v.is_empty() => Self::Single(input),
             Self::Multiple(mut v) => {
                 v.push(input);
@@ -273,7 +267,7 @@ impl KeySeq {
     pub fn as_slice(&self) -> &[KeyInput] {
         match self {
             Self::Multiple(v) => v.as_slice(),
-            Self::Single(k) => std::slice::from_ref(k),
+            Self::Single(k) => slice::from_ref(k),
         }
     }
 }
@@ -282,20 +276,32 @@ impl FromStr for KeySeq {
     type Err = Error;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let mut seq = Self::Multiple(vec![]);
-        for s in s.split_whitespace() {
-            seq.push(s.parse()?);
+        let mut keys = s.split_whitespace();
+        if let Some(key) = keys.next() {
+            let mut seq = Self::Single(key.parse()?);
+            for key in keys {
+                seq = seq.push(key.parse()?);
+            }
+            Ok(seq)
+        } else {
+            Err(Error::EmptyKeySequence)
         }
-        if seq.as_slice().is_empty() {
-            return Err(Error::EmptyKeySequence);
-        }
-        Ok(seq)
     }
 }
 
-impl From<char> for KeySeq {
-    fn from(c: char) -> Self {
-        Self::Single(c.into())
+impl<K: Into<KeyInput>> From<K> for KeySeq {
+    fn from(key: K) -> Self {
+        Self::Single(key.into())
+    }
+}
+
+impl From<Vec<KeyInput>> for KeySeq {
+    fn from(mut v: Vec<KeyInput>) -> Self {
+        if v.len() == 1 {
+            Self::Single(v.pop().unwrap())
+        } else {
+            Self::Multiple(v)
+        }
     }
 }
 
@@ -306,12 +312,11 @@ pub struct Keybind<A> {
 }
 
 impl<A> Keybind<A> {
-    pub fn multiple(seq: KeySeq, action: A) -> Self {
-        Self { seq, action }
-    }
-
-    pub fn single(input: KeyInput, action: A) -> Self {
-        Self::multiple(KeySeq::Single(input), action)
+    pub fn new<S: Into<KeySeq>>(seq: S, action: A) -> Self {
+        Self {
+            seq: seq.into(),
+            action,
+        }
     }
 }
 
@@ -333,10 +338,6 @@ impl<A> Deref for Keybinds<A> {
 }
 
 impl<A> Keybinds<A> {
-    pub fn new(v: Vec<Keybind<A>>) -> Self {
-        Self(v)
-    }
-
     pub fn find(&self, seq: &[KeyInput]) -> Match<&Keybind<A>> {
         let mut saw_prefix = false;
         for bind in self.0.iter() {
@@ -354,6 +355,14 @@ impl<A> Keybinds<A> {
     }
 }
 
+impl<A> From<Vec<Keybind<A>>> for Keybinds<A> {
+    fn from(binds: Vec<Keybind<A>>) -> Self {
+        Self(binds)
+    }
+}
+
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
+
 pub struct KeybindDispatcher<A> {
     binds: Keybinds<A>,
     ongoing: Vec<KeyInput>,
@@ -368,18 +377,16 @@ impl<A> Default for KeybindDispatcher<A> {
 }
 
 impl<A> KeybindDispatcher<A> {
-    pub fn new(binds: Keybinds<A>) -> Self {
+    pub fn new<K: Into<Keybinds<A>>>(binds: K) -> Self {
         Self {
-            binds,
+            binds: binds.into(),
             ongoing: vec![],
             last_input: None,
-            timeout: Duration::from_secs(1),
+            timeout: DEFAULT_TIMEOUT,
         }
     }
-
     pub fn add<K: Into<KeySeq>>(&mut self, key: K, action: A) {
-        let seq = key.into();
-        self.binds.0.push(Keybind::multiple(seq, action));
+        self.binds.0.push(Keybind::new(key, action));
     }
 
     pub fn bind(&mut self, key: &str, action: A) -> Result<()> {
@@ -395,6 +402,10 @@ impl<A> KeybindDispatcher<A> {
     pub fn reset(&mut self) {
         self.ongoing.clear();
         self.last_input = None;
+    }
+
+    pub fn timeout(&self) -> Duration {
+        self.timeout
     }
 
     pub fn keybinds(&self) -> &Keybinds<A> {
@@ -496,16 +507,16 @@ mod tests {
     #[test]
     fn handle_input() {
         let binds = vec![
-            Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1),
-            Keybind::single(KeyInput::new('a', Mods::CTRL), A::Action2),
-            Keybind::multiple(
-                KeySeq::new(vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
+            Keybind::new(
+                vec![
                     KeyInput::new('B', Mods::NONE),
                     KeyInput::new('c', Mods::NONE),
-                ]),
+                ],
                 A::Action3,
             ),
-            Keybind::single(KeyInput::new(Key::Up, Mods::NONE), A::Action4),
+            Keybind::new(Key::Up, A::Action4),
         ];
 
         let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
@@ -524,7 +535,7 @@ mod tests {
 
     #[test]
     fn discard_ongoing_nothing_matched() {
-        let binds = vec![Keybind::single(KeyInput::new('a', Mods::NONE), A::Action1)];
+        let binds = vec![Keybind::new('a', A::Action1)];
         let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
 
         assert_eq!(keybinds.dispatch(KeyInput::from('x')), None);
@@ -537,12 +548,12 @@ mod tests {
     #[test]
     fn dispatcher_from_iter() {
         let expected = vec![
-            Keybind::single('a'.into(), A::Action1),
-            Keybind::multiple(
-                KeySeq::new(vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new(
+                vec![
                     KeyInput::new('b', Mods::CTRL),
                     KeyInput::new('c', Mods::MOD),
-                ]),
+                ],
                 A::Action2,
             ),
         ];
