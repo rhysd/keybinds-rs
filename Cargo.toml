@@ -6,6 +6,7 @@ authors = ["rhysd <lin90162@yahoo.co.jp>"]
 description = "Platform&Framework-agnostic key bindings parser and dispatcher"
 license = "MIT"
 homepage = "https://github.com/rhysd/keybinds-rs#readme"
+documentation = "https://docs.rs/keybinds"
 repository = "https://github.com/rhysd/keybinds-rs"
 keywords = ["key", "bindings", "configuration", "shortcut", "keyboard"]
 categories = ["config"]
@@ -54,6 +55,6 @@ serde = { version = "1.0.217", features = ["derive"] }
 members = [".", "bench"]
 
 [package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
 features = ["serde", "crossterm", "winit", "termwiz"]
 rustdoc-args = ["--cfg", "docsrs"]

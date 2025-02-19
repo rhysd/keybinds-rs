@@ -1,23 +1,20 @@
 #![forbid(unsafe_code)]
-#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(clippy::dbg_macro, clippy::print_stdout)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg_hide))]
+#![cfg_attr(docsrs, doc(cfg_hide(doc, docsrs)))]
 #![doc = include_str!("../README.md")]
 
 mod error;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "crossterm")))]
 #[cfg(feature = "crossterm")]
 pub mod crossterm;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 #[cfg(feature = "serde")]
 pub mod serde;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "termwiz")))]
 #[cfg(feature = "termwiz")]
 pub mod termwiz;
 
-#[cfg_attr(docsrs, doc(cfg(feature = "winit")))]
 #[cfg(feature = "winit")]
 pub mod winit;
 
