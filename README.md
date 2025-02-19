@@ -10,8 +10,8 @@ library can be buggy and have arbitrary breaking changes.**
 
 - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
 - Support key sequences like `Ctrl+x Ctrl+s`
-- Support to parse/generate the key bindings configuration using [serde][] optionally ([example](./examples/serde))
-- Core API independent from any platforms and frameworks with minimal dependencies
+- Support to parse/generate the key bindings configuration using [serde][] optionally ([example](./examples/serde.rs))
+- Core API independent from any platforms and frameworks with minimal dependencies ([example](./examples/minimal.rs))
 - Support several platforms and frameworks as optional features
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
@@ -108,11 +108,6 @@ Here are some examples of key sequences:
 
 - `h e l l o`
 - `Ctrl+x Ctrl+c`
-
-## [serde][] support
-
-See the document for `serde` module.
-The serde support requires the `serde` feature enabled.
 
 ## License
 
