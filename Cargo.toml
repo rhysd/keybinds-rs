@@ -13,6 +13,7 @@ categories = ["config"]
 include = [
     "/src",
     "/examples",
+    "/doc",
     "/LICENSE.txt",
     "/README.md",
 ]

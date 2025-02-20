@@ -30,6 +30,7 @@ fn main() -> Result<(), Error> {
     let terminal = new_terminal(caps)?;
 
     let mut buf = BufferedTerminal::new(terminal)?;
+    buf.add_change("Type Ctrl+x Ctrl+c to exit");
     buf.add_change(Change::CursorPosition {
         x: Position::Absolute(0),
         y: Position::Absolute(2),

@@ -8,16 +8,16 @@ library can be buggy and have arbitrary breaking changes.**
 
 [keybinds-rs][crates-io] is a small Rust crate to define/parse/dispatch key bindings.
 
-- Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
-- Support key sequences like `Ctrl+x Ctrl+s`
-- Support to parse/generate the key bindings configuration using [serde][] optionally ([example](./examples/serde.rs))
-- Core API independent from any platforms and frameworks with minimal dependencies ([example](./examples/minimal.rs))
-- Support several platforms and frameworks as optional features
+- Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`. ([document](./doc/binding_syntax.md))
+- Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
+- Provide the core API independent from any platforms and frameworks with minimal dependencies (only one crate). ([example](./examples/minimal.rs))
+- Support to parse/generate the key bindings configuration using [serde][] optionally. ([example](./examples/serde.rs))
+- Support several platforms and frameworks as optional features.
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
 
-[Documentation][api-doc]
+[API Documentation][api-doc]
 
 ## Installation
 
@@ -25,11 +25,11 @@ library can be buggy and have arbitrary breaking changes.**
 cargo add keybinds
 ```
 
-## Basic usage
+## Minimal usage
 
 This crate is platform-agnostic. Create `KeybindDispatcher` instance and define key bindings by `bind` method.
-Pass each key input to the `dispatch` method call. It returns a dispatched action. Key sequence and key combination
-can be parsed using `FromStr` trait. See the [API documentation][api-doc] for more details.
+Pass each key input to the `dispatch` method call. It returns a dispatched action. See the [API documentation][api-doc]
+for more details.
 
 ```rust
 use keybinds::{KeybindDispatcher, KeyInput, Key, Mods};
@@ -70,44 +70,14 @@ assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);
 assert_eq!(dispatcher.dispatch(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
 ```
 
-## Syntax for key sequence and combination
+## Examples
 
-Keys are joint with `+` as a key combination like `Ctrl+a`. The last key must be a normal key and others must be modifier
-keys.
+For more usage, please see the [examples](./examples). They can be run locally by `cargo run` inside this repository.
+Some examples require some features enabled. For instance, to run `termwiz` example:
 
-Normal keys are a single character (e.g. `a`, `X`, `あ`) or a special key name (e.g. `Up`, `Enter`, `Tab`). Note that
-the characters are case-sensitive. `A` means typing "A" and "Shift" keys on US keyboard.
-
-These are **logical** keys which are inputs as the result of key typing. In comparison, physical keys are actual keys on
-your keyboard. For example, typing the physical keys "Shift" and "9" produces the logical key `(` with US keyboard, and
-it also produces the logical key `)` with JP keyboard.
-
-The following modifier keys are available:
-
-- `Ctrl`: "Ctrl" key
-- `Cmd`: "Command" key
-- `Mod`: "Command" key on macOS, "Ctrl" key on other platforms
-- `Super`: "Windows" key on platforms other than macOS, Command key on macOS
-- `Alt`: "Alt" key
-- `Option`: An alias to "Alt" key
-
-Here are some examples of key combinations:
-
-- `a`
-- `X`
-- `!`
-- `Enter`
-- `Ctrl+X`
-- `Mod+x`
-- `Ctrl+Alt+Left`
-
-Key combinations are joint with whitespaces as a key sequence. When key combinations are input in the order, they
-trigger the action.
-
-Here are some examples of key sequences:
-
-- `h e l l o`
-- `Ctrl+x Ctrl+c`
+```sh
+cargo run --example termwiz --features=termwiz
+```
 
 ## License
 
