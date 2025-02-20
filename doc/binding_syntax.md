@@ -36,9 +36,9 @@ modifier        ::= 'Control' | 'Ctrl' | 'Command' | 'Cmd' | 'Mod' | 'Alt' | 'Su
                     'CONTROL' | 'CTRL' | 'COMMAND' | 'CMD' | 'MOD' | 'ALT' | 'SUPER' | 'OPTION'
 key             ::= character-key | named-key | function-key
 character-key   ::= /* Any unicode character except for spaces */
-named-key       ::= 'Space' | 'Up' | 'Right' | 'Down' | 'Left' | 'Enter' | 'Backspace' | 'Delete' | 'Home' | 'End' | 'PageUp' | 'PageDown' | 'Esc' | 'Tab' | 'Backtab' | 'Insert' | 'Copy' | 'Cut' | 'Paste' | 'Clear' | 'Undo' | 'Redo' | 'ZoomIn' | 'ZoomOut' | 'ScrollLock' | 'NumLock' | 'FnLock' | 'PrintScreen' | 'Menu' | 'Play' | 'Pause' | 'PlayPause' | 'Stop' | 'Rewind' | 'NextTrack' | 'PrevTrack' | 'VolumeUp' | 'VolumeDown' | 'Mute' |
-                    'space' | 'up' | 'right' | 'down' | 'left' | 'enter' | 'backspace' | 'delete' | 'home' | 'end' | 'pageup' | 'pagedown' | 'esc' | 'tab' | 'backtab' | 'insert' | 'copy' | 'cut' | 'paste' | 'clear' | 'undo' | 'redo' | 'zoomin' | 'zoomout' | 'scrolllock' | 'numlock' | 'fnlock' | 'printscreen' | 'menu' | 'play' | 'pause' | 'playpause' | 'stop' | 'rewind' | 'nexttrack' | 'prevtrack' | 'volumeup' | 'volumedown' | 'mute' |
-                    'SPACE' | 'UP' | 'RIGHT' | 'DOWN' | 'LEFT' | 'ENTER' | 'BACKSPACE' | 'DELETE' | 'HOME' | 'END' | 'PAGEUP' | 'PAGEDOWN' | 'ESC' | 'TAB' | 'BACKTAB' | 'INSERT' | 'COPY' | 'CUT' | 'PASTE' | 'CLEAR' | 'UNDO' | 'REDO' | 'ZOOMIN' | 'ZOOMOUT' | 'SCROLLLOCK' | 'NUMLOCK' | 'FNLOCK' | 'PRINTSCREEN' | 'MENU' | 'PLAY' | 'PAUSE' | 'PLAYPAUSE' | 'STOP' | 'REWIND' | 'NEXTTRACK' | 'PREVTRACK' | 'VOLUMEUP' | 'VOLUMEDOWN' | 'MUTE'
+named-key       ::= 'Space' | 'Plus' | 'Up' | 'Right' | 'Down' | 'Left' | 'Enter' | 'Backspace' | 'Delete' | 'Home' | 'End' | 'PageUp' | 'PageDown' | 'Esc' | 'Tab' | 'Backtab' | 'Insert' | 'Copy' | 'Cut' | 'Paste' | 'Clear' | 'Undo' | 'Redo' | 'ZoomIn' | 'ZoomOut' | 'ScrollLock' | 'NumLock' | 'FnLock' | 'PrintScreen' | 'Menu' | 'Play' | 'Pause' | 'PlayPause' | 'Stop' | 'Rewind' | 'NextTrack' | 'PrevTrack' | 'VolumeUp' | 'VolumeDown' | 'Mute' |
+                    'space' | 'plus' | 'up' | 'right' | 'down' | 'left' | 'enter' | 'backspace' | 'delete' | 'home' | 'end' | 'pageup' | 'pagedown' | 'esc' | 'tab' | 'backtab' | 'insert' | 'copy' | 'cut' | 'paste' | 'clear' | 'undo' | 'redo' | 'zoomin' | 'zoomout' | 'scrolllock' | 'numlock' | 'fnlock' | 'printscreen' | 'menu' | 'play' | 'pause' | 'playpause' | 'stop' | 'rewind' | 'nexttrack' | 'prevtrack' | 'volumeup' | 'volumedown' | 'mute' |
+                    'SPACE' | 'PLUS' | 'UP' | 'RIGHT' | 'DOWN' | 'LEFT' | 'ENTER' | 'BACKSPACE' | 'DELETE' | 'HOME' | 'END' | 'PAGEUP' | 'PAGEDOWN' | 'ESC' | 'TAB' | 'BACKTAB' | 'INSERT' | 'COPY' | 'CUT' | 'PASTE' | 'CLEAR' | 'UNDO' | 'REDO' | 'ZOOMIN' | 'ZOOMOUT' | 'SCROLLLOCK' | 'NUMLOCK' | 'FNLOCK' | 'PRINTSCREEN' | 'MENU' | 'PLAY' | 'PAUSE' | 'PLAYPAUSE' | 'STOP' | 'REWIND' | 'NEXTTRACK' | 'PREVTRACK' | 'VOLUMEUP' | 'VOLUMEDOWN' | 'MUTE'
 function-key    ::= 'F' [1-9] ([0-9])*
 ```
 
@@ -74,6 +74,8 @@ The following modifier keys are available:
 
 The following modifier keys are available.
 
+- `Space`
+- `Plus`
 - `Up`
 - `Right`
 - `Down`

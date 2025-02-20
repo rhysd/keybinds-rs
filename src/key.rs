@@ -60,6 +60,7 @@ impl FromStr for Key {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
         {
             let mut c = s.chars();
             if let (Some(c), None) = (c.next(), c.next()) {
@@ -75,6 +76,7 @@ impl FromStr for Key {
 
         match s {
             "space" | "Space" | "SPACE" => Ok(Self::Char(' ')),
+            "plus" | "Plus" | "PLUS" => Ok(Self::Char('+')),
             "up" | "Up" | "UP" => Ok(Self::Up),
             "right" | "Right" | "RIGHT" => Ok(Self::Right),
             "down" | "Down" | "DOWN" => Ok(Self::Down),
@@ -113,6 +115,7 @@ impl FromStr for Key {
             "volumeup" | "VolumeUp" | "VOLUMEUP" => Ok(Self::VolumeUp),
             "volumedown" | "VolumeDown" | "VOLUMEDOWN" => Ok(Self::VolumeDown),
             "mute" | "Mute" | "MUTE" => Ok(Self::Mute),
+            "" => Err(Error::EmptyKey),
             _ => Err(Error::UnknownKey(s.into())),
         }
     }
@@ -144,13 +147,14 @@ impl Mods {
 impl FromStr for Mods {
     type Err = Error;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        match s {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
             "Control" | "control" | "CONTROL" | "Ctrl" | "ctrl" | "CTRL" => Ok(Self::CTRL),
             "Command" | "command" | "COMMAND" | "Cmd" | "cmd" | "CMD" => Ok(Self::CMD),
             "Mod" | "mod" | "MOD" => Ok(Self::MOD),
             "Alt" | "alt" | "ALT" | "Option" | "option" | "OPTION" => Ok(Self::ALT),
             "Super" | "super" | "SUPER" => Ok(Self::SUPER),
+            "" => Err(Error::EmptyModifier),
             _ => Err(Error::UnknownModifier(s.into())),
         }
     }
@@ -178,11 +182,9 @@ impl KeyInput {
 impl FromStr for KeyInput {
     type Err = Error;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let mut s = s.split('+');
-        let Some(mut cur) = s.next() else {
-            return Err(Error::EmptyKeyInput);
-        };
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut s = s.trim().split('+');
+        let mut cur = s.next().unwrap(); // Iterator by `.split()` is never empty
         let mut mods = Mods::NONE;
         loop {
             if let Some(next) = s.next() {
@@ -252,8 +254,8 @@ impl KeySeq {
 impl FromStr for KeySeq {
     type Err = Error;
 
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let mut keys = s.split_whitespace();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut keys = s.trim().split_whitespace();
         if let Some(key) = keys.next() {
             let mut seq = Self::Single(key.parse()?);
             for key in keys {
@@ -287,7 +289,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_key_seq() {
+    fn parse_key_input_ok() {
         let tests = [
             ("x", KeyInput::new('x', Mods::NONE)),
             ("A", KeyInput::new('A', Mods::NONE)),
@@ -316,11 +318,78 @@ mod tests {
                 "Ctrl+Super+Enter",
                 KeyInput::new(Key::Enter, Mods::CTRL | Mods::SUPER),
             ),
+            ("  x  ", KeyInput::new('x', Mods::NONE)),
+            ("Ctrl+Plus", KeyInput::new('+', Mods::CTRL)),
         ];
 
         for (input, expected) in tests {
             let actual: KeyInput = input.parse().unwrap();
             assert_eq!(actual, expected, "input={input:?}");
+        }
+    }
+
+    #[test]
+    fn parse_key_input_error() {
+        let tests = [
+            ("", Error::EmptyKey),
+            (" ", Error::EmptyKey),
+            ("+", Error::EmptyModifier),
+            ("+a", Error::EmptyModifier),
+            ("Ctrl+", Error::EmptyKey),
+            ("Hoge+", Error::UnknownModifier("Hoge".into())),
+            ("Fooooo", Error::UnknownKey("Fooooo".into())),
+        ];
+
+        for (input, expected) in tests {
+            assert_eq!(input.parse::<KeyInput>(), Err(expected), "input={input:?}");
+        }
+    }
+
+    #[test]
+    fn parse_key_seq_ok() {
+        let tests = [
+            ("x", KeySeq::from('x')),
+            ("Enter", KeySeq::from(Key::Enter)),
+            ("Ctrl+x", KeySeq::from(KeyInput::new('x', Mods::CTRL))),
+            (
+                "a b c",
+                KeySeq::from(vec!['a'.into(), 'b'.into(), 'c'.into()]),
+            ),
+            (
+                "Up Down Enter",
+                KeySeq::from(vec![Key::Up.into(), Key::Down.into(), Key::Enter.into()]),
+            ),
+            (
+                "Ctrl+Alt+a Super+b Mod+c",
+                KeySeq::from(vec![
+                    KeyInput::new('a', Mods::ALT | Mods::CTRL),
+                    KeyInput::new('b', Mods::SUPER),
+                    KeyInput::new('c', Mods::MOD),
+                ]),
+            ),
+        ];
+
+        for (seq, expected) in tests {
+            assert_eq!(seq.parse::<KeySeq>(), Ok(expected), "seq={seq:?}");
+        }
+    }
+
+    #[test]
+    fn parse_key_seq_error() {
+        let tests = [
+            ("", Error::EmptyKeySequence),
+            (" ", Error::EmptyKeySequence),
+            ("+", Error::EmptyModifier),
+            ("+a", Error::EmptyModifier),
+            ("Ctrl+", Error::EmptyKey),
+            ("Hoge+", Error::UnknownModifier("Hoge".into())),
+            ("Fooooo", Error::UnknownKey("Fooooo".into())),
+            ("a b Fooooo", Error::UnknownKey("Fooooo".into())),
+            (" Fooooo ", Error::UnknownKey("Fooooo".into())),
+        ];
+
+        for (seq, expected) in tests {
+            assert_eq!(seq.parse::<KeySeq>(), Err(expected), "seq={seq:?}");
         }
     }
 }

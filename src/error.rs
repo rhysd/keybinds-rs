@@ -1,11 +1,12 @@
 use std::error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Error {
     UnknownKey(Box<str>),
     UnknownModifier(Box<str>),
-    EmptyKeyInput,
+    EmptyKey,
+    EmptyModifier,
     EmptyKeySequence,
 }
 
@@ -16,7 +17,8 @@ impl fmt::Display for Error {
             Self::UnknownModifier(key) => {
                 write!(f, "Unknown modifier key {key:?} in key sequence")
             }
-            Self::EmptyKeyInput => write!(f, "Key input definition is empty"),
+            Self::EmptyKey => write!(f, "Key value is empty"),
+            Self::EmptyModifier => write!(f, "Modifier key value is empty"),
             Self::EmptyKeySequence => write!(f, "Key sequence is empty"),
         }
     }
