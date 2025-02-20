@@ -90,13 +90,14 @@ impl<A> KeybindDispatcher<A> {
         }
     }
 
-    pub fn add<K: Into<KeySeq>>(&mut self, key: K, action: A) {
-        self.binds.0.push(Keybind::new(key, action));
+    pub fn push(&mut self, bind: Keybind<A>) {
+        self.binds.0.push(bind);
+        self.reset();
     }
 
     pub fn bind(&mut self, key: &str, action: A) -> Result<()> {
         let seq: KeySeq = key.parse()?;
-        self.add(seq, action);
+        self.push(Keybind::new(seq, action));
         Ok(())
     }
 
@@ -115,6 +116,10 @@ impl<A> KeybindDispatcher<A> {
 
     pub fn keybinds(&self) -> &Keybinds<A> {
         &self.binds
+    }
+
+    pub fn is_ongoing(&self) -> bool {
+        self.last_input.is_some()
     }
 
     fn handle_timeout(&mut self) {
@@ -163,6 +168,7 @@ impl<A> FromIterator<Keybind<A>> for KeybindDispatcher<A> {
 mod tests {
     use super::*;
     use crate::{Key, Mods};
+    use std::thread::sleep;
 
     #[derive(Clone, Copy, PartialEq, Eq, Debug)]
     enum A {
@@ -177,13 +183,7 @@ mod tests {
         let binds = vec![
             Keybind::new('a', A::Action1),
             Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
-            Keybind::new(
-                vec![
-                    KeyInput::new('B', Mods::NONE),
-                    KeyInput::new('c', Mods::NONE),
-                ],
-                A::Action3,
-            ),
+            Keybind::new(vec!['B'.into(), 'c'.into()], A::Action3),
             Keybind::new(Key::Up, A::Action4),
         ];
 
@@ -197,6 +197,7 @@ mod tests {
                 let expected = is_last.then_some(bind.action);
                 let actual = keybinds.dispatch(input.clone());
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
+                assert_eq!(keybinds.is_ongoing(), !is_last, "bind={bind:?}");
             }
         }
     }
@@ -204,13 +205,13 @@ mod tests {
     #[test]
     fn discard_ongoing_nothing_matched() {
         let binds = vec![Keybind::new('a', A::Action1)];
-        let mut keybinds = KeybindDispatcher::new(Keybinds(binds.clone()));
+        let mut keybinds = KeybindDispatcher::new(binds);
 
-        assert_eq!(keybinds.dispatch(KeyInput::from('x')), None);
-        assert_eq!(keybinds.dispatch(KeyInput::from('y')), None);
-        assert_eq!(keybinds.dispatch(KeyInput::from('a')), Some(&A::Action1));
-        assert_eq!(keybinds.dispatch(KeyInput::from('z')), None);
-        assert_eq!(keybinds.dispatch(KeyInput::from('a')), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch('x'), None);
+        assert_eq!(keybinds.dispatch('y'), None);
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch('z'), None);
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
     }
 
     #[test]
@@ -227,6 +228,89 @@ mod tests {
         ];
 
         let actual: KeybindDispatcher<_> = expected.clone().into_iter().collect();
-        assert_eq!(actual.binds.0, expected);
+        assert_eq!(*actual.binds, expected);
+    }
+
+    #[test]
+    fn dispatcher_is_ongoing() {
+        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+
+        assert!(!dispatcher.is_ongoing());
+        dispatcher.dispatch('x');
+        assert!(!dispatcher.is_ongoing());
+        dispatcher.dispatch('a');
+        assert!(dispatcher.is_ongoing());
+        dispatcher.dispatch('b');
+        assert!(!dispatcher.is_ongoing());
+        dispatcher.dispatch('y');
+        assert!(!dispatcher.is_ongoing());
+        dispatcher.dispatch('a');
+        assert!(dispatcher.is_ongoing());
+        dispatcher.dispatch('z');
+        assert!(!dispatcher.is_ongoing());
+    }
+
+    #[test]
+    fn dispatcher_set_timeout() {
+        let mut dispatcher = KeybindDispatcher::<A>::default();
+        assert_eq!(dispatcher.timeout(), DEFAULT_TIMEOUT);
+        let d = Duration::from_secs(2);
+        dispatcher.set_timeout(d);
+        assert_eq!(dispatcher.timeout(), d);
+    }
+
+    #[test]
+    fn dispatcher_ignore_keys() {
+        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+        dispatcher.dispatch('a');
+        assert_eq!(dispatcher.dispatch(Key::Ignored), None);
+        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+    }
+
+    #[test]
+    fn dispatcher_timeout_input() {
+        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+        dispatcher.set_timeout(Duration::from_millis(10));
+
+        dispatcher.dispatch('a');
+        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+
+        dispatcher.dispatch('a');
+        sleep(Duration::from_millis(50));
+        assert_eq!(dispatcher.dispatch('b'), None);
+
+        dispatcher.dispatch('a');
+        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+    }
+
+    #[test]
+    fn dispatcher_bind() {
+        let mut dispatcher = KeybindDispatcher::default();
+
+        dispatcher.bind("x", A::Action1).unwrap();
+        dispatcher.bind("a b", A::Action2).unwrap();
+        dispatcher.bind("", A::Action1).unwrap_err();
+
+        assert_eq!(dispatcher.dispatch('x'), Some(&A::Action1));
+        dispatcher.dispatch('a');
+        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action2));
+
+        dispatcher.dispatch('a');
+        assert!(dispatcher.is_ongoing());
+        dispatcher.bind("y", A::Action1).unwrap();
+        assert!(!dispatcher.is_ongoing());
+    }
+
+    #[test]
+    fn dispatcher_reset() {
+        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+        dispatcher.dispatch('a');
+        assert!(dispatcher.is_ongoing());
+        dispatcher.reset();
+        assert!(!dispatcher.is_ongoing());
     }
 }

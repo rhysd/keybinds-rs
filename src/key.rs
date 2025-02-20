@@ -392,4 +392,62 @@ mod tests {
             assert_eq!(seq.parse::<KeySeq>(), Err(expected), "seq={seq:?}");
         }
     }
+
+    #[test]
+    fn conversions() {
+        for (actual, expected) in [
+            (Key::from('a'), Key::Char('a')),
+            (Key::from('あ'), Key::Char('あ')),
+        ] {
+            assert_eq!(actual, expected);
+        }
+
+        for (actual, expected) in [
+            (
+                KeyInput::from('a'),
+                KeyInput {
+                    key: Key::Char('a'),
+                    mods: Mods::NONE,
+                },
+            ),
+            (
+                KeyInput::from(Key::Enter),
+                KeyInput {
+                    key: Key::Enter,
+                    mods: Mods::NONE,
+                },
+            ),
+        ] {
+            assert_eq!(actual, expected);
+        }
+
+        for (actual, expected) in [
+            (
+                KeySeq::from('a'),
+                KeySeq::Single(KeyInput {
+                    key: Key::Char('a'),
+                    mods: Mods::NONE,
+                }),
+            ),
+            (
+                KeySeq::from(Key::Enter),
+                KeySeq::Single(KeyInput {
+                    key: Key::Enter,
+                    mods: Mods::NONE,
+                }),
+            ),
+            (
+                KeySeq::from(KeyInput {
+                    key: Key::Enter,
+                    mods: Mods::CTRL,
+                }),
+                KeySeq::Single(KeyInput {
+                    key: Key::Enter,
+                    mods: Mods::CTRL,
+                }),
+            ),
+        ] {
+            assert_eq!(actual, expected);
+        }
+    }
 }
