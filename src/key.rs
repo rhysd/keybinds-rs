@@ -160,7 +160,7 @@ impl FromStr for Mods {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct KeyInput {
     pub key: Key,
     pub mods: Mods,
@@ -211,7 +211,7 @@ pub enum Match {
     Unmatch,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum KeySeq {
     Multiple(Vec<KeyInput>),
     Single(KeyInput),

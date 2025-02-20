@@ -2,10 +2,10 @@ use crate::{KeyInput, KeySeq, Match, Result};
 use std::ops::Deref;
 use std::time::{Duration, Instant};
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct Keybind<A> {
-    seq: KeySeq,
-    action: A,
+    pub seq: KeySeq,
+    pub action: A,
 }
 
 impl<A> Keybind<A> {
@@ -17,7 +17,7 @@ impl<A> Keybind<A> {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum Found<'a, A> {
     Keybind(&'a Keybind<A>),
     Ongoing,
@@ -89,6 +89,7 @@ impl<A> KeybindDispatcher<A> {
             timeout: DEFAULT_TIMEOUT,
         }
     }
+
     pub fn add<K: Into<KeySeq>>(&mut self, key: K, action: A) {
         self.binds.0.push(Keybind::new(key, action));
     }
