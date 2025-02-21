@@ -1,4 +1,4 @@
-use crate::{KeyInput, KeySeq, Match, Result};
+use crate::{Key, KeyInput, KeySeq, Match, Result};
 use std::ops::Deref;
 use std::time::{Duration, Instant};
 
@@ -45,7 +45,7 @@ impl<A> Keybinds<A> {
     pub fn find(&self, seq: &[KeyInput]) -> Found<'_, A> {
         let mut saw_prefix = false;
         for bind in self.0.iter() {
-            match bind.seq.matches(seq) {
+            match bind.seq.match_to(seq) {
                 Match::Matched => return Found::Keybind(bind),
                 Match::Prefix => saw_prefix = true,
                 Match::Unmatch => continue,
@@ -135,7 +135,7 @@ impl<A> KeybindDispatcher<A> {
 
     pub fn dispatch<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         let input = input.into();
-        if input.is_ignored() {
+        if input.key == Key::Ignored {
             return None;
         }
         self.handle_timeout();

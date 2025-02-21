@@ -121,6 +121,7 @@ impl FromStr for Key {
     }
 }
 
+// TODO: Add `SHIFT` again for Shift with named keys like Shift+Up
 bitflags! {
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -173,10 +174,6 @@ impl KeyInput {
             mods,
         }
     }
-
-    pub(crate) fn is_ignored(&self) -> bool {
-        self.key == Key::Ignored
-    }
 }
 
 impl FromStr for KeyInput {
@@ -211,6 +208,8 @@ pub enum Match {
     Unmatch,
 }
 
+// TODO: Implement `PartialEq` and `Eq` considering that `KeySeq::Multiple(vec!['a'.into()])`
+// should be equal to `KeySeq::Single('a'.into())`
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum KeySeq {
     Multiple(Vec<KeyInput>),
@@ -218,7 +217,7 @@ pub enum KeySeq {
 }
 
 impl KeySeq {
-    pub fn matches(&self, inputs: &[KeyInput]) -> Match {
+    pub fn match_to(&self, inputs: &[KeyInput]) -> Match {
         let mut ls = self.as_slice().iter();
         let mut rs = inputs.iter();
         loop {
@@ -301,14 +300,8 @@ mod tests {
                 "ALT+SUPER+DOWN",
                 KeyInput::new(Key::Down, Mods::ALT | Mods::SUPER),
             ),
-            #[cfg(target_os = "macos")]
-            ("Mod+x", KeyInput::new('x', Mods::CMD)),
-            #[cfg(not(target_os = "macos"))]
-            ("Mod+x", KeyInput::new('x', Mods::CTRL)),
-            #[cfg(target_os = "macos")]
-            ("Super+x", KeyInput::new('x', Mods::CMD)),
-            #[cfg(not(target_os = "macos"))]
-            ("Super+x", KeyInput::new('x', Mods::WIN)),
+            ("Mod+x", KeyInput::new('x', Mods::MOD)),
+            ("Super+x", KeyInput::new('x', Mods::SUPER)),
             ("F1", KeyInput::new(Key::F(1), Mods::NONE)),
             ("Ctrl+F1", KeyInput::new(Key::F(1), Mods::CTRL)),
             ("F20", KeyInput::new(Key::F(20), Mods::NONE)),
