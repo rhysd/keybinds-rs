@@ -255,7 +255,7 @@ impl FromStr for KeySeq {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut keys = s.trim().split_whitespace();
+        let mut keys = s.split_whitespace();
         if let Some(key) = keys.next() {
             let mut seq = Self::Single(key.parse()?);
             for key in keys {
