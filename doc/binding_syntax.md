@@ -17,6 +17,7 @@ Here are some examples of key bindings with US keyboard.
 | `"Alt+M"`         | <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>                                              |
 | `"Enter"`         | <kbd>Enter</kbd>                                                                              |
 | `"Ctrl+Enter"`    | <kbd>Ctrl</kbd> + <kbd>Enter</kbd>                                                            |
+| `"Shift+Up"`      | <kbd>Shift</kbd> + <kbd>↑</kbd>                                                               |
 | `"a b c"`         | <kbd>A</kbd> → <kbd>B</kbd> → <kbd>C</kbd>                                                    |
 | `"Ctrl+x Ctrl+s"` | <kbd>Ctrl</kbd> + <kbd>X</kbd> → <kbd>Ctrl</kbd> + <kbd>S</kbd>                               |
 | `"Mod+x"`         | <kbd>Command</kbd> + <kbd>X</kbd> on macOS, <kbd>Ctrl</kbd> + <kbd>X</kbd> on other platforms |
@@ -31,9 +32,9 @@ key-binding     ::= key-sequence
 key-sequence    ::= key-combination ((space)+ key-combination)*
 space           ::= ' ' | '\t'
 key-combination ::= (modifier '+')* key
-modifier        ::= 'Control' | 'Ctrl' | 'Command' | 'Cmd' | 'Mod' | 'Alt' | 'Super' | 'Option' |
-                    'control' | 'ctrl' | 'command' | 'cmd' | 'mod' | 'alt' | 'super' | 'option' |
-                    'CONTROL' | 'CTRL' | 'COMMAND' | 'CMD' | 'MOD' | 'ALT' | 'SUPER' | 'OPTION'
+modifier        ::= 'Control' | 'Ctrl' | 'Command' | 'Cmd' | 'Mod' | 'Alt' | 'Super' | 'Option' | 'Shift' |
+                    'control' | 'ctrl' | 'command' | 'cmd' | 'mod' | 'alt' | 'super' | 'option' | 'shift' |
+                    'CONTROL' | 'CTRL' | 'COMMAND' | 'CMD' | 'MOD' | 'ALT' | 'SUPER' | 'OPTION' | 'SHIFT'
 key             ::= character-key | named-key | function-key
 character-key   ::= /* Any unicode character except for spaces */
 named-key       ::= 'Space' | 'Plus' | 'Up' | 'Right' | 'Down' | 'Left' | 'Enter' | 'Backspace' | 'Delete' | 'Home' | 'End' | 'PageUp' | 'PageDown' | 'Esc' | 'Tab' | 'Backtab' | 'Insert' | 'Copy' | 'Cut' | 'Paste' | 'Clear' | 'Undo' | 'Redo' | 'ZoomIn' | 'ZoomOut' | 'ScrollLock' | 'NumLock' | 'FnLock' | 'PrintScreen' | 'Menu' | 'Play' | 'Pause' | 'PlayPause' | 'Stop' | 'Rewind' | 'NextTrack' | 'PrevTrack' | 'VolumeUp' | 'VolumeDown' | 'Mute' |
@@ -69,6 +70,13 @@ The following modifier keys are available:
 - `Super`: <kbd>Windows</kbd> key on platforms other than macOS, Command key on macOS
 - `Alt`: <kbd>Alt</kbd> key
 - `Option`: An alias to <kbd>Alt</kbd> key
+- `Shift`: <kbd>Shift</kbd> key
+
+> [!Caution]
+>
+> `Shift` modifier key is only available with named keys like `Shift+Up`. For example, when you want to
+> define key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you need to use `A` instead of `Shift+a`. This
+> restriction is for avoiding some confusing edge cases and may be relaxed in the future.
 
 ## Named keys
 

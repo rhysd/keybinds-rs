@@ -8,6 +8,7 @@ pub enum Error {
     EmptyKey,
     EmptyModifier,
     EmptyKeySequence,
+    ShiftUnavailable,
 }
 
 impl fmt::Display for Error {
@@ -20,6 +21,7 @@ impl fmt::Display for Error {
             Self::EmptyKey => write!(f, "Key value is empty"),
             Self::EmptyModifier => write!(f, "Modifier key value is empty"),
             Self::EmptyKeySequence => write!(f, "Key sequence is empty"),
+            Self::ShiftUnavailable => write!(f, "Shift modifier is only available with named keys"),
         }
     }
 }

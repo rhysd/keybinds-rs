@@ -50,6 +50,16 @@ pub enum Key {
     Ignored,
 }
 
+impl Key {
+    pub fn is_named(self) -> bool {
+        match self {
+            Self::Char(c) if c == ' ' || c == '+' => true,
+            Self::Char(_) | Self::Ignored | Self::Unidentified => false,
+            _ => true,
+        }
+    }
+}
+
 impl From<char> for Key {
     fn from(c: char) -> Self {
         Self::Char(c)
@@ -121,7 +131,6 @@ impl FromStr for Key {
     }
 }
 
-// TODO: Add `SHIFT` again for Shift with named keys like Shift+Up
 bitflags! {
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -131,6 +140,7 @@ bitflags! {
         const CMD   = 0b00000010;
         const ALT   = 0b00000100;
         const WIN   = 0b00001000;
+        const SHIFT = 0b00010000;
     }
 }
 
@@ -155,6 +165,7 @@ impl FromStr for Mods {
             "Mod" | "mod" | "MOD" => Ok(Self::MOD),
             "Alt" | "alt" | "ALT" | "Option" | "option" | "OPTION" => Ok(Self::ALT),
             "Super" | "super" | "SUPER" => Ok(Self::SUPER),
+            "Shift" | "shift" | "SHIFT" => Ok(Self::SHIFT),
             "" => Err(Error::EmptyModifier),
             _ => Err(Error::UnknownModifier(s.into())),
         }
@@ -169,10 +180,8 @@ pub struct KeyInput {
 
 impl KeyInput {
     pub fn new(key: impl Into<Key>, mods: Mods) -> Self {
-        KeyInput {
-            key: key.into(),
-            mods,
-        }
+        let key = key.into();
+        KeyInput { key, mods }
     }
 }
 
@@ -188,7 +197,10 @@ impl FromStr for KeyInput {
                 mods |= cur.parse()?;
                 cur = next;
             } else {
-                let key = cur.parse()?;
+                let key: Key = cur.parse()?;
+                if mods.contains(Mods::SHIFT) && !key.is_named() {
+                    return Err(Error::ShiftUnavailable);
+                }
                 return Ok(Self { key, mods });
             }
         }
@@ -318,6 +330,13 @@ mod tests {
             ),
             ("  x  ", KeyInput::new('x', Mods::NONE)),
             ("Ctrl+Plus", KeyInput::new('+', Mods::CTRL)),
+            ("Shift+Up", KeyInput::new(Key::Up, Mods::SHIFT)),
+            (
+                "Ctrl+Shift+F7",
+                KeyInput::new(Key::F(7), Mods::SHIFT | Mods::CTRL),
+            ),
+            ("Shift+Plus", KeyInput::new('+', Mods::SHIFT)),
+            ("Shift+Space", KeyInput::new(' ', Mods::SHIFT)),
         ];
 
         for (input, expected) in tests {
@@ -336,6 +355,8 @@ mod tests {
             ("Ctrl+", Error::EmptyKey),
             ("Hoge+", Error::UnknownModifier("Hoge".into())),
             ("Fooooo", Error::UnknownKey("Fooooo".into())),
+            ("Shift+a", Error::ShiftUnavailable),
+            ("Ctrl+Shift+A", Error::ShiftUnavailable),
         ];
 
         for (input, expected) in tests {
@@ -452,10 +473,23 @@ mod tests {
     #[test]
     fn keyseq_eq() {
         use KeySeq::*;
-
         assert_eq!(Multiple(vec!['a'.into()]), Single('a'.into()));
         assert_eq!(Single('a'.into()), Multiple(vec!['a'.into()]));
         assert_ne!(Multiple(vec!['a'.into()]), Single('b'.into()));
         assert_ne!(Single('a'.into()), Multiple(vec!['b'.into()]));
+    }
+
+    #[test]
+    fn key_is_named() {
+        assert!(!Key::Char('a').is_named());
+        assert!(!Key::Char('(').is_named());
+        assert!(!Key::Char('あ').is_named());
+        assert!(!Key::Ignored.is_named());
+        assert!(!Key::Unidentified.is_named());
+        assert!(Key::Up.is_named());
+        assert!(Key::Enter.is_named());
+        // Edge cases
+        assert!(Key::Char(' ').is_named());
+        assert!(Key::Char('+').is_named());
     }
 }
