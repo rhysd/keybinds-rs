@@ -208,12 +208,17 @@ pub enum Match {
     Unmatch,
 }
 
-// TODO: Implement `PartialEq` and `Eq` considering that `KeySeq::Multiple(vec!['a'.into()])`
-// should be equal to `KeySeq::Single('a'.into())`
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Eq, Debug)]
 pub enum KeySeq {
     Multiple(Vec<KeyInput>),
     Single(KeyInput),
+}
+
+// Consider that `KeySeq::Multiple(vec!['a'.into()])` should be equal to `KeySeq::Single('a'.into())`
+impl PartialEq for KeySeq {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
 }
 
 impl KeySeq {
@@ -442,5 +447,15 @@ mod tests {
         ] {
             assert_eq!(actual, expected);
         }
+    }
+
+    #[test]
+    fn keyseq_eq() {
+        use KeySeq::*;
+
+        assert_eq!(Multiple(vec!['a'.into()]), Single('a'.into()));
+        assert_eq!(Single('a'.into()), Multiple(vec!['a'.into()]));
+        assert_ne!(Multiple(vec!['a'.into()]), Single('b'.into()));
+        assert_ne!(Single('a'.into()), Multiple(vec!['b'.into()]));
     }
 }

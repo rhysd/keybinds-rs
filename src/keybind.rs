@@ -2,7 +2,7 @@ use crate::{Key, KeyInput, KeySeq, Match, Result};
 use std::ops::Deref;
 use std::time::{Duration, Instant};
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Keybind<A> {
     pub seq: KeySeq,
     pub action: A,
@@ -17,7 +17,7 @@ impl<A> Keybind<A> {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Found<'a, A> {
     Keybind(&'a Keybind<A>),
     Ongoing,
