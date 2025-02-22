@@ -1,7 +1,7 @@
 //! Support for [`serde`] crate.
 //!
-//! This module provides a `Deserialize` support for [`Keybinds`] to easily parse key bindings from
-//! a configuration file.
+//! This module provides a [`Deserialize`] trait support for [`Keybinds`] to easily parse key bindings
+//! from a configuration file.
 //!
 //! ```
 //! use serde::Deserialize;

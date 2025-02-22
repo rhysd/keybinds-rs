@@ -2,7 +2,11 @@ use crate::{Key, KeyInput, KeySeq, Match, Result};
 use std::ops::Deref;
 use std::time::{Duration, Instant};
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 #[derive(Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Keybind<A> {
     pub seq: KeySeq,
     pub action: A,
@@ -25,6 +29,7 @@ pub enum Found<'a, A> {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct Keybinds<A>(Vec<Keybind<A>>);
 
 impl<A> Default for Keybinds<A> {

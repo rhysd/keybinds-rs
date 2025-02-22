@@ -16,6 +16,7 @@ library can be buggy and have arbitrary breaking changes.**
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
+- Support structral fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
 
 [API Documentation][api-doc]
 
@@ -91,5 +92,6 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [crossterm]: https://crates.io/crates/crossterm
 [winit]: https://crates.io/crates/winit
 [termwiz]: https://crates.io/crates/termwiz
+[arbitrary]: https://crates.io/crates/arbitrary
 [api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [toml]: https://crates.io/crates/toml

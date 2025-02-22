@@ -4,8 +4,12 @@ use std::fmt;
 use std::slice;
 use std::str::FromStr;
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 #[non_exhaustive]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Key {
     Char(char),
     Up,
@@ -248,6 +252,7 @@ impl fmt::Display for Mods {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct KeyInput {
     key: Key,
     mods: Mods,
@@ -316,6 +321,7 @@ pub enum Match {
 }
 
 #[derive(Clone, Eq, Debug)]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum KeySeq {
     Multiple(Vec<KeyInput>),
     Single(KeyInput),

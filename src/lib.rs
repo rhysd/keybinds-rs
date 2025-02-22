@@ -10,6 +10,7 @@
 //!   - [crossterm][]
 //!   - [termwiz][]
 //!   - [winit][]
+//! - Support structral fuzzing using [arbitrary][] optionally.
 //!
 //! # Minimal example
 //!
@@ -66,6 +67,7 @@
 //! [crossterm]: https://crates.io/crates/crossterm
 //! [winit]: https://crates.io/crates/winit
 //! [termwiz]: https://crates.io/crates/termwiz
+//! [arbitrary]: https://crates.io/crates/arbitrary
 //! [examples]: https://github.com/rhysd/keybinds-rs/tree/main/examples
 //!
 #![doc = include_str!("../doc/binding_syntax.md")]
@@ -89,6 +91,9 @@ pub mod termwiz;
 
 #[cfg(feature = "winit")]
 pub mod winit;
+
+#[cfg(feature = "arbitrary")]
+pub mod arbitrary;
 
 pub use error::{Error, Result};
 pub use key::{Key, KeyInput, KeySeq, Match, Mods};
