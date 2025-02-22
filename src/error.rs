@@ -23,7 +23,7 @@ impl fmt::Display for Error {
             Self::EmptyModifier => write!(f, "Modifier key must not be empty"),
             Self::EmptyKeySequence => write!(f, "Key sequence must not be empty"),
             Self::ShiftUnavailable(key) => {
-                write!(f, "Shift modifier is not available with key {key:?}. It is only available with named keys")
+                write!(f, "Shift modifier is not available with key \"{key}\". It is only available with named keys")
             }
         }
     }

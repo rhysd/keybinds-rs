@@ -1,5 +1,6 @@
 use crate::Error;
 use bitflags::bitflags;
+use std::fmt;
 use std::slice;
 use std::str::FromStr;
 
@@ -131,6 +132,57 @@ impl FromStr for Key {
     }
 }
 
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Char(' ') => f.write_str("Space"),
+            Self::Char('+') => f.write_str("Plus"),
+            Self::Char(c) => write!(f, "{c}"),
+            Self::Up => f.write_str("Up"),
+            Self::Right => f.write_str("Right"),
+            Self::Down => f.write_str("Down"),
+            Self::Left => f.write_str("Left"),
+            Self::Enter => f.write_str("Enter"),
+            Self::Backspace => f.write_str("Backspace"),
+            Self::Delete => f.write_str("Delete"),
+            Self::Home => f.write_str("Home"),
+            Self::End => f.write_str("End"),
+            Self::PageUp => f.write_str("PageUp"),
+            Self::PageDown => f.write_str("PageDown"),
+            Self::Esc => f.write_str("Esc"),
+            Self::Tab => f.write_str("Tab"),
+            Self::Backtab => f.write_str("Backtab"),
+            Self::Insert => f.write_str("Insert"),
+            Self::Copy => f.write_str("Copy"),
+            Self::Cut => f.write_str("Cut"),
+            Self::Paste => f.write_str("Paste"),
+            Self::Clear => f.write_str("Clear"),
+            Self::Undo => f.write_str("Undo"),
+            Self::Redo => f.write_str("Redo"),
+            Self::ZoomIn => f.write_str("ZoomIn"),
+            Self::ZoomOut => f.write_str("ZoomOut"),
+            Self::ScrollLock => f.write_str("ScrollLock"),
+            Self::NumLock => f.write_str("NumLock"),
+            Self::FnLock => f.write_str("FnLock"),
+            Self::PrintScreen => f.write_str("PrintScreen"),
+            Self::Menu => f.write_str("Menu"),
+            Self::Play => f.write_str("Play"),
+            Self::Pause => f.write_str("Pause"),
+            Self::PlayPause => f.write_str("PlayPause"),
+            Self::Stop => f.write_str("Stop"),
+            Self::Rewind => f.write_str("Rewind"),
+            Self::NextTrack => f.write_str("NextTrack"),
+            Self::PrevTrack => f.write_str("PrevTrack"),
+            Self::VolumeUp => f.write_str("VolumeUp"),
+            Self::VolumeDown => f.write_str("VolumeDown"),
+            Self::Mute => f.write_str("Mute"),
+            Self::F(i) => write!(f, "F{i}"),
+            Self::Unidentified => f.write_str("Unidentified"),
+            Self::Ignored => f.write_str("Ignored"),
+        }
+    }
+}
+
 bitflags! {
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -169,6 +221,29 @@ impl FromStr for Mods {
             "" => Err(Error::EmptyModifier),
             _ => Err(Error::UnknownModifier(s.into())),
         }
+    }
+}
+
+impl fmt::Display for Mods {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut first = true;
+        for (value, name) in [
+            (Mods::CTRL, "Ctrl"),
+            (Mods::CMD, "Cmd"),
+            (Mods::ALT, "Alt"),
+            (Mods::WIN, "Win"),
+            (Mods::SHIFT, "Shift"),
+        ] {
+            if self.contains(value) {
+                if first {
+                    first = false;
+                } else {
+                    f.write_str("+")?;
+                }
+                f.write_str(name)?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -221,6 +296,15 @@ impl FromStr for KeyInput {
 impl<K: Into<Key>> From<K> for KeyInput {
     fn from(k: K) -> Self {
         Self::new(k.into(), Mods::NONE)
+    }
+}
+
+impl fmt::Display for KeyInput {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.mods != Mods::NONE {
+            write!(f, "{}+", self.mods)?;
+        }
+        write!(f, "{}", self.key)
     }
 }
 
@@ -308,6 +392,19 @@ impl From<Vec<KeyInput>> for KeySeq {
         } else {
             Self::Multiple(v)
         }
+    }
+}
+
+impl fmt::Display for KeySeq {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut inputs = self.as_slice().iter();
+        if let Some(first) = inputs.next() {
+            write!(f, "{}", first)?;
+            for input in inputs {
+                write!(f, " {}", input)?;
+            }
+        };
+        Ok(())
     }
 }
 
@@ -531,7 +628,7 @@ mod tests {
     }
 
     #[test]
-    fn unnamed_key_with_shift() {
+    fn create_key_with_shift() {
         let k = KeyInput::new(Key::Up, Mods::SHIFT);
         assert_eq!(k.key(), Key::Up);
         assert_eq!(k.mods(), Mods::SHIFT);
@@ -543,5 +640,73 @@ mod tests {
         let k = KeyInput::new('X', Mods::SHIFT | Mods::CTRL);
         assert_eq!(k.key(), Key::Char('X'));
         assert_eq!(k.mods(), Mods::CTRL);
+    }
+
+    #[test]
+    fn display() {
+        let tests = [
+            (KeySeq::from(vec![]), ""),
+            (KeySeq::from('a'), "a"),
+            (KeySeq::from('A'), "A"),
+            (KeySeq::from(Key::Up), "Up"),
+            (KeySeq::from(Key::F(11)), "F11"),
+            (KeySeq::from(' '), "Space"),
+            (KeySeq::from('+'), "Plus"),
+            (KeySeq::from(KeyInput::new('a', Mods::CTRL)), "Ctrl+a"),
+            (
+                KeySeq::from(KeyInput::new(
+                    'a',
+                    Mods::CTRL | Mods::CMD | Mods::ALT | Mods::WIN,
+                )),
+                "Ctrl+Cmd+Alt+Win+a",
+            ),
+            #[cfg(not(target_os = "macos"))]
+            (KeySeq::from(KeyInput::new('a', Mods::MOD)), "Ctrl+a"),
+            #[cfg(target_os = "macos")]
+            (KeySeq::from(KeyInput::new('a', Mods::MOD)), "Cmd+a"),
+            #[cfg(not(target_os = "macos"))]
+            (KeySeq::from(KeyInput::new('a', Mods::SUPER)), "Win+a"),
+            #[cfg(target_os = "macos")]
+            (KeySeq::from(KeyInput::new('a', Mods::SUPER)), "Cmd+a"),
+            (
+                KeySeq::from(KeyInput::new(Key::Enter, Mods::SHIFT)),
+                "Shift+Enter",
+            ),
+            (
+                KeySeq::from(KeyInput::new(Key::Char(' '), Mods::SHIFT)),
+                "Shift+Space",
+            ),
+            (
+                KeySeq::from(KeyInput::new(Key::Char('+'), Mods::SHIFT)),
+                "Shift+Plus",
+            ),
+            (KeySeq::from(vec!['a'.into(), 'b'.into()]), "a b"),
+            (
+                KeySeq::from(vec![
+                    'a'.into(),
+                    'b'.into(),
+                    'c'.into(),
+                    'd'.into(),
+                    'e'.into(),
+                ]),
+                "a b c d e",
+            ),
+            (
+                KeySeq::from(vec![Key::Left.into(), Key::Right.into()]),
+                "Left Right",
+            ),
+            (
+                KeySeq::from(vec![
+                    KeyInput::new(Key::Left, Mods::SHIFT),
+                    KeyInput::new('X', Mods::ALT | Mods::CTRL),
+                ]),
+                "Shift+Left Ctrl+Alt+X",
+            ),
+        ];
+
+        for (seq, expected) in tests {
+            let actual = format!("{seq}");
+            assert_eq!(&actual, expected, "seq={seq:?}");
+        }
     }
 }
