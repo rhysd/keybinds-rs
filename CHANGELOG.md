@@ -1,3 +1,19 @@
+<a id="v0.0.5"></a>
+# [v0.0.5](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.5) - 2025-02-22
+
+- **BREAKING:** Make some `new` constructor functions into `From::from` trait implementations with more generic arguments using `Into` trait.
+- **BREAKING:** Avoid heap allocation on a single-key key binding by changing `KeySeq` struct to an enum.
+- **BREAKING:** Rename `KeySeq::matches` to `KeySeq::match_to`.
+- **BREAKING:** Hide `KeyInput`'s fields and add getter methods `KeyInput::key`, `KeyInput::mods`.
+- Add support for `Shift` modifier again. `Shift` modifier key is only available with named keys like `Shift+Up`. For example, when you want to define key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you need to use `A` instead of `Shift+a`. This restriction is for avoiding some confusing edge cases and may be relaxed in the future.
+- Make fields of `Keybind` struct public.
+- Fix error handling on parsing invalid empty key bindings.
+- Fix non-ASCII spaces like `U+3000` are not available for key binding.
+- Define the key binding syntax in the separate [document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+
+[Changes][v0.0.5]
+
+
 <a id="v0.0.4"></a>
 # [v0.0.4](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.4) - 2025-02-19
 
@@ -5,8 +21,8 @@
 - **BREAKING:** Rename `KeybindDispatcher::trigger` to `KeybindDispatcher::dispatch`.
 - Implement `FromIterator<Keybind<A>>` for `KeybindDispatcher<A>` to constructor a dispatcher instance from a list of key bindings easily.
 - Implement `Deref<Target=[KeyBind]>` for `Keybinds` and implement `KeybindDispatcher::keybinds` getter method.
-- Add API document for all optional features
-- Add `minimal` and `serde` examples
+- Add API document for all optional features.
+- Add `minimal` and `serde` examples.
 
 [Changes][v0.0.4]
 
@@ -59,6 +75,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.5]: https://github.com/rhysd/keybinds-rs/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/rhysd/keybinds-rs/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/rhysd/keybinds-rs/compare/v0.0.2...v0.0.3
 [v0.0.2]: https://github.com/rhysd/keybinds-rs/compare/v0.0.1...v0.0.2
