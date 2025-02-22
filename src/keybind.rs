@@ -135,7 +135,7 @@ impl<A> KeybindDispatcher<A> {
 
     pub fn dispatch<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         let input = input.into();
-        if input.key == Key::Ignored {
+        if input.key() == Key::Ignored {
             return None;
         }
         self.handle_timeout();

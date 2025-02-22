@@ -188,10 +188,7 @@ pub trait WinitEvent {
 
 impl WinitEvent for KeyEvent {
     fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
-        KeyInput {
-            key: Key::from(&self.logical_key),
-            mods: conv.mods,
-        }
+        KeyInput::new(Key::from(&self.logical_key), conv.mods)
     }
 }
 
@@ -278,10 +275,8 @@ mod tests {
     // Instead, we use `winit::keyboard::Key` directly.
     impl WinitEvent for WinitKey {
         fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
-            KeyInput {
-                key: self.into(),
-                mods: conv.mods,
-            }
+            let key: Key = self.into();
+            KeyInput::new(key, conv.mods)
         }
     }
 

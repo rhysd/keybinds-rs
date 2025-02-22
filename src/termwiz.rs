@@ -134,10 +134,8 @@ impl From<Modifiers> for Mods {
 
 impl From<&KeyEvent> for KeyInput {
     fn from(event: &KeyEvent) -> Self {
-        Self {
-            key: event.key.into(),
-            mods: event.modifiers.into(),
-        }
+        let key: Key = event.key.into();
+        Self::new(key, event.modifiers.into())
     }
 }
 

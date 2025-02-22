@@ -102,9 +102,9 @@ impl From<KeyModifiers> for Mods {
 
 impl From<&KeyEvent> for KeyInput {
     fn from(event: &KeyEvent) -> Self {
-        let key = event.code.into();
+        let key: Key = event.code.into();
         let mods = event.modifiers.into();
-        Self { key, mods }
+        Self::new(key, mods)
     }
 }
 

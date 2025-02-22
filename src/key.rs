@@ -174,14 +174,25 @@ impl FromStr for Mods {
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct KeyInput {
-    pub key: Key,
-    pub mods: Mods,
+    key: Key,
+    mods: Mods,
 }
 
 impl KeyInput {
-    pub fn new(key: impl Into<Key>, mods: Mods) -> Self {
+    pub fn new<K: Into<Key>>(key: K, mut mods: Mods) -> Self {
         let key = key.into();
+        if !key.is_named() {
+            mods.remove(Mods::SHIFT); // Ensure the invariant
+        }
         KeyInput { key, mods }
+    }
+
+    pub fn key(&self) -> Key {
+        self.key
+    }
+
+    pub fn mods(&self) -> Mods {
+        self.mods
     }
 }
 
@@ -491,5 +502,20 @@ mod tests {
         // Edge cases
         assert!(Key::Char(' ').is_named());
         assert!(Key::Char('+').is_named());
+    }
+
+    #[test]
+    fn unnamed_key_with_shift() {
+        let k = KeyInput::new(Key::Up, Mods::SHIFT);
+        assert_eq!(k.key(), Key::Up);
+        assert_eq!(k.mods(), Mods::SHIFT);
+
+        let k = KeyInput::new('a', Mods::SHIFT);
+        assert_eq!(k.key(), Key::Char('a'));
+        assert_eq!(k.mods(), Mods::NONE);
+
+        let k = KeyInput::new('X', Mods::SHIFT | Mods::CTRL);
+        assert_eq!(k.key(), Key::Char('X'));
+        assert_eq!(k.mods(), Mods::CTRL);
     }
 }

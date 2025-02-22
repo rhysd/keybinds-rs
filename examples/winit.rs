@@ -48,7 +48,7 @@ impl ApplicationHandler for App {
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         // Convert the window event into key input
         let input = self.converter.convert(&event);
-        if input.key != Key::Ignored {
+        if input.key() != Key::Ignored {
             println!("Key input: {input:?}");
         }
 
