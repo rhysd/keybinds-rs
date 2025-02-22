@@ -1,9 +1,9 @@
 [package]
 name = "keybinds"
-version = "0.0.4"
+version = "0.0.5"
 edition = "2021"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
-description = "Platform&Framework-agnostic key bindings parser and dispatcher"
+description = "Platform&Framework-agnostic key binding (keyboard shortcut) parser and dispatcher"
 license = "MIT"
 homepage = "https://github.com/rhysd/keybinds-rs#readme"
 documentation = "https://docs.rs/keybinds"

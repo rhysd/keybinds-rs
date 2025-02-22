@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_key_binds() {
+    fn deserialize_key_bindings_ok() {
         let input = r#"
         [bindings]
         "j" = "Action1"
@@ -164,15 +164,34 @@ mod tests {
     }
 
     #[test]
+    fn deserialize_empty_table() {
+        let _: Keybinds<A> = toml::from_str("").unwrap();
+    }
+
+    #[test]
+    fn deserialize_key_bindings_error() {
+        let tests = [
+            r#""x" = 12"#,
+            r#""x" = "Action123456""#,
+            r#""" = "Action1""#,
+            r#""     " = "Action1""#,
+            r#""Foooo" = "Action1""#,
+            r#""Foooo+x" = "Action1""#,
+            r#""Ctrl+Fooooo" = "Action1""#,
+            r#""Shift+a" = "Action1""#, // Error because it violates invariant
+        ];
+
+        for input in tests {
+            let _ = toml::from_str::<Keybinds<A>>(input)
+                .expect_err(&format!("invalid input {input:?}"));
+        }
+    }
+
+    #[test]
     fn deserialize_mod_key_bind() {
         let input = r#""Mod+x" = "Action1""#;
         let actual: Keybinds<A> = toml::from_str(input).unwrap();
-        let expected = [
-            #[cfg(target_os = "macos")]
-            Keybind::new(KeyInput::new('x', Mods::CMD), A::Action1),
-            #[cfg(not(target_os = "macos"))]
-            Keybind::new(KeyInput::new('x', Mods::CTRL), A::Action1),
-        ];
+        let expected = [Keybind::new(KeyInput::new('x', Mods::MOD), A::Action1)];
         assert_eq!(actual.deref(), expected);
     }
 }
