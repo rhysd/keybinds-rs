@@ -1,3 +1,4 @@
+use crate::Key;
 use std::error;
 use std::fmt;
 
@@ -8,7 +9,7 @@ pub enum Error {
     EmptyKey,
     EmptyModifier,
     EmptyKeySequence,
-    ShiftUnavailable,
+    ShiftUnavailable(Key),
 }
 
 impl fmt::Display for Error {
@@ -18,10 +19,12 @@ impl fmt::Display for Error {
             Self::UnknownModifier(key) => {
                 write!(f, "Unknown modifier key {key:?} in key sequence")
             }
-            Self::EmptyKey => write!(f, "Key value is empty"),
-            Self::EmptyModifier => write!(f, "Modifier key value is empty"),
-            Self::EmptyKeySequence => write!(f, "Key sequence is empty"),
-            Self::ShiftUnavailable => write!(f, "Shift modifier is only available with named keys"),
+            Self::EmptyKey => write!(f, "Key must not be empty"),
+            Self::EmptyModifier => write!(f, "Modifier key must not be empty"),
+            Self::EmptyKeySequence => write!(f, "Key sequence must not be empty"),
+            Self::ShiftUnavailable(key) => {
+                write!(f, "Shift modifier is not available with key {key:?}. It is only available with named keys")
+            }
         }
     }
 }

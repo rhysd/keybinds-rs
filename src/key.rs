@@ -210,7 +210,7 @@ impl FromStr for KeyInput {
             } else {
                 let key: Key = cur.parse()?;
                 if mods.contains(Mods::SHIFT) && !key.is_named() {
-                    return Err(Error::ShiftUnavailable);
+                    return Err(Error::ShiftUnavailable(key));
                 }
                 return Ok(Self { key, mods });
             }
@@ -368,8 +368,8 @@ mod tests {
             ("Ctrl+", Error::EmptyKey),
             ("Hoge+", Error::UnknownModifier("Hoge".into())),
             ("Fooooo", Error::UnknownKey("Fooooo".into())),
-            ("Shift+a", Error::ShiftUnavailable),
-            ("Ctrl+Shift+A", Error::ShiftUnavailable),
+            ("Shift+a", Error::ShiftUnavailable(Key::Char('a'))),
+            ("Ctrl+Shift+A", Error::ShiftUnavailable(Key::Char('A'))),
         ];
 
         for (input, expected) in tests {

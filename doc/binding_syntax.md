@@ -8,20 +8,20 @@ and `KeybindDispatcher::bind`.
 
 Here are some examples of key bindings with US keyboard.
 
-| Notation          | Corresponding key input                                                                       |
-|-------------------|-----------------------------------------------------------------------------------------------|
-| `"a"`             | <kbd>A</kbd>                                                                                  |
-| `"X"`             | <kbd>Shift</kbd> + <kbd>X</kbd>                                                               |
-| `"?"`             | <kbd>Shift</kbd> + <kbd>/</kbd>                                                               |
-| `"Ctrl+t"`        | <kbd>Ctrl</kbd> + <kbd>T</kbd>                                                                |
-| `"Alt+M"`         | <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>                                              |
-| `"Enter"`         | <kbd>Enter</kbd>                                                                              |
-| `"Ctrl+Enter"`    | <kbd>Ctrl</kbd> + <kbd>Enter</kbd>                                                            |
-| `"Shift+Up"`      | <kbd>Shift</kbd> + <kbd>↑</kbd>                                                               |
-| `"a b c"`         | <kbd>A</kbd> → <kbd>B</kbd> → <kbd>C</kbd>                                                    |
-| `"Ctrl+x Ctrl+s"` | <kbd>Ctrl</kbd> + <kbd>X</kbd> → <kbd>Ctrl</kbd> + <kbd>S</kbd>                               |
-| `"Mod+x"`         | <kbd>Command</kbd> + <kbd>X</kbd> on macOS, <kbd>Ctrl</kbd> + <kbd>X</kbd> on other platforms |
-| `"Super+x"`       | <kbd>Command</kbd> + <kbd>X</kbd> on macOS, <kbd>Win</kbd> + <kbd>X</kbd> on other platforms  |
+| Notation        | Corresponding key input                                                                       |
+|-----------------|-----------------------------------------------------------------------------------------------|
+| `a`             | <kbd>A</kbd>                                                                                  |
+| `X`             | <kbd>Shift</kbd> + <kbd>X</kbd>                                                               |
+| `?`             | <kbd>Shift</kbd> + <kbd>/</kbd>                                                               |
+| `Ctrl+t`        | <kbd>Ctrl</kbd> + <kbd>T</kbd>                                                                |
+| `Alt+M`         | <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd>                                              |
+| `Enter`         | <kbd>Enter</kbd>                                                                              |
+| `Ctrl+Enter`    | <kbd>Ctrl</kbd> + <kbd>Enter</kbd>                                                            |
+| `Shift+Up`      | <kbd>Shift</kbd> + <kbd>↑</kbd>                                                               |
+| `a b c`         | <kbd>A</kbd> → <kbd>B</kbd> → <kbd>C</kbd>                                                    |
+| `Ctrl+x Ctrl+s` | <kbd>Ctrl</kbd> + <kbd>X</kbd> → <kbd>Ctrl</kbd> + <kbd>S</kbd>                               |
+| `Mod+x`         | <kbd>Command</kbd> + <kbd>X</kbd> on macOS, <kbd>Ctrl</kbd> + <kbd>X</kbd> on other platforms |
+| `Super+x`       | <kbd>Command</kbd> + <kbd>X</kbd> on macOS, <kbd>Win</kbd> + <kbd>X</kbd> on other platforms  |
 
 ## Grammar
 
@@ -74,9 +74,9 @@ The following modifier keys are available:
 
 > [!Caution]
 >
-> `Shift` modifier key is only available with named keys like `Shift+Up`. For example, when you want to
-> define key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you need to use `A` instead of `Shift+a`. This
-> restriction is for avoiding some confusing edge cases and may be relaxed in the future.
+> `Shift` modifier key is only available with named keys, such as `Shift+Up`. For example, when you want to
+> define a key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you should use `A` instead of `Shift+a`. This
+> restriction helps avoid some confusing edge cases and may be relaxed in the future.
 
 ## Named keys
 
