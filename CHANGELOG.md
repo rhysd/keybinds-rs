@@ -1,3 +1,14 @@
+<a id="v0.0.6"></a>
+# [v0.0.6](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.6) - 2025-02-22
+
+- Support serializing key bindings with [serde](https://crates.io/crates/serde) crate. `serde` feature needs to be enabled. See the [example](https://github.com/rhysd/keybinds-rs/blob/main/examples/serialize.rs) for the usage.
+- Support structural fuzzing with [arbitrary](https://crates.io/crates/arbitrary) crate. `arbitrary` feature needs to be enabled. See the [example](https://github.com/rhysd/keybinds-rs/blob/main/examples/arbitrary.rs) for the usage.
+- Implement `Display` trait for `Key`, `Mod`, `KeyInput`, and `KeySeq`.
+- Improve an error message on Shift modifier with unamed keys.
+
+[Changes][v0.0.6]
+
+
 <a id="v0.0.5"></a>
 # [v0.0.5](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.5) - 2025-02-22
 
@@ -75,6 +86,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.6]: https://github.com/rhysd/keybinds-rs/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/rhysd/keybinds-rs/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/rhysd/keybinds-rs/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/rhysd/keybinds-rs/compare/v0.0.2...v0.0.3
