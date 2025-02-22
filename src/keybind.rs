@@ -370,4 +370,20 @@ mod tests {
         assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
         assert_eq!(dispatcher.dispatch('b'), None);
     }
+
+    #[test]
+    fn non_ascii_space() {
+        let binds = vec![Keybind::new('　', A::Action1)];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+        assert_eq!(dispatcher.dispatch('　'), Some(&A::Action1));
+
+        let mut dispatcher = KeybindDispatcher::default();
+        dispatcher.bind("　", A::Action1).unwrap();
+        dispatcher.bind("Ctrl+　", A::Action2).unwrap();
+        assert_eq!(dispatcher.dispatch('　'), Some(&A::Action1));
+        assert_eq!(
+            dispatcher.dispatch(KeyInput::new('　', Mods::CTRL)),
+            Some(&A::Action2),
+        );
+    }
 }

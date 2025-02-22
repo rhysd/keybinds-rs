@@ -70,7 +70,7 @@ impl FromStr for Key {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.trim();
+        let s = s.trim_ascii();
         {
             let mut c = s.chars();
             if let (Some(c), None) = (c.next(), c.next()) {
@@ -159,7 +159,7 @@ impl FromStr for Mods {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.trim() {
+        match s.trim_ascii() {
             "Control" | "control" | "CONTROL" | "Ctrl" | "ctrl" | "CTRL" => Ok(Self::CTRL),
             "Command" | "command" | "COMMAND" | "Cmd" | "cmd" | "CMD" => Ok(Self::CMD),
             "Mod" | "mod" | "MOD" => Ok(Self::MOD),
@@ -200,7 +200,7 @@ impl FromStr for KeyInput {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut s = s.trim().split('+');
+        let mut s = s.trim_ascii().split('+');
         let mut cur = s.next().unwrap(); // Iterator by `.split()` is never empty
         let mut mods = Mods::NONE;
         loop {
@@ -282,7 +282,7 @@ impl FromStr for KeySeq {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut keys = s.split_whitespace();
+        let mut keys = s.split_ascii_whitespace();
         if let Some(key) = keys.next() {
             let mut seq = Self::Single(key.parse()?);
             for key in keys {
@@ -348,6 +348,8 @@ mod tests {
             ),
             ("Shift+Plus", KeyInput::new('+', Mods::SHIFT)),
             ("Shift+Space", KeyInput::new(' ', Mods::SHIFT)),
+            ("　", KeyInput::new('　', Mods::NONE)),
+            ("Ctrl+　", KeyInput::new('　', Mods::CTRL)),
         ];
 
         for (input, expected) in tests {
@@ -395,6 +397,13 @@ mod tests {
                     KeyInput::new('a', Mods::ALT | Mods::CTRL),
                     KeyInput::new('b', Mods::SUPER),
                     KeyInput::new('c', Mods::MOD),
+                ]),
+            ),
+            (
+                "　 Ctrl+　",
+                KeySeq::from(vec![
+                    KeyInput::new('　', Mods::NONE),
+                    KeyInput::new('　', Mods::CTRL),
                 ]),
             ),
         ];

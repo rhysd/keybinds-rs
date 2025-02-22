@@ -30,7 +30,7 @@ This is the grammar of key binding representation in [W3C EBNF notation][ebnf].
 ```ebnf
 key-binding     ::= key-sequence
 key-sequence    ::= key-combination ((space)+ key-combination)*
-space           ::= ' ' | '\t'
+space           ::= ' ' | #09 | #0A | #0C | #0D
 key-combination ::= (modifier '+')* key
 modifier        ::= 'Control' | 'Ctrl' | 'Command' | 'Cmd' | 'Mod' | 'Alt' | 'Super' | 'Option' | 'Shift' |
                     'control' | 'ctrl' | 'command' | 'cmd' | 'mod' | 'alt' | 'super' | 'option' | 'shift' |
@@ -70,7 +70,7 @@ The following modifier keys are available:
 - `Super`: <kbd>Windows</kbd> key on platforms other than macOS, Command key on macOS
 - `Alt`: <kbd>Alt</kbd> key
 - `Option`: An alias to <kbd>Alt</kbd> key
-- `Shift`: <kbd>Shift</kbd> key
+- `Shift`: <kbd>Shift</kbd> key (can only modify named keys)
 
 > [!Caution]
 >
