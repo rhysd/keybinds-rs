@@ -22,7 +22,11 @@ include = [
 name = "minimal"
 
 [[example]]
-name = "serde"
+name = "deserialize"
+required-features = ["serde"]
+
+[[example]]
+name = "serialize"
 required-features = ["serde"]
 
 [[example]]
@@ -58,7 +62,7 @@ termwiz = { version = "0.23.0", optional = true }
 winit = { version = "0.30.9", optional = true }
 
 [dev-dependencies]
-toml = { version = "0.8.20", default-features = false, features = ["parse"] }
+toml = { version = "0.8.20", default-features = false, features = ["parse", "display"] }
 serde = { version = "1.0.217", features = ["derive"] }
 
 [workspace]

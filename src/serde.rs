@@ -4,43 +4,41 @@
 //! from a configuration file.
 //!
 //! ```
-//! use serde::Deserialize;
-//! use keybinds::{Keybinds, KeybindDispatcher, Key, Mods, KeyInput};
+//! use serde::{Serialize, Deserialize};
+//! use keybinds::{Keybinds, Key, Mods, KeyInput};
 //!
 //! // Actions dispatched by key bindings
-//! #[derive(Deserialize, PartialEq, Eq, Debug)]
+//! #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 //! enum Action {
 //!     OpenFile,
 //!     ExitApp,
 //! }
 //!
 //! // Configuration file format of your application
-//! #[derive(Deserialize)]
+//! #[derive(Serialize, Deserialize)]
 //! struct Config {
 //!     // `Keybinds` implements serde's `Deserialize`
 //!     bindings: Keybinds<Action>,
 //! }
 //!
 //! // Configuration file content
-//! let configuration = r#"
-//! [bindings]
+//! let configuration =
+//! r#"[bindings]
 //! "Ctrl+Alt+Enter" = "OpenFile"
 //! "Ctrl+x Ctrl+c" = "ExitApp"
 //! "#;
 //!
-//! // Parse the TOML input
-//! let config: Config = toml::from_str(configuration).unwrap();
+//! // Parse the configuration as TOML input
+//! let parsed: Config = toml::from_str(configuration).unwrap();
 //!
-//! // Create a dispatcher from the key bindings
-//! let mut dispatcher = KeybindDispatcher::new(config.bindings);
+//! // Generate the configuration as TOML
+//! let generated = toml::to_string_pretty(&parsed).unwrap();
 //!
-//! // Use the key bindings
-//! let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
-//! assert_eq!(action, Some(&Action::OpenFile));
+//! assert_eq!(&generated, configuration);
 //! ```
-use crate::{KeyInput, KeySeq, Keybind, Keybinds};
-use serde::de::{MapAccess, Visitor};
-use serde::{Deserialize, Deserializer};
+use crate::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
+use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::fmt;
 
 impl<'de> Deserialize<'de> for KeyInput {
@@ -109,14 +107,48 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
     }
 }
 
+impl Serialize for Key {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl Serialize for Mods {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl Serialize for KeyInput {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl Serialize for KeySeq {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
+impl<A: Serialize> Serialize for Keybinds<A> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(Some(self.len()))?;
+        for keybind in self.iter() {
+            map.serialize_entry(&keybind.seq, &keybind.action)?;
+        }
+        map.end()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{KeyInput, Mods};
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use std::ops::Deref;
 
-    #[derive(Clone, Copy, PartialEq, Eq, Deserialize, Debug)]
+    #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Debug)]
     enum A {
         Action1,
         Action2,
@@ -125,13 +157,13 @@ mod tests {
         Action5,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     struct Config {
         bindings: Keybinds<A>,
     }
 
     #[test]
-    fn deserialize_key_bindings_ok() {
+    fn deserialize_ok() {
         let input = r#"
         [bindings]
         "j" = "Action1"
@@ -169,7 +201,7 @@ mod tests {
     }
 
     #[test]
-    fn deserialize_key_bindings_error() {
+    fn deserialize_error() {
         let tests = [
             r#""x" = 12"#,
             r#""x" = "Action123456""#,
@@ -193,5 +225,44 @@ mod tests {
         let actual: Keybinds<A> = toml::from_str(input).unwrap();
         let expected = [Keybind::new(KeyInput::new('x', Mods::MOD), A::Action1)];
         assert_eq!(actual.deref(), expected);
+    }
+
+    #[test]
+    fn serialize_ok() {
+        let binds = vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new(Key::Up, A::Action2),
+            Keybind::new(KeyInput::new(Key::Enter, Mods::CTRL), A::Action3),
+            Keybind::new(
+                KeySeq::from(vec![
+                    'H'.into(),
+                    'e'.into(),
+                    'l'.into(),
+                    'l'.into(),
+                    'o'.into(),
+                ]),
+                A::Action4,
+            ),
+            Keybind::new(
+                KeySeq::from(vec![
+                    KeyInput::new('X', Mods::ALT | Mods::CTRL),
+                    KeyInput::new(Key::Up, Mods::SHIFT),
+                ]),
+                A::Action5,
+            ),
+        ];
+        let config = Config {
+            bindings: Keybinds::from(binds),
+        };
+        let actual = toml::to_string_pretty(&config).unwrap();
+        let expected = r#"[bindings]
+a = "Action1"
+Up = "Action2"
+"Ctrl+Enter" = "Action3"
+"H e l l o" = "Action4"
+"Ctrl+Alt+X Shift+Up" = "Action5"
+"#;
+
+        assert_eq!(&actual, expected);
     }
 }

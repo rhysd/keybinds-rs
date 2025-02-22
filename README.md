@@ -11,11 +11,13 @@ library can be buggy and have arbitrary breaking changes.**
 - Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`. ([document](./doc/binding_syntax.md))
 - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
 - Provide the core API independent from any platforms and frameworks with minimal dependencies (only one crate). ([example](./examples/minimal.rs))
-- Support to parse/generate the key bindings configuration using [serde][] optionally. ([example](./examples/serde.rs))
 - Support several platforms and frameworks as optional features.
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
+- Support to parse/generate the key bindings configuration using [serde][] optionally.
+  - [Deserialization example](./examples/deserialize.rs)
+  - [Serialization example](./examples/serialize.rs)
 - Support structral fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
 
 [API Documentation][api-doc]
