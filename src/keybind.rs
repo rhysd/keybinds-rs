@@ -313,4 +313,61 @@ mod tests {
         dispatcher.reset();
         assert!(!dispatcher.is_ongoing());
     }
+
+    #[test]
+    fn default_dispatcher() {
+        let mut dispatcher = KeybindDispatcher::<()>::default();
+        assert!(dispatcher.keybinds().is_empty());
+        assert_eq!(dispatcher.dispatch('a'), None);
+        assert!(!dispatcher.is_ongoing());
+    }
+
+    #[test]
+    fn distinguish_bindings_with_modifiers() {
+        let binds = vec![
+            Keybind::new(KeyInput::new('a', Mods::CTRL | Mods::ALT), A::Action1),
+            Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
+            Keybind::new('a', A::Action3),
+        ];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+
+        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action3));
+        assert_eq!(
+            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL)),
+            Some(&A::Action2),
+        );
+        assert_eq!(
+            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT)),
+            Some(&A::Action1),
+        );
+        assert_eq!(
+            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT | Mods::WIN)),
+            None,
+        );
+    }
+
+    #[test]
+    fn keybinds_priority_order() {
+        let binds = vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new('a', A::Action2),
+            Keybind::new('a', A::Action3),
+        ];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
+    }
+
+    #[test]
+    fn smaller_seq_is_prioritized() {
+        let binds = vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new(vec!['a'.into(), 'a'.into()], A::Action2),
+            Keybind::new(vec!['a'.into(), 'b'.into()], A::Action3),
+        ];
+        let mut dispatcher = KeybindDispatcher::new(binds);
+
+        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
+        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
+        assert_eq!(dispatcher.dispatch('b'), None);
+    }
 }

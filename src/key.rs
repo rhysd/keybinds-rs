@@ -467,10 +467,27 @@ mod tests {
                 }),
             ),
             (
-                KeySeq::from(KeyInput {
-                    key: Key::Enter,
-                    mods: Mods::CTRL,
+                KeySeq::from(vec![KeyInput::from('x')]),
+                KeySeq::Single(KeyInput {
+                    key: Key::Char('x'),
+                    mods: Mods::NONE,
                 }),
+            ),
+            (
+                KeySeq::from(vec!['x'.into(), 'y'.into()]),
+                KeySeq::Multiple(vec![
+                    KeyInput {
+                        key: Key::Char('x'),
+                        mods: Mods::NONE,
+                    },
+                    KeyInput {
+                        key: Key::Char('y'),
+                        mods: Mods::NONE,
+                    },
+                ]),
+            ),
+            (
+                KeySeq::from(KeyInput::new(Key::Enter, Mods::CTRL)),
                 KeySeq::Single(KeyInput {
                     key: Key::Enter,
                     mods: Mods::CTRL,
