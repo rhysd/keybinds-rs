@@ -128,6 +128,12 @@ impl From<Modifiers> for Mods {
         if mods.contains(Modifiers::SUPER) {
             ret |= Mods::SUPER;
         }
+        if mods.contains(Modifiers::SHIFT)
+            || mods.contains(Modifiers::LEFT_SHIFT)
+            || mods.contains(Modifiers::RIGHT_SHIFT)
+        {
+            ret |= Mods::SHIFT;
+        }
         ret
     }
 }
@@ -178,8 +184,8 @@ mod tests {
         assert_eq!(Mods::from(Modifiers::CTRL), Mods::CTRL);
         assert_eq!(Mods::from(Modifiers::LEFT_CTRL), Mods::CTRL);
         assert_eq!(
-            Mods::from(Modifiers::CTRL | Modifiers::SUPER | Modifiers::ALT),
-            Mods::CTRL | Mods::SUPER | Mods::ALT,
+            Mods::from(Modifiers::CTRL | Modifiers::SUPER | Modifiers::ALT | Modifiers::SHIFT),
+            Mods::CTRL | Mods::SUPER | Mods::ALT | Mods::SHIFT,
         );
         assert_eq!(
             Mods::from(Modifiers::LEFT_CTRL | Modifiers::LEFT_ALT),

@@ -172,6 +172,9 @@ impl From<&ModifiersState> for Mods {
         if state.contains(ModifiersState::SUPER) {
             mods |= Mods::SUPER;
         }
+        if state.contains(ModifiersState::SHIFT) {
+            mods |= Mods::SHIFT;
+        }
         mods
     }
 }
@@ -264,8 +267,8 @@ mod tests {
     fn convert_modifiers_state() {
         assert_eq!(Mods::from(ModifiersState::CONTROL), Mods::CTRL);
         assert_eq!(
-            Mods::from(ModifiersState::CONTROL | ModifiersState::ALT),
-            Mods::CTRL | Mods::ALT,
+            Mods::from(ModifiersState::CONTROL | ModifiersState::ALT | ModifiersState::SHIFT),
+            Mods::CTRL | Mods::ALT | Mods::SHIFT,
         );
         assert_eq!(Mods::from(ModifiersState::SUPER), Mods::SUPER);
     }
