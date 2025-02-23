@@ -70,6 +70,12 @@ impl<A> From<Vec<Keybind<A>>> for Keybinds<A> {
     }
 }
 
+impl<A> From<Keybinds<A>> for Vec<Keybind<A>> {
+    fn from(binds: Keybinds<A>) -> Self {
+        binds.0
+    }
+}
+
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 
 pub struct KeybindDispatcher<A> {

@@ -36,11 +36,21 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 impl Arbitrary<'_> for Mods {
     fn arbitrary(u: &mut Unstructured<'_>) -> Result<Self> {
         let mut mods = Self::NONE;
-        mods.set(Mods::CTRL, u.arbitrary()?);
-        mods.set(Mods::CMD, u.arbitrary()?);
-        mods.set(Mods::ALT, u.arbitrary()?);
-        mods.set(Mods::WIN, u.arbitrary()?);
-        mods.set(Mods::SHIFT, u.arbitrary()?);
+        if u.arbitrary()? {
+            mods |= Mods::CTRL;
+        }
+        if u.arbitrary()? {
+            mods |= Mods::CMD;
+        }
+        if u.arbitrary()? {
+            mods |= Mods::ALT;
+        }
+        if u.arbitrary()? {
+            mods |= Mods::WIN;
+        }
+        if u.arbitrary()? {
+            mods |= Mods::SHIFT;
+        }
         Ok(mods)
     }
 }

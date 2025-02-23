@@ -35,7 +35,7 @@ required-features = ["arbitrary"]
 
 [[example]]
 name = "crossterm"
-required-features = ["crossterm"]
+required-features = ["crossterm", "serde"]
 
 [[example]]
 name = "termwiz"

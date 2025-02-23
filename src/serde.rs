@@ -37,7 +37,7 @@
 //! assert_eq!(&generated, configuration);
 //! ```
 use crate::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
-use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::fmt;
 
@@ -52,7 +52,7 @@ impl<'de> Deserialize<'de> for KeyInput {
                 formatter.write_str("key sequence for a key bind")
             }
 
-            fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
+            fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
                 v.parse().map_err(E::custom)
             }
         }
@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for KeySeq {
                 formatter.write_str("key sequence for a key bind")
             }
 
-            fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
+            fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
                 v.parse().map_err(E::custom)
             }
         }

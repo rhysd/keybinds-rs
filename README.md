@@ -28,49 +28,101 @@ library can be buggy and have arbitrary breaking changes.**
 cargo add keybinds
 ```
 
-## Minimal usage
+## Usage
 
-This crate is platform-agnostic. Create `KeybindDispatcher` instance and define key bindings by `bind` method.
-Pass each key input to the `dispatch` method call. It returns a dispatched action. See the [API documentation][api-doc]
-for more details.
+This code demonstrates the usage by parsing and dispatching key bindings for moving the cursor inside terminal
+using the `serde` and `crossterm` optional features. You can run this code as the [example](./examples/crossterm.rs)
+as well. See the [API documentation][api-doc] for more details.
 
 ```rust
-use keybinds::{KeybindDispatcher, KeyInput, Key, Mods};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::{cursor, event, execute};
+use keybinds::{KeybindDispatcher, Keybinds};
+use serde::Deserialize;
+use std::io;
 
 // Actions dispatched by key bindings
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Deserialize)]
 enum Action {
-    SayHello,
-    OpenFile,
-    ExitApp,
+    Exit,
+    Up,
+    Down,
+    Left,
+    Right,
+    Top,
+    Bottom,
+    Home,
+    End,
 }
 
-// Create a dispatcher to dispatch actions for upcoming key inputs
-let mut dispatcher = KeybindDispatcher::default();
+// Configuration of your app
+#[derive(Deserialize)]
+struct Config {
+    keyboard: Keybinds<Action>,
+}
 
-// Register key bindings to dispatch the actions
+const CONFIG_FILE: &str = r#"
+[keyboard]
+"Esc" = "Exit"
 
-// Key sequence "h" → "e" → "l" → "l" → "o"
-dispatcher.bind("h e l l o", Action::SayHello).unwrap();
-// Key combination "Ctrl + Alt + Enter"
-dispatcher.bind("Ctrl+Alt+Enter", Action::OpenFile).unwrap();
-// Sequence of key combinations
-dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+# Standard bindings
+"Up" = "Up"
+"Down" = "Down"
+"Left" = "Left"
+"Right" = "Right"
+"PageUp" = "Top"
+"PageDown" = "Bottom"
+"Home" = "Home"
+"End" = "End"
 
-// Dispatch `SayHello` action
-assert_eq!(dispatcher.dispatch(KeyInput::from('h')), None);
-assert_eq!(dispatcher.dispatch(KeyInput::from('e')), None);
-assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
-assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
-assert_eq!(dispatcher.dispatch(KeyInput::from('o')), Some(&Action::SayHello));
+# Emacs-like bindings
+"Ctrl+p" = "Up"
+"Ctrl+n" = "Down"
+"Ctrl+b" = "Left"
+"Ctrl+f" = "Right"
+"Alt+<" = "Top"
+"Alt+>" = "Bottom"
+"Ctrl+a" = "Home"
+"Ctrl+e" = "End"
 
-// Dispatch `OpenFile` action
-let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
-assert_eq!(action, Some(&Action::OpenFile));
+# Vim-like bindings
+"k" = "Up"
+"j" = "Down"
+"h" = "Left"
+"l" = "Right"
+"g g" = "Top"
+"G" = "Bottom"
+"^" = "Home"
+"$" = "End"
+"#;
 
-// Dispatch `ExitApp` action
-assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);
-assert_eq!(dispatcher.dispatch(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
+fn main() -> io::Result<()> {
+    // Parse the configuration from the file content
+    let config: Config = toml::from_str(CONFIG_FILE).unwrap();
+
+    // Create the key binding dispatcher to handle key input events
+    let mut dispatcher = KeybindDispatcher::new(config.keyboard);
+
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    while let Ok(event) = event::read() {
+        // If the event triggered some action, dispatch it
+        if let Some(action) = dispatcher.dispatch(&event) {
+            match action {
+                Action::Exit => break,
+                Action::Up => execute!(stdout, cursor::MoveUp(1))?,
+                Action::Down => execute!(stdout, cursor::MoveDown(1))?,
+                Action::Left => execute!(stdout, cursor::MoveLeft(1))?,
+                Action::Right => execute!(stdout, cursor::MoveRight(1))?,
+                Action::Top => execute!(stdout, cursor::MoveUp(9999))?,
+                Action::Bottom => execute!(stdout, cursor::MoveDown(9999))?,
+                Action::Home => execute!(stdout, cursor::MoveLeft(9999))?,
+                Action::End => execute!(stdout, cursor::MoveRight(9999))?,
+            }
+        }
+    }
+    disable_raw_mode()
+}
 ```
 
 ## Examples

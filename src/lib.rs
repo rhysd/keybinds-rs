@@ -12,6 +12,12 @@
 //!   - [winit][]
 //! - Support structral fuzzing using [arbitrary][] optionally.
 //!
+//! # Installation
+//!
+//! ```sh
+//! cargo add keybinds
+//! ```
+//!
 //! # Minimal example
 //!
 //! ```
