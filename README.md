@@ -1,6 +1,7 @@
 keybinds-rs
 ===========
-[![crates.io][crate-badge]][crates-io]
+[![crate][crate-badge]][crates-io]
+[![docs][doc-badge]][api-doc]
 [![CI][ci-badge]][ci]
 
 **THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
@@ -31,8 +32,8 @@ cargo add keybinds
 ## Usage
 
 This code demonstrates the usage by parsing and dispatching key bindings for moving the cursor inside terminal
-using the `serde` and `crossterm` optional features. You can run this code as the [example](./examples/crossterm.rs)
-as well. See the [API documentation][api-doc] for more details.
+using the `serde` and `crossterm` optional features. You can try this code as an [example](./examples/crossterm.rs).
+See the [API documentation][api-doc] for more details.
 
 ```rust
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
@@ -139,13 +140,14 @@ cargo run --example termwiz --features=termwiz
 This crate is licensed under [the MIT license](./LICENSE.txt).
 
 [crate-badge]: https://img.shields.io/crates/v/keybinds
+[crates-io]: https://crates.io/crates/keybinds
+[doc-badge]: https://docs.rs/keybinds/badge.svg
+[api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [ci-badge]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml/badge.svg
 [ci]: https://github.com/rhysd/keybinds-rs/actions/workflows/ci.yml
-[crates-io]: https://crates.io/crates/keybinds
 [serde]: https://serde.rs/
 [crossterm]: https://crates.io/crates/crossterm
 [winit]: https://crates.io/crates/winit
 [termwiz]: https://crates.io/crates/termwiz
 [arbitrary]: https://crates.io/crates/arbitrary
-[api-doc]: https://docs.rs/keybinds/latest/keybinds/
 [toml]: https://crates.io/crates/toml
