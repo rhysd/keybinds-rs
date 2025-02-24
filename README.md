@@ -16,6 +16,7 @@ library can be buggy and have arbitrary breaking changes.**
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
+  - [iced][] ([example](./examples/iced.rs))
 - Support to parse/generate the key bindings configuration using [serde][] optionally.
   - [Deserialization example](./examples/deserialize.rs)
   - [Serialization example](./examples/serialize.rs)
@@ -148,6 +149,7 @@ This crate is licensed under [the MIT license](./LICENSE.txt).
 [serde]: https://serde.rs/
 [crossterm]: https://crates.io/crates/crossterm
 [winit]: https://crates.io/crates/winit
+[iced]: https://crates.io/crates/iced
 [termwiz]: https://crates.io/crates/termwiz
 [arbitrary]: https://crates.io/crates/arbitrary
 [toml]: https://crates.io/crates/toml

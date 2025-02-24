@@ -4,12 +4,13 @@
 //!
 //! - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
 //! - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style
-//! - Support to parse/generate the key bindings configuration using [serde][] optionally
 //! - Core API independent from any platforms and frameworks with minimal dependencies (only one crate)
 //! - Support several platforms and frameworks as optional features
 //!   - [crossterm][]
 //!   - [termwiz][]
 //!   - [winit][]
+//!   - [iced][]
+//! - Support to parse/generate the key bindings configuration using [serde][] optionally
 //! - Support structral fuzzing using [arbitrary][] optionally.
 //!
 //! # Installation
@@ -72,6 +73,7 @@
 //! [serde]: https://serde.rs/
 //! [crossterm]: https://crates.io/crates/crossterm
 //! [winit]: https://crates.io/crates/winit
+//! [iced]: https://crates.io/crates/iced
 //! [termwiz]: https://crates.io/crates/termwiz
 //! [arbitrary]: https://crates.io/crates/arbitrary
 //! [examples]: https://github.com/rhysd/keybinds-rs/tree/main/examples
@@ -97,6 +99,9 @@ pub mod termwiz;
 
 #[cfg(feature = "winit")]
 pub mod winit;
+
+#[cfg(feature = "iced")]
+pub mod iced;
 
 #[cfg(feature = "arbitrary")]
 pub mod arbitrary;

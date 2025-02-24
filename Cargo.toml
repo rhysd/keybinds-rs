@@ -45,6 +45,10 @@ required-features = ["termwiz"]
 name = "winit"
 required-features = ["winit"]
 
+[[example]]
+name = "iced"
+required-features = ["iced"]
+
 [features]
 default = []
 serde = ["dep:serde"]
@@ -52,11 +56,14 @@ crossterm = ["dep:crossterm"]
 winit = ["dep:winit"]
 termwiz = ["dep:termwiz"]
 arbitrary = ["dep:arbitrary"]
+iced = ["dep:iced"]
 
+# TODO: Consider `default-features = false` for optional crates to reduce the number of dependencies
 [dependencies]
 arbitrary = { version = "1.4.1", features = ["derive"], optional = true }
 bitflags = "2.8.0"
 crossterm = { version = "0.28.1", optional = true }
+iced = { version = "0.13.1", optional = true }
 serde = { version = "1.0.217", optional = true }
 termwiz = { version = "0.23.0", optional = true }
 winit = { version = "0.30.9", optional = true }
@@ -70,5 +77,5 @@ members = [".", "bench"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
-features = ["serde", "crossterm", "winit", "termwiz", "arbitrary"]
+features = ["serde", "crossterm", "winit", "termwiz", "iced", "arbitrary"]
 rustdoc-args = ["--cfg", "docsrs"]
