@@ -17,5 +17,5 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt -- --check
       - run: cargo clippy -- -D warnings
-      - run: cargo clippy --all-features --tests --workspace --benches -- -D warnings
+      - run: cargo clippy --all-features --tests --examples --workspace --benches -- -D warnings
       - run: cargo test --all-features

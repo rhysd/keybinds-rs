@@ -1,3 +1,74 @@
+//! Support for [`iced`] crate.
+//!
+//! This module provides the conversions from iced's event or key types to [`Key`], [`Mods`], and
+//! [`KeyInput`].
+//!
+//! Put [`KeybindDispatcher`][crate::KeybindDispatcher] as a part of state of your application and
+//! dispatch the action in the `update` method. Key events can be subscribed as [`iced::Subscription`].
+//!
+//! ```no_run
+//! use keybinds::KeybindDispatcher;
+//! use iced::event::listen_with;
+//! use iced::{keyboard, Event, Element, Subscription, Task};
+//!
+//! // Actions dispatched by the key bindings
+//! enum Action {
+//!     SayHello,
+//!     Exit,
+//! }
+//!
+//! #[derive(Debug)]
+//! enum Message {
+//!     KeyEvent(keyboard::Event)
+//! }
+//!
+//! struct App {
+//!     keybinds: KeybindDispatcher<Action>,
+//! }
+//!
+//! impl Default for App {
+//!     fn default() -> Self {
+//!         let mut keybinds = KeybindDispatcher::default();
+//!
+//!         // Define the key bindings
+//!         keybinds.bind("H e l l o", Action::SayHello).unwrap();
+//!         keybinds.bind("Mod+q", Action::Exit).unwrap();
+//!
+//!         Self { keybinds }
+//!     }
+//! }
+//!
+//! impl App {
+//!     fn update(&mut self, message: Message) -> Task<Message> {
+//!         match message {
+//!             Message::KeyEvent(event) => {
+//!                 // Dispatch an action from the key event and handle it
+//!                 if let Some(action) = self.keybinds.dispatch(event) {
+//!                     match action {
+//!                         Action::SayHello => println!("Hello!"),
+//!                         Action::Exit => return iced::exit(),
+//!                     }
+//!                 }
+//!             }
+//!         }
+//!         Task::none()
+//!     }
+//!
+//!     fn view(&self) -> Element<Message> {
+//!         todo!("TODO: Build UI of your application")
+//!     }
+//!
+//!     fn subscription(&self) -> Subscription<Message> {
+//!         // Subscribe events and send keyboard events as message
+//!         listen_with(|event, _, _| match event {
+//!             Event::Keyboard(event) => Some(Message::KeyEvent(event)),
+//!             _ => None,
+//!         })
+//!     }
+//! }
+//!
+//! iced::run("My App", App::update, App::view).unwrap();
+//! ```
 use crate::{Key, KeyInput, Mods};
 use iced::keyboard::key::Named;
 use iced::keyboard::{Event as KeyEvent, Key as IcedKey, Modifiers};
