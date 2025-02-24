@@ -20,34 +20,42 @@ include = [
 
 [[example]]
 name = "minimal"
+doc-scrape-examples = true
 
 [[example]]
 name = "deserialize"
 required-features = ["serde"]
+doc-scrape-examples = true
 
 [[example]]
 name = "serialize"
 required-features = ["serde"]
+doc-scrape-examples = true
 
 [[example]]
 name = "arbitrary"
 required-features = ["arbitrary"]
+doc-scrape-examples = true
 
 [[example]]
 name = "crossterm"
 required-features = ["crossterm", "serde"]
+doc-scrape-examples = true
 
 [[example]]
 name = "termwiz"
 required-features = ["termwiz"]
+doc-scrape-examples = true
 
 [[example]]
 name = "winit"
 required-features = ["winit"]
+doc-scrape-examples = true
 
 [[example]]
 name = "iced"
 required-features = ["iced"]
+doc-scrape-examples = true
 
 [features]
 default = []
@@ -75,7 +83,12 @@ serde = { version = "1.0.217", features = ["derive"] }
 [workspace]
 members = [".", "bench"]
 
+# To generate the document locally, run the following command.
+# ```
+# cargo +nightly doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features --open
+# ```
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
-features = ["serde", "crossterm", "winit", "termwiz", "iced", "arbitrary"]
+all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
