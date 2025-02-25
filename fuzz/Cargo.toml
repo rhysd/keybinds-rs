@@ -7,14 +7,26 @@ edition = "2021"
 [package.metadata]
 cargo-fuzz = true
 
+[features]
+default = []
+arbitrary = ["dep:arbitrary"]
+
 [dependencies]
-arbitrary = "1.4.1"
+arbitrary = { version = "1.4.1", optional = true }
 keybinds = { path = "..", features = ["arbitrary"] }
 libfuzzer-sys = "0.4"
 
 [[bin]]
 name = "dispatch"
 path = "fuzz_targets/dispatch.rs"
+test = false
+doc = false
+bench = false
+required-features = ["arbitrary"]
+
+[[bin]]
+name = "parse"
+path = "fuzz_targets/parse.rs"
 test = false
 doc = false
 bench = false
