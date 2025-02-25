@@ -1,10 +1,23 @@
+<a id="v0.0.7"></a>
+# [v0.0.7](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.7) - 2025-02-25
+
+- Support [iced](https://crates.io/crates/iced) as optional `iced` feature. ([example](https://github.com/rhysd/keybinds-rs/blob/main/examples/iced.rs))
+- Fix Shift modifier is not converted correctly from platform-specific events.
+- Fix Meta modifier key is wrongly handled as Cmd key on converting crossterm events.
+- Scrape examples on generating API documents for docs.rs.
+- Add the [fuzz tests](https://github.com/rhysd/keybinds-rs/tree/main/fuzz).
+- Refine the [crossterm example](https://github.com/rhysd/keybinds-rs/blob/main/examples/crossterm.rs) with more practical usage.
+
+[Changes][v0.0.7]
+
+
 <a id="v0.0.6"></a>
 # [v0.0.6](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.6) - 2025-02-22
 
-- Support serializing key bindings with [serde](https://crates.io/crates/serde) crate. `serde` feature needs to be enabled. See the [example](https://github.com/rhysd/keybinds-rs/blob/main/examples/serialize.rs) for the usage.
-- Support structural fuzzing with [arbitrary](https://crates.io/crates/arbitrary) crate. `arbitrary` feature needs to be enabled. See the [example](https://github.com/rhysd/keybinds-rs/blob/main/examples/arbitrary.rs) for the usage.
+- Support serializing key bindings with [serde](https://crates.io/crates/serde) crate. `serde` feature needs to be enabled. ([example](https://github.com/rhysd/keybinds-rs/blob/main/examples/serialize.rs))
+- Support structural fuzzing with [arbitrary](https://crates.io/crates/arbitrary) crate. `arbitrary` feature needs to be enabled. ([example](https://github.com/rhysd/keybinds-rs/blob/main/examples/arbitrary.rs))
 - Implement `Display` trait for `Key`, `Mod`, `KeyInput`, and `KeySeq`.
-- Improve an error message on Shift modifier with unamed keys.
+- Improve an error message on Shift modifier with unnamed keys.
 
 [Changes][v0.0.6]
 
@@ -86,6 +99,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.7]: https://github.com/rhysd/keybinds-rs/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/rhysd/keybinds-rs/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/rhysd/keybinds-rs/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/rhysd/keybinds-rs/compare/v0.0.3...v0.0.4
