@@ -53,7 +53,7 @@ the characters are case-sensitive. `A` means typing <kbd>A</kbd> and <kbd>Shift<
 
 These keys are **logical** keys which are inputs as the result of key typing. In comparison, physical keys are
 actual keys on your keyboard. For example, typing the physical keys <kbd>Shift</kbd> and <kbd>9</kbd> produces
-the logical key `(` with US keyboard, and it also produces the logical key `)` with JP keyboard.
+the logical key input `(` with US keyboard, and it also produces the logical key input `)` with JP keyboard.
 
 ## Key sequence
 
@@ -68,7 +68,7 @@ The following modifier keys are available:
 - `Cmd`: <kbd>Command</kbd> key
 - `Mod`: <kbd>Command</kbd> key on macOS, <kbd>Ctrl</kbd> key on other platforms
 - `Super`: <kbd>Windows</kbd> key on platforms other than macOS, Command key on macOS
-- `Alt`: <kbd>Alt</kbd> key
+- `Alt`: <kbd>Alt</kbd> or <kbd>Meta</kbd> key
 - `Option`: An alias to <kbd>Alt</kbd> key
 - `Shift`: <kbd>Shift</kbd> key (can only modify named keys)
 

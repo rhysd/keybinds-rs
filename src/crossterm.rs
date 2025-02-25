@@ -87,14 +87,11 @@ impl From<KeyModifiers> for Mods {
         if from.contains(KeyModifiers::CONTROL) {
             to |= Mods::CTRL;
         }
-        if from.contains(KeyModifiers::ALT) {
+        if from.contains(KeyModifiers::ALT) || from.contains(KeyModifiers::META) {
             to |= Mods::ALT;
         }
         if from.contains(KeyModifiers::SUPER) {
             to |= Mods::SUPER;
-        }
-        if from.contains(KeyModifiers::META) {
-            to |= Mods::CMD;
         }
         if from.contains(KeyModifiers::SHIFT) {
             to |= Mods::SHIFT;
@@ -162,7 +159,7 @@ mod tests {
                     | KeyModifiers::ALT
                     | KeyModifiers::META
             ),
-            Mods::CTRL | Mods::ALT | Mods::CMD | Mods::SHIFT,
+            Mods::CTRL | Mods::ALT | Mods::SHIFT,
         );
         assert_eq!(Mods::from(KeyModifiers::SUPER), Mods::SUPER);
     }
