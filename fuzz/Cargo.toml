@@ -1,0 +1,20 @@
+[package]
+name = "keybinds-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = "1.4.1"
+keybinds = { path = "..", features = ["arbitrary"] }
+libfuzzer-sys = "0.4"
+
+[[bin]]
+name = "dispatch"
+path = "fuzz_targets/dispatch.rs"
+test = false
+doc = false
+bench = false

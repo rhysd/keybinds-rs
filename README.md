@@ -20,7 +20,7 @@ library can be buggy and have arbitrary breaking changes.**
 - Support to parse/generate the key bindings configuration using [serde][] optionally.
   - [Deserialization example](./examples/deserialize.rs)
   - [Serialization example](./examples/serialize.rs)
-- Support structral fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
+- Support structure-aware fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
 
 [API Documentation][api-doc]
 

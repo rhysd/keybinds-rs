@@ -11,7 +11,7 @@
 //!   - [winit][]
 //!   - [iced][]
 //! - Support to parse/generate the key bindings configuration using [serde][] optionally
-//! - Support structral fuzzing using [arbitrary][] optionally.
+//! - Support structure-aware fuzzing using [arbitrary][] optionally.
 //!
 //! # Installation
 //!

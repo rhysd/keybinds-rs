@@ -19,3 +19,5 @@ jobs:
       - run: cargo clippy -- -D warnings
       - run: cargo clippy --all-features --tests --examples --workspace --benches -- -D warnings
       - run: cargo test --all-features
+      - run: cargo check
+        working-directory: ./fuzz

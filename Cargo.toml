@@ -81,7 +81,7 @@ toml = { version = "0.8.20", default-features = false, features = ["parse", "dis
 serde = { version = "1.0.217", features = ["derive"] }
 
 [workspace]
-members = [".", "bench"]
+members = [".", "bench", "fuzz"]
 
 # To generate the document locally, run the following command.
 # ```
