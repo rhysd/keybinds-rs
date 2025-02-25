@@ -17,7 +17,7 @@ library can be buggy and have arbitrary breaking changes.**
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
   - [iced][] ([example](./examples/iced.rs))
-- Support to parse/generate the key bindings configuration using [serde][] optionally.
+- Support parsing/generating the key bindings configuration using [serde][] optionally.
   - [Deserialization example](./examples/deserialize.rs)
   - [Serialization example](./examples/serialize.rs)
 - Support structure-aware fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
@@ -32,8 +32,8 @@ cargo add keybinds
 
 ## Usage
 
-This code demonstrates the usage by parsing and dispatching key bindings for moving the cursor inside terminal
-using the `serde` and `crossterm` optional features. You can try this code as an [example](./examples/crossterm.rs).
+The following code demonstrates the usage by parsing and dispatching key bindings for moving the cursor inside terminal
+using the `serde` and `crossterm` optional features. The code can be run as the [example](./examples/crossterm.rs).
 See the [API documentation][api-doc] for more details.
 
 ```rust
@@ -108,7 +108,7 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     while let Ok(event) = event::read() {
-        // If the event triggered some action, dispatch it
+        // If the event triggered some action, handle it using `match`
         if let Some(action) = dispatcher.dispatch(&event) {
             match action {
                 Action::Exit => break,

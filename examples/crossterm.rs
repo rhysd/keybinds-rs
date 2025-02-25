@@ -69,7 +69,7 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     while let Ok(event) = event::read() {
-        // If the event triggered some action, dispatch it
+        // If the event triggered some action, handle it using `match`
         if let Some(action) = dispatcher.dispatch(&event) {
             match action {
                 Action::Exit => break,

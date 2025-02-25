@@ -10,7 +10,7 @@
 //!   - [termwiz][]
 //!   - [winit][]
 //!   - [iced][]
-//! - Support to parse/generate the key bindings configuration using [serde][] optionally
+//! - Support parsing/generating the key bindings configuration using [serde][] optionally
 //! - Support structure-aware fuzzing using [arbitrary][] optionally.
 //!
 //! # Installation
