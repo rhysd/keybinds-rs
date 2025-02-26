@@ -259,8 +259,13 @@ pub struct KeyInput {
 }
 
 impl KeyInput {
-    pub fn new<K: Into<Key>>(key: K, mut mods: Mods) -> Self {
+    pub fn new<K, M>(key: K, mods: M) -> Self
+    where
+        K: Into<Key>,
+        M: Into<Mods>,
+    {
         let key = key.into();
+        let mut mods = mods.into();
         if !key.is_named() {
             mods.remove(Mods::SHIFT); // Ensure the invariant
         }

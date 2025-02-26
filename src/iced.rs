@@ -193,7 +193,7 @@ impl From<&KeyEvent> for KeyInput {
                 modified_key,
                 modifiers,
                 ..
-            } => Self::new(modified_key, modifiers.into()),
+            } => Self::new(modified_key, modifiers),
             _ => Key::Ignored.into(),
         }
     }

@@ -64,6 +64,7 @@ impl Example {
             Message::KeyEvent(event) => {
                 let input = KeyInput::from(&event);
                 if input.key() != Key::Ignored {
+                    println!("Key input: {input:?}");
                     if !self.keybinds.is_ongoing() {
                         self.last_action.clear();
                         self.ongoing_input.clear();
