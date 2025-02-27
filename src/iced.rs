@@ -141,6 +141,21 @@ impl From<&IcedKey> for Key {
                 Named::F18 => Self::F(18),
                 Named::F19 => Self::F(19),
                 Named::F20 => Self::F(20),
+                Named::F21 => Self::F(21),
+                Named::F22 => Self::F(22),
+                Named::F23 => Self::F(23),
+                Named::F24 => Self::F(24),
+                Named::F25 => Self::F(25),
+                Named::F26 => Self::F(26),
+                Named::F27 => Self::F(27),
+                Named::F28 => Self::F(28),
+                Named::F29 => Self::F(29),
+                Named::F30 => Self::F(30),
+                Named::F31 => Self::F(31),
+                Named::F32 => Self::F(32),
+                Named::F33 => Self::F(33),
+                Named::F34 => Self::F(34),
+                Named::F35 => Self::F(35),
                 Named::Alt
                 | Named::Control
                 | Named::Shift

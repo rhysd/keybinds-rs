@@ -132,6 +132,21 @@ impl From<&WinitKey> for Key {
                 NamedKey::F18 => Self::F(18),
                 NamedKey::F19 => Self::F(19),
                 NamedKey::F20 => Self::F(20),
+                NamedKey::F21 => Self::F(21),
+                NamedKey::F22 => Self::F(22),
+                NamedKey::F23 => Self::F(23),
+                NamedKey::F24 => Self::F(24),
+                NamedKey::F25 => Self::F(25),
+                NamedKey::F26 => Self::F(26),
+                NamedKey::F27 => Self::F(27),
+                NamedKey::F28 => Self::F(28),
+                NamedKey::F29 => Self::F(29),
+                NamedKey::F30 => Self::F(30),
+                NamedKey::F31 => Self::F(31),
+                NamedKey::F32 => Self::F(32),
+                NamedKey::F33 => Self::F(33),
+                NamedKey::F34 => Self::F(34),
+                NamedKey::F35 => Self::F(35),
                 NamedKey::Alt
                 | NamedKey::Control
                 | NamedKey::Shift
