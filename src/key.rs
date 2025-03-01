@@ -7,6 +7,12 @@ use std::str::FromStr;
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
+/// Single logical key on keyboard.
+///
+/// The 'logical key' is the key after applying modifier keys. For example, `Key::Char('A')` usually means the result
+/// of pressing <kbd>Shift</kbd> + <kbd>A</kbd> physical keys.
+///
+/// This enum is non-exhaustive because more keys may be added in the future.
 #[non_exhaustive]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -51,11 +57,30 @@ pub enum Key {
     VolumeDown,
     Mute,
     F(u8),
+    /// Special virtual key for keys which are not identified.
     Unidentified,
+    /// Special virtual key for ignoring the key input. This key is completely ignored by a key binding dispatcher.
     Ignored,
 }
 
 impl Key {
+    /// Returns true when it is a named key such as "Up". As an edge case, space key and the "+" key are also treated
+    /// as named key even if they are instances of `Key::Char` variant.
+    ///
+    /// ```
+    /// use keybinds::Key;
+    ///
+    /// assert!(Key::Up.is_named());
+    /// assert!(Key::Copy.is_named());
+    /// assert!(Key::Insert.is_named());
+    /// assert!(Key::Enter.is_named());
+    /// assert!(Key::Home.is_named());
+    /// assert!(Key::F(1).is_named());
+    /// assert!(Key::Char(' ').is_named());
+    /// assert!(Key::Char('+').is_named());
+    /// assert!(!Key::Char('x').is_named());
+    /// assert!(!Key::Unidentified.is_named());
+    /// ```
     pub fn is_named(self) -> bool {
         match self {
             Self::Char(c) if c == ' ' || c == '+' => true,
@@ -66,6 +91,14 @@ impl Key {
 }
 
 impl From<char> for Key {
+    /// Convert the character to the single character key.
+    ///
+    /// ```
+    /// use keybinds::Key;
+    ///
+    /// let key: Key = 'X'.into();
+    /// assert_eq!(key, Key::Char('X'));
+    /// ```
     fn from(c: char) -> Self {
         Self::Char(c)
     }
@@ -74,6 +107,21 @@ impl From<char> for Key {
 impl FromStr for Key {
     type Err = Error;
 
+    /// Parse the key from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::Key;
+    ///
+    /// assert_eq!("x".parse(), Ok(Key::Char('x')));
+    /// assert_eq!("Up".parse(), Ok(Key::Up));
+    /// assert_eq!("Enter".parse(), Ok(Key::Enter));
+    /// assert_eq!("Space".parse(), Ok(Key::Char(' ')));
+    /// assert_eq!("Plus".parse(), Ok(Key::Char('+')));
+    /// assert_eq!("F1".parse(), Ok(Key::F(1)));
+    ///
+    /// assert!("Unknown".parse::<Key>().is_err());
+    /// assert!("".parse::<Key>().is_err());
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.trim_ascii();
         {
@@ -137,6 +185,18 @@ impl FromStr for Key {
 }
 
 impl fmt::Display for Key {
+    /// Generate a string representation of the key following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::Key;
+    ///
+    /// assert_eq!(format!("{}", Key::Char('X')), "X");
+    /// assert_eq!(format!("{}", Key::Down), "Down");
+    /// assert_eq!(format!("{}", Key::Insert), "Insert");
+    /// assert_eq!(format!("{}", Key::F(5)), "F5");
+    /// assert_eq!(format!("{}", Key::Char(' ')), "Space");
+    /// assert_eq!(format!("{}", Key::Char('+')), "Plus");
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Char(' ') => f.write_str("Space"),
@@ -188,6 +248,21 @@ impl fmt::Display for Key {
 }
 
 bitflags! {
+    /// Modifier keys such as "Ctrl".
+    ///
+    /// `NONE` means nothing is pressed. These constants are bitfields so use `|` for representing to press multiple
+    /// modifiers at once.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// // No modifiers
+    /// let none = Mods::NONE;
+    /// // Ctrl + Alt
+    /// let ctrl_alt = Mods::CTRL | Mods::ALT;
+    ///
+    /// assert_ne!(none, ctrl_alt);
+    /// ```
     #[repr(transparent)]
     #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, Debug)]
     pub struct Mods: u8 {
@@ -201,12 +276,52 @@ bitflags! {
 }
 
 impl Mods {
+    /// The "Mod" modifier key. It is equivalent to "Cmd" on macOS and "Ctrl" on other platforms.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// #[cfg(target_os = "macos")]
+    /// assert_eq!(Mods::MOD, Mods::CMD);
+    /// #[cfg(not(target_os = "macos"))]
+    /// assert_eq!(Mods::MOD, Mods::CTRL);
+    /// ```
     #[cfg(not(target_os = "macos"))]
     pub const MOD: Self = Self::CTRL;
+    /// The "Mod" modifier key. It is equivalent to "Cmd" on macOS and "Ctrl" on other platforms.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// #[cfg(target_os = "macos")]
+    /// assert_eq!(Mods::MOD, Mods::CMD);
+    /// #[cfg(not(target_os = "macos"))]
+    /// assert_eq!(Mods::MOD, Mods::CTRL);
+    /// ```
     #[cfg(target_os = "macos")]
     pub const MOD: Self = Self::CMD;
+    /// The "Super" modifier key. It is equivalent to "Cmd" on macOS and "Win" on other platforms.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// #[cfg(target_os = "macos")]
+    /// assert_eq!(Mods::SUPER, Mods::CMD);
+    /// #[cfg(not(target_os = "macos"))]
+    /// assert_eq!(Mods::SUPER, Mods::WIN);
+    /// ```
     #[cfg(not(target_os = "macos"))]
     pub const SUPER: Self = Self::WIN;
+    /// The "Super" modifier key. It is equivalent to "Cmd" on macOS and "Win" on other platforms.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// #[cfg(target_os = "macos")]
+    /// assert_eq!(Mods::SUPER, Mods::CMD);
+    /// #[cfg(not(target_os = "macos"))]
+    /// assert_eq!(Mods::SUPER, Mods::WIN);
+    /// ```
     #[cfg(target_os = "macos")]
     pub const SUPER: Self = Self::CMD;
 }
@@ -214,6 +329,26 @@ impl Mods {
 impl FromStr for Mods {
     type Err = Error;
 
+    /// Parse the modifier key from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// assert_eq!("Ctrl".parse(), Ok(Mods::CTRL));
+    /// assert_eq!("Cmd".parse(), Ok(Mods::CMD));
+    /// assert_eq!("Alt".parse(), Ok(Mods::ALT));
+    /// assert_eq!("Mod".parse(), Ok(Mods::MOD));
+    /// assert_eq!("Super".parse(), Ok(Mods::SUPER));
+    ///
+    /// // Aliases
+    /// assert_eq!("Control".parse(), Ok(Mods::CTRL));
+    /// assert_eq!("Command".parse(), Ok(Mods::CMD));
+    /// assert_eq!("Option".parse(), Ok(Mods::ALT));
+    ///
+    /// // Error cases
+    /// assert!("Fooo".parse::<Mods>().is_err());
+    /// assert!("".parse::<Mods>().is_err());
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.trim_ascii() {
             "Control" | "control" | "CONTROL" | "Ctrl" | "ctrl" | "CTRL" => Ok(Self::CTRL),
@@ -229,6 +364,17 @@ impl FromStr for Mods {
 }
 
 impl fmt::Display for Mods {
+    /// Generate a string representation of the modifier key following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// When multiple modifiers are pressed at once they are joint with "+". When no modifier key is pressed, it generates an empty string.
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    ///
+    /// assert_eq!(format!("{}", Mods::CTRL), "Ctrl");
+    /// assert_eq!(format!("{}", Mods::CTRL | Mods::CMD | Mods::ALT), "Ctrl+Cmd+Alt");
+    /// assert_eq!(format!("{}", Mods::NONE), "");
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut first = true;
         for (value, name) in [
@@ -251,6 +397,10 @@ impl fmt::Display for Mods {
     }
 }
 
+/// Single key input by pressing a key and modifiers.
+///
+/// This struct is equivalent to a key combination in the [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
+/// such as "Ctrl+x".
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct KeyInput {
@@ -259,6 +409,30 @@ pub struct KeyInput {
 }
 
 impl KeyInput {
+    /// Create a new [`KeyInput`] instance with checking the <kbd>Shift</kbd> modifier restriction described in the
+    /// [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::{KeyInput, Key, Mods};
+    ///
+    /// let k = KeyInput::new('x', Mods::CTRL);
+    /// assert_eq!(k.key(), Key::Char('x'));
+    /// assert_eq!(k.mods(), Mods::CTRL);
+    ///
+    /// let k = KeyInput::new(Key::Enter, Mods::MOD);
+    /// assert_eq!(k.key(), Key::Enter);
+    /// assert_eq!(k.mods(), Mods::MOD);
+    ///
+    /// // Shift modifier is removed when it is not used with named keys following the restriction.
+    /// let k = KeyInput::new('x', Mods::SHIFT | Mods::CTRL);
+    /// assert_eq!(k.key(), Key::Char('x'));
+    /// assert_eq!(k.mods(), Mods::CTRL);
+    ///
+    /// // You need to use the following instead.
+    /// let k = KeyInput::new('X', Mods::CTRL);
+    /// assert_eq!(k.key(), Key::Char('X'));
+    /// assert_eq!(k.mods(), Mods::CTRL);
+    /// ```
     pub fn new<K, M>(key: K, mods: M) -> Self
     where
         K: Into<Key>,
@@ -272,10 +446,12 @@ impl KeyInput {
         KeyInput { key, mods }
     }
 
+    /// Return the [`Key`] of the input.
     pub fn key(&self) -> Key {
         self.key
     }
 
+    /// Return the [`Mods`] of the input.
     pub fn mods(&self) -> Mods {
         self.mods
     }
@@ -284,6 +460,19 @@ impl KeyInput {
 impl FromStr for KeyInput {
     type Err = Error;
 
+    /// Parse the key input from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::{Key, Mods, KeyInput};
+    ///
+    /// assert_eq!("a".parse(), Ok(KeyInput::new('a', Mods::NONE)));
+    /// assert_eq!("Ctrl+x".parse(), Ok(KeyInput::new('x', Mods::CTRL)));
+    /// assert_eq!("Alt+Shift+Enter".parse(), Ok(KeyInput::new(Key::Enter, Mods::ALT | Mods::SHIFT)));
+    ///
+    /// assert!("".parse::<KeyInput>().is_err());
+    /// assert!("Foooo".parse::<KeyInput>().is_err());
+    /// assert!("Shift+x".parse::<KeyInput>().is_err()); // Violates Shift modifier invariant
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut s = s.trim_ascii().split('+');
         let mut cur = s.next().unwrap(); // Iterator by `.split()` is never empty
@@ -304,12 +493,31 @@ impl FromStr for KeyInput {
 }
 
 impl<K: Into<Key>> From<K> for KeyInput {
+    /// Convert a single key with no modifiers into [`KeyInput`].
+    ///
+    /// ```
+    /// use keybinds::{KeyInput, Mods};
+    ///
+    /// assert_eq!(KeyInput::from('x'), KeyInput::new('x', Mods::NONE));
+    /// ```
     fn from(k: K) -> Self {
         Self::new(k.into(), Mods::NONE)
     }
 }
 
 impl fmt::Display for KeyInput {
+    /// Generate a string representation of the key input following the
+    /// [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::{Key, Mods, KeyInput};
+    ///
+    /// assert_eq!(format!("{}", KeyInput::new('x', Mods::CTRL)), "Ctrl+x");
+    /// assert_eq!(
+    ///     format!("{}", KeyInput::new(Key::Enter, Mods::SHIFT | Mods::ALT)),
+    ///     "Alt+Shift+Enter",
+    /// );
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.mods != Mods::NONE {
             write!(f, "{}+", self.mods)?;
@@ -318,13 +526,34 @@ impl fmt::Display for KeyInput {
     }
 }
 
+/// The result of [`KeySeq::match_to`] to match a key sequence to key inputs.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 pub enum Match {
+    /// The key inputs completely matched to the key sequence.
     Matched,
+    /// The key inupts were a prefix of the key sequence. This means the matching is still ongoing.
     Prefix,
+    /// The key inputs did not match to the key sequence.
     Unmatch,
 }
 
+/// The key sequence bound to some action. It consists of one or more [`KeyInput`] instances.
+///
+/// This enum is equivalent to a key sequence in the [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
+/// such as "Ctrl+x Ctrl+s".
+///
+/// A key sequence usually consists of a single key input, except for complex key bindings like Vim style. This
+/// type is implemented as an enum that can represent either a single key input or multiple key inputs so that it can
+/// avoid heap allocations in most cases.
+///
+/// [`KeySeq::as_slice`] is useful to handle both variants in a uniform way.
+///
+/// ```
+/// use keybinds::{KeySeq, KeyInput, Mods};
+///
+/// let seq: KeySeq = vec![KeyInput::new('x', Mods::CTRL), 'a'.into()].into();
+/// assert_eq!(seq.as_slice().len(), 2);
+/// ```
 #[derive(Clone, Eq, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum KeySeq {
@@ -332,14 +561,37 @@ pub enum KeySeq {
     Single(KeyInput),
 }
 
-// Consider that `KeySeq::Multiple(vec!['a'.into()])` should be equal to `KeySeq::Single('a'.into())`
 impl PartialEq for KeySeq {
     fn eq(&self, other: &Self) -> bool {
+        // Consider that `KeySeq::Multiple(vec!['a'.into()])` should be equal to `KeySeq::Single('a'.into())`
         self.as_slice() == other.as_slice()
     }
 }
 
 impl KeySeq {
+    /// Match the given inputs to the key sequence. The result [`Match`] is one of following cases:
+    ///
+    /// - the key sequence completely matched the input
+    /// - the input was a prefix of the key sequence. This means the matching is still ongoing
+    /// - the key sequence didn't match the input
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, Match};
+    ///
+    /// let seq = KeySeq::from(vec!['x'.into(), 'y'.into(), 'z'.into()]);
+    ///
+    /// let matched = ['x'.into(), 'y'.into(), 'z'.into()];
+    /// let ongoing_1 = ['x'.into()];
+    /// let ongoing_2 = ['x'.into(), 'y'.into()];
+    /// let unmatch_1 = ['x'.into(), 'y'.into(), 'a'.into()];
+    /// let unmatch_2 = ['y'.into(), 'z'.into()];
+    ///
+    /// assert_eq!(seq.match_to(&matched), Match::Matched);
+    /// assert_eq!(seq.match_to(&ongoing_1), Match::Prefix);
+    /// assert_eq!(seq.match_to(&ongoing_2), Match::Prefix);
+    /// assert_eq!(seq.match_to(&unmatch_1), Match::Unmatch);
+    /// assert_eq!(seq.match_to(&unmatch_2), Match::Unmatch);
+    /// ```
     pub fn match_to(&self, inputs: &[KeyInput]) -> Match {
         let mut ls = self.as_slice().iter();
         let mut rs = inputs.iter();
@@ -354,6 +606,25 @@ impl KeySeq {
         }
     }
 
+    /// Get the key sequence as a slice without copying anything.
+    ///
+    /// ```
+    /// use keybinds::KeySeq;
+    ///
+    /// assert_eq!(KeySeq::Single('x'.into()).as_slice(), &['x'.into()]);
+    /// assert_eq!(
+    ///     KeySeq::Multiple(vec!['x'.into(), 'y'.into()]).as_slice(),
+    ///     &['x'.into(), 'y'.into()],
+    /// );
+    /// assert_eq!(KeySeq::Multiple(vec![]).as_slice(), &[]);
+    /// ```
+    pub fn as_slice(&self) -> &[KeyInput] {
+        match self {
+            Self::Multiple(v) => v.as_slice(),
+            Self::Single(k) => slice::from_ref(k),
+        }
+    }
+
     fn push(self, input: KeyInput) -> Self {
         match self {
             Self::Multiple(v) if v.is_empty() => Self::Single(input),
@@ -364,18 +635,41 @@ impl KeySeq {
             Self::Single(k) => Self::Multiple(vec![k, input]),
         }
     }
-
-    pub fn as_slice(&self) -> &[KeyInput] {
-        match self {
-            Self::Multiple(v) => v.as_slice(),
-            Self::Single(k) => slice::from_ref(k),
-        }
-    }
 }
 
 impl FromStr for KeySeq {
     type Err = Error;
 
+    /// Parse the key sequence from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// When the sequence is invalid such as unknown keys or empty input, this method returns an error.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    ///
+    /// assert_eq!("x".parse(), Ok(KeySeq::from(KeyInput::from('x'))));
+    /// assert_eq!(
+    ///     "Ctrl+Up Alt+Down".parse(),
+    ///     Ok(KeySeq::from(vec![
+    ///         KeyInput::new(Key::Up, Mods::CTRL),
+    ///         KeyInput::new(Key::Down, Mods::ALT)]
+    ///     )),
+    /// );
+    /// assert_eq!(
+    ///     "h e l l o".parse(),
+    ///     Ok(KeySeq::from(vec![
+    ///         KeyInput::from('h'),
+    ///         KeyInput::from('e'),
+    ///         KeyInput::from('l'),
+    ///         KeyInput::from('l'),
+    ///         KeyInput::from('o'),
+    ///     ])),
+    /// );
+    ///
+    /// // Errors
+    /// assert!("".parse::<KeySeq>().is_err());
+    /// assert!("x Fooo".parse::<KeySeq>().is_err());
+    /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut keys = s.split_ascii_whitespace();
         if let Some(key) = keys.next() {
@@ -391,12 +685,32 @@ impl FromStr for KeySeq {
 }
 
 impl<K: Into<KeyInput>> From<K> for KeySeq {
+    /// Convert a single key input into a key sequence.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    ///
+    /// assert_eq!(KeySeq::from('x'), KeySeq::Single(KeyInput::new(Key::Char('x'), Mods::NONE)));
+    /// ```
     fn from(key: K) -> Self {
         Self::Single(key.into())
     }
 }
 
 impl From<Vec<KeyInput>> for KeySeq {
+    /// Convert multiple key inputs into a key sequence.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    ///
+    /// assert_eq!(
+    ///     KeySeq::from(vec!['H'.into(), 'i'.into()]),
+    ///     KeySeq::Multiple(vec![
+    ///         KeyInput::new(Key::Char('H'), Mods::NONE),
+    ///         KeyInput::new(Key::Char('i'), Mods::NONE),
+    ///     ]),
+    /// );
+    /// ```
     fn from(mut v: Vec<KeyInput>) -> Self {
         if v.len() == 1 {
             Self::Single(v.pop().unwrap())
@@ -407,6 +721,20 @@ impl From<Vec<KeyInput>> for KeySeq {
 }
 
 impl fmt::Display for KeySeq {
+    /// Generate a string representation of the key sequence following the
+    /// [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// Key inputs are joint with one single space. If the sequence is empty, this method writes nothing.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    ///
+    /// let seq = KeySeq::from(vec![
+    ///     KeyInput::new('x', Mods::CTRL),
+    ///     KeyInput::new(Key::Enter, Mods::ALT),
+    /// ]);
+    /// assert_eq!(format!("{}", seq), "Ctrl+x Alt+Enter");
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut inputs = self.as_slice().iter();
         if let Some(first) = inputs.next() {

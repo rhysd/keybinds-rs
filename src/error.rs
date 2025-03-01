@@ -2,13 +2,22 @@ use crate::Key;
 use std::error;
 use std::fmt;
 
+/// The error type for keybinds crate.
 #[derive(PartialEq, Debug)]
 pub enum Error {
+    /// Error raised when parsing an unknown key like `"Fooo"`.
     UnknownKey(Box<str>),
+    /// Error raised when parsing an unknown modifier key like `"Fooo+x"`.
     UnknownModifier(Box<str>),
+    /// Error raised when parsing an empty key like `""`.
     EmptyKey,
+    /// Error raised when parsing an empty modifier key like `"+x"`.
     EmptyModifier,
+    /// Error raised when parsing an empty key sequence like `""`.
     EmptyKeySequence,
+    /// Error raised when `Shift` modifier key is not allowed with the key. `Shift` modifier is only available with
+    /// named keys so key inputs such as `Shift+x` are not allowed. Please read the top level document of this crate
+    /// for more details.
     ShiftUnavailable(Key),
 }
 
@@ -31,4 +40,5 @@ impl fmt::Display for Error {
 
 impl error::Error for Error {}
 
+/// The result type for keybinds crate.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
