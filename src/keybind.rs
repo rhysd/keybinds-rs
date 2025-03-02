@@ -1,4 +1,5 @@
 use crate::{Key, KeyInput, KeySeq, Match, Result};
+use std::mem;
 use std::ops::Deref;
 use std::time::{Duration, Instant};
 
@@ -61,6 +62,36 @@ impl<A> Keybinds<A> {
         } else {
             Found::None
         }
+    }
+
+    /// Create a [`KeybindDispatcher`] instance from the key bindings.
+    ///
+    /// This method is a utility to easily create a dispatcher instance from your configuration without moving the
+    /// instance. After calling this method, this instance is made empty to avoid heap allocations.
+    ///
+    /// ```
+    /// use keybinds::{Keybinds, Keybind};
+    ///
+    /// struct Action;
+    ///
+    /// // Configuration of your app
+    /// struct Config {
+    ///     bindings: Keybinds<Action>,
+    /// }
+    ///
+    /// // Get your app configuration from somewhere (e.g. parsing from a configuration file)
+    /// let mut config = Config {
+    ///     bindings: Keybinds::from(vec![
+    ///         Keybind::new('a', Action),
+    ///         // ...
+    ///     ]),
+    /// };
+    ///
+    /// // Create a dispatcher instance without moving out `bindings` field from the `Config` instance
+    /// let mut dispatcher = config.bindings.take_dispatcher();
+    /// ```
+    pub fn take_dispatcher(&mut self) -> KeybindDispatcher<A> {
+        KeybindDispatcher::new(mem::take(self))
     }
 }
 
@@ -396,5 +427,17 @@ mod tests {
             dispatcher.dispatch(KeyInput::new('　', Mods::CTRL)),
             Some(&A::Action2),
         );
+    }
+
+    #[test]
+    fn keybinds_take_dispatcher() {
+        let mut binds = Keybinds::from(vec![
+            Keybind::new('a', A::Action1),
+            Keybind::new('b', A::Action2),
+        ]);
+        let mut dispatcher = binds.take_dispatcher();
+        assert!(binds.is_empty());
+        assert_eq!(dispatcher.keybinds().len(), 2);
+        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
     }
 }

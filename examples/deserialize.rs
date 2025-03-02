@@ -1,4 +1,4 @@
-use keybinds::{KeybindDispatcher, Keybinds};
+use keybinds::Keybinds;
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -35,10 +35,10 @@ timeout = 500
 "#;
 
     // Parse the TOML input
-    let config: Config = toml::from_str(configuration).unwrap();
+    let mut config: Config = toml::from_str(configuration).unwrap();
 
     // Use the key bindings parsed from the TOML input
-    let mut dispatcher = KeybindDispatcher::new(config.keyboard.bindings);
+    let mut dispatcher = config.keyboard.bindings.take_dispatcher();
     // Set the matching timeout if needed
     if let Some(ms) = config.keyboard.timeout {
         dispatcher.set_timeout(Duration::from_millis(ms));
