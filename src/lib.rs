@@ -46,11 +46,11 @@
 //! dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 //!
 //! // Dispatch `SayHello` action
-//! assert_eq!(dispatcher.dispatch(KeyInput::from('h')), None);
-//! assert_eq!(dispatcher.dispatch(KeyInput::from('e')), None);
-//! assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
-//! assert_eq!(dispatcher.dispatch(KeyInput::from('l')), None);
-//! assert_eq!(dispatcher.dispatch(KeyInput::from('o')), Some(&Action::SayHello));
+//! assert_eq!(dispatcher.dispatch('h'), None);
+//! assert_eq!(dispatcher.dispatch('e'), None);
+//! assert_eq!(dispatcher.dispatch('l'), None);
+//! assert_eq!(dispatcher.dispatch('l'), None);
+//! assert_eq!(dispatcher.dispatch('o'), Some(&Action::SayHello));
 //!
 //! // Dispatch `OpenFile` action
 //! let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
