@@ -208,6 +208,36 @@ impl<A> From<Vec<Keybind<A>>> for Keybinds<A> {
     }
 }
 
+/// Collect [`Keybinds`] from an iterator of [`Keybind`].
+///
+/// ```
+/// use keybinds::{Keybinds, Keybind, KeySeq};
+///
+/// enum Action {
+///     Foo,
+///     Bar,
+///     Piyo,
+/// }
+///
+/// let config = [
+///     ("f o o",         Action::Foo),
+///     ("Ctrl+b Ctrl+a", Action::Bar),
+///     ("Enter",         Action::Piyo),
+/// ];
+///
+/// let binds: Keybinds<_> = config
+///         .into_iter()
+///         .map(|(k, a)| k.parse().map(|k: KeySeq| Keybind::new(k, a)))
+///         .collect::<Result<_, _>>()
+///         .unwrap();
+///
+/// ```
+impl<A> FromIterator<Keybind<A>> for Keybinds<A> {
+    fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
+        Keybinds(iter.into_iter().collect())
+    }
+}
+
 /// Convert [`Keybinds`] into an array of [`Keybind`] instances. This method is useful to update the key bindings.
 ///
 /// ```
@@ -546,13 +576,6 @@ impl<A> KeybindDispatcher<A> {
     // TODO: Add `into_keybinds`
 }
 
-// TODO: Move this to `FromIterator<Keybind<A>> for Keybinds<A>`
-impl<A> FromIterator<Keybind<A>> for KeybindDispatcher<A> {
-    fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
-        Self::new(Keybinds(iter.into_iter().collect()))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -604,7 +627,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatcher_from_iter() {
+    fn keybinds_from_iter() {
         let expected = vec![
             Keybind::new('a', A::Action1),
             Keybind::new(
@@ -616,8 +639,8 @@ mod tests {
             ),
         ];
 
-        let actual: KeybindDispatcher<_> = expected.clone().into_iter().collect();
-        assert_eq!(*actual.binds, expected);
+        let binds: Keybinds<_> = expected.clone().into_iter().collect();
+        assert_eq!(*binds, expected);
     }
 
     #[test]
