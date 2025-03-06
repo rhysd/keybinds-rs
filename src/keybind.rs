@@ -331,8 +331,8 @@ impl<A> Default for KeybindDispatcher<A> {
 
 impl<A> KeybindDispatcher<A> {
     /// Create a dispatcher instance from the given key bindings. This constructor function is useful for creating
-    /// a dispatcher from [`Keybinds`] or `Vec<Keybind>`. If you want to create a dispatcher from
-    /// `Iterator<Item = Keybind>`, [`KeybindDispatcher::collect`] is also useful.
+    /// a dispatcher from [`Keybinds`] or `Vec<Keybind>`. If you want to create a [`Keybinds`] instance from
+    /// `Iterator<Item = Keybind>`, [`Iterator::collect`] is also useful.
     ///
     /// ```
     /// use keybinds::{Keybind, KeybindDispatcher, Key, Mods, KeyInput};
@@ -573,7 +573,24 @@ impl<A> KeybindDispatcher<A> {
         self.last_input.is_some()
     }
 
-    // TODO: Add `into_keybinds`
+    /// Convert to the inner [`Keybinds`] instance. This method is useful when you need to modify key bindings.
+    ///
+    /// ```
+    /// use keybinds::{KeybindDispatcher, Keybinds, Keybind};
+    ///
+    /// #[derive(Clone, PartialEq, Eq, Debug)]
+    /// struct Action;
+    ///
+    /// let original = Keybinds::from(vec![Keybind::new('a', Action)]);
+    ///
+    /// let dispatcher = KeybindDispatcher::new(original.clone());
+    /// let binds = dispatcher.into_keybinds();
+    ///
+    /// assert_eq!(original, binds);
+    /// ```
+    pub fn into_keybinds(self) -> Keybinds<A> {
+        self.binds
+    }
 }
 
 #[cfg(test)]
