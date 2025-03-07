@@ -33,6 +33,7 @@ struct Example {
 
 impl Default for Example {
     fn default() -> Self {
+        // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
         let mut keybinds = Keybinds::default();
 
         // Define the key bindings

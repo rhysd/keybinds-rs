@@ -9,12 +9,12 @@ enum Action {
 }
 
 fn main() -> io::Result<()> {
-    // Create a dispatcher to dispatch actions for upcoming key inputs
-    let mut dispatcher = Keybinds::default();
+    // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+    let mut keybinds = Keybinds::default();
 
     // Register key bindings to dispatch the actions
-    dispatcher.bind("h e l l o", Action::SayHello).unwrap();
-    dispatcher.bind("Esc", Action::ExitApp).unwrap();
+    keybinds.bind("h e l l o", Action::SayHello).unwrap();
+    keybinds.bind("Esc", Action::ExitApp).unwrap();
 
     println!("Type inputs and send it by hitting Enter key. Send Esc to exit");
     for b in io::stdin().bytes() {
@@ -26,7 +26,7 @@ fn main() -> io::Result<()> {
         println!("Key input: {input:?}");
 
         // Try to dispatch action by `dispatch` method
-        if let Some(action) = dispatcher.dispatch(input) {
+        if let Some(action) = keybinds.dispatch(input) {
             println!("Dispatched action: {action:?}");
             match action {
                 Action::SayHello => println!("Hello!"),

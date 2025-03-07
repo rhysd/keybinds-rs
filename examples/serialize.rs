@@ -14,25 +14,24 @@ struct Config {
     bindings: Keybinds<Action>,
 }
 
-fn main() {
+fn main() -> keybinds::Result<()> {
     println!("Input your favorite key bindings like Ctrl+a per line.");
     println!("Input an empty line to finish.");
 
-    let mut config = vec![];
-    for line in stdin().lines().map(Result::unwrap) {
-        if line.is_empty() {
-            break;
-        }
-        let seq: KeySeq = line.parse().unwrap();
-        config.push(Keybind::new(seq, Action::DoSomething));
-    }
-
-    let config = Config {
-        // `Keybinds` is a map from key bindings to the actions
-        bindings: Keybinds::new(config),
-    };
+    let bindings: Keybinds<_> = stdin()
+        .lines()
+        .map(Result::unwrap)
+        .take_while(|l| !l.is_empty())
+        .map(|l| {
+            let seq: KeySeq = l.parse()?;
+            Ok(Keybind::new(seq, Action::DoSomething))
+        })
+        .collect::<Result<_, _>>()?;
+    let config = Config { bindings };
 
     // Generate configuration file content using serde
     let generated = toml::to_string_pretty(&config).unwrap();
     println!("{generated}");
+
+    Ok(())
 }

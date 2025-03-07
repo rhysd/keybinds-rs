@@ -22,21 +22,22 @@
 //!
 //! struct App {
 //!     window: Option<Window>,
-//!     dispatcher: Keybinds<Action>,
+//!     keybinds: Keybinds<Action>,
 //!     converter: WinitEventConverter,
 //! }
 //!
 //! impl Default for App {
 //!     fn default() -> Self {
-//!         let mut dispatcher = Keybinds::default();
+//!         // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+//!         let mut keybinds = Keybinds::default();
 //!
 //!         // Key bindings to dispatch the actions
-//!         dispatcher.bind("h i", Action::SayHi).unwrap();
-//!         dispatcher.bind("Mod+q", Action::Exit).unwrap();
+//!         keybinds.bind("h i", Action::SayHi).unwrap();
+//!         keybinds.bind("Mod+q", Action::Exit).unwrap();
 //!
 //!         Self {
 //!             window: None,
-//!             dispatcher,
+//!             keybinds,
 //!             converter: WinitEventConverter::default(),
 //!         }
 //!     }
@@ -53,7 +54,7 @@
 //!         let input = self.converter.convert(&event);
 //!
 //!         // Check if the converted key input dispatches some action
-//!         if let Some(action) = self.dispatcher.dispatch(input) {
+//!         if let Some(action) = self.keybinds.dispatch(input) {
 //!             match action {
 //!                 Action::SayHi => println!("Hi!"),
 //!                 Action::Exit => event_loop.exit(),

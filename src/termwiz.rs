@@ -15,12 +15,12 @@
 //!     ExitApp,
 //! }
 //!
-//! // Create an action dispatcher to dispatch actions for upcoming key inputs
-//! let mut dispatcher = Keybinds::default();
+//! // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+//! let mut keybinds = Keybinds::default();
 //!
 //! // Key bindings to dispatch the actions
-//! dispatcher.bind("h i", Action::SayHi).unwrap();
-//! dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+//! keybinds.bind("h i", Action::SayHi).unwrap();
+//! keybinds.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 //!
 //! let caps = Capabilities::new_from_env().unwrap();
 //! let terminal = new_terminal(caps).unwrap();
@@ -38,7 +38,7 @@
 //!     buf.add_change(format!("{:?}\r\n", KeyInput::from(&input)));
 //!
 //!     // Dispatch action by directly passing `InputEvent` to `dispatch` method.
-//!     let action = dispatcher.dispatch(&input);
+//!     let action = keybinds.dispatch(&input);
 //!
 //!     if let Some(action) = action {
 //!         match action {

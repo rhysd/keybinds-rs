@@ -7,7 +7,8 @@ keybinds-rs
 **THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
 library can be buggy and have arbitrary breaking changes.**
 
-[keybinds-rs][crates-io] is a small crate to parse/generate/dispatch key bindings (keyboard shortcuts) written in Safe Rust.
+[keybinds-rs][crates-io] is a small crate to parse/generate/dispatch key bindings (keyboard shortcuts) written
+in Safe Rust.
 
 - Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`. ([document](./doc/binding_syntax.md))
 - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
@@ -17,9 +18,7 @@ library can be buggy and have arbitrary breaking changes.**
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
   - [iced][] ([example](./examples/iced.rs))
-- Support parsing/generating the key bindings configuration using [serde][] optionally.
-  - [Deserialization example](./examples/deserialize.rs)
-  - [Serialization example](./examples/serialize.rs)
+- Support [parsing](./examples/deserialize.rs)/[generating](./examples/serialize.rs) the key bindings configuration using [serde][] optionally.
 - Support structure-aware fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
 
 [API Documentation][api-doc]
@@ -32,14 +31,14 @@ cargo add keybinds
 
 ## Usage
 
-The following code demonstrates the usage by parsing and dispatching key bindings for moving the cursor inside terminal
-using the `serde` and `crossterm` optional features. The code can be run as the [example](./examples/crossterm.rs).
-See the [API documentation][api-doc] for more details.
+The following code demonstrates the usage by parsing key bindings configuration from TOML input and dispatching actions
+to move the cursor inside terminal with the `serde` and `crossterm` optional features. This code can be run as the
+[example](./examples/crossterm.rs). See the [API documentation][api-doc] for more details.
 
 ```rust
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute};
-use keybinds::{KeybindDispatcher, Keybinds};
+use keybinds::Keybinds;
 use serde::Deserialize;
 use std::io;
 
@@ -101,15 +100,13 @@ const CONFIG_FILE: &str = r#"
 fn main() -> io::Result<()> {
     // Parse the configuration from the file content
     let config: Config = toml::from_str(CONFIG_FILE).unwrap();
-
-    // Create the key binding dispatcher to handle key input events
-    let mut dispatcher = KeybindDispatcher::new(config.keyboard);
+    let mut keybinds = config.keyboard;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     while let Ok(event) = event::read() {
         // If the event triggered some action, handle it using `match`
-        if let Some(action) = dispatcher.dispatch(&event) {
+        if let Some(action) = keybinds.dispatch(&event) {
             match action {
                 Action::Exit => break,
                 Action::Up => execute!(stdout, cursor::MoveUp(1))?,
@@ -129,11 +126,11 @@ fn main() -> io::Result<()> {
 
 ## Examples
 
-For more usage, please see the [examples](./examples). They can be run locally by `cargo run` inside this repository.
-Some examples require some features enabled. For instance, to run `termwiz` example:
+For more usage, please see the working [examples](./examples). They can be run locally by `cargo run` inside this
+repository. Some examples require some features enabled. For instance, to run the above `crossterm` example:
 
 ```sh
-cargo run --example termwiz --features=termwiz
+cargo run --example crossterm --features=crossterm,serde
 ```
 
 ## License

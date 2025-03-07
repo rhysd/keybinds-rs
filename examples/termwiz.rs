@@ -17,14 +17,14 @@ enum Action {
 }
 
 fn main() -> Result<(), Error> {
-    // Create an action dispatcher to dispatch actions for upcoming key inputs
-    let mut dispatcher = Keybinds::default();
+    // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+    let mut keybinds = Keybinds::default();
 
     // Key bindings to dispatch the actions
-    dispatcher.bind("h i", Action::SayHi).unwrap();
-    dispatcher.bind("Left", Action::MoveLeft).unwrap();
-    dispatcher.bind("Ctrl+p", Action::Paste).unwrap();
-    dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+    keybinds.bind("h i", Action::SayHi).unwrap();
+    keybinds.bind("Left", Action::MoveLeft).unwrap();
+    keybinds.bind("Ctrl+p", Action::Paste).unwrap();
+    keybinds.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 
     let caps = Capabilities::new_from_env()?;
     let terminal = new_terminal(caps)?;
@@ -44,7 +44,7 @@ fn main() -> Result<(), Error> {
         };
 
         // Dispatch action by directly passing `InputEvent` to `dispatch` method.
-        let action = dispatcher.dispatch(&input);
+        let action = keybinds.dispatch(&input);
 
         buf.add_change(Change::CursorPosition {
             x: Position::Absolute(0),

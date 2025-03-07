@@ -16,23 +16,24 @@ enum Action {
 
 struct App {
     window: Option<Window>,
-    dispatcher: Keybinds<Action>,
+    keybinds: Keybinds<Action>,
     converter: WinitEventConverter,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let mut dispatcher = Keybinds::default();
+        // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+        let mut keybinds = Keybinds::default();
 
         // Key bindings to dispatch the actions
-        dispatcher.bind("h i", Action::SayHi).unwrap();
-        dispatcher.bind("Mod+m", Action::ToggleMaximized).unwrap();
-        dispatcher.bind("Mod+Alt+t", Action::ToggleTheme).unwrap();
-        dispatcher.bind("Mod+x Mod+c", Action::Exit).unwrap();
+        keybinds.bind("h i", Action::SayHi).unwrap();
+        keybinds.bind("Mod+m", Action::ToggleMaximized).unwrap();
+        keybinds.bind("Mod+Alt+t", Action::ToggleTheme).unwrap();
+        keybinds.bind("Mod+x Mod+c", Action::Exit).unwrap();
 
         Self {
             window: None,
-            dispatcher,
+            keybinds,
             converter: WinitEventConverter::default(),
         }
     }
@@ -53,7 +54,7 @@ impl ApplicationHandler for App {
         }
 
         // Check if the converted key input dispatches some action
-        if let Some(action) = self.dispatcher.dispatch(input) {
+        if let Some(action) = self.keybinds.dispatch(input) {
             println!("Action: {action:?}");
 
             match action {

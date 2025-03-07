@@ -33,41 +33,41 @@
 //!     ExitApp,
 //! }
 //!
-//! // Create a dispatcher to dispatch actions for upcoming key inputs
-//! let mut dispatcher = Keybinds::default();
+//! // Create a key bindings dispatcher to dispatch actions for upcoming key inputs
+//! let mut keybinds = Keybinds::default();
 //!
 //! // Register key bindings to dispatch the actions
 //!
 //! // Key sequence "h" → "e" → "l" → "l" → "o"
-//! dispatcher.bind("h e l l o", Action::SayHello).unwrap();
+//! keybinds.bind("h e l l o", Action::SayHello).unwrap();
 //! // Key combination "Ctrl + Alt + Enter"
-//! dispatcher.bind("Ctrl+Alt+Enter", Action::OpenFile).unwrap();
+//! keybinds.bind("Ctrl+Alt+Enter", Action::OpenFile).unwrap();
 //! // Sequence of key combinations
-//! dispatcher.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
+//! keybinds.bind("Ctrl+x Ctrl+c", Action::ExitApp).unwrap();
 //!
 //! // Dispatch `SayHello` action
-//! assert_eq!(dispatcher.dispatch('h'), None);
-//! assert_eq!(dispatcher.dispatch('e'), None);
-//! assert_eq!(dispatcher.dispatch('l'), None);
-//! assert_eq!(dispatcher.dispatch('l'), None);
-//! assert_eq!(dispatcher.dispatch('o'), Some(&Action::SayHello));
+//! assert_eq!(keybinds.dispatch('h'), None);
+//! assert_eq!(keybinds.dispatch('e'), None);
+//! assert_eq!(keybinds.dispatch('l'), None);
+//! assert_eq!(keybinds.dispatch('l'), None);
+//! assert_eq!(keybinds.dispatch('o'), Some(&Action::SayHello));
 //!
 //! // Dispatch `OpenFile` action
-//! let action = dispatcher.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
+//! let action = keybinds.dispatch(KeyInput::new(Key::Enter, Mods::CTRL | Mods::ALT));
 //! assert_eq!(action, Some(&Action::OpenFile));
 //!
 //! // Dispatch `ExitApp` action
-//! assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);
-//! assert_eq!(dispatcher.dispatch(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
+//! assert_eq!(keybinds.dispatch(KeyInput::new('x', Mods::CTRL)), None);
+//! assert_eq!(keybinds.dispatch(KeyInput::new('c', Mods::CTRL)), Some(&Action::ExitApp));
 //! ```
 //!
 //! # More examples
 //!
 //! For more usage, please see [the examples][examples]. They can be run locally by `cargo run` inside this repository.
-//! Some examples require some features enabled. For instance, to run `termwiz` example:
+//! Some examples require some features enabled. For instance, to run the `crossterm` example:
 //!
 //! ```sh
-//! cargo run --example termwiz --features=termwiz
+//! cargo run --example crossterm --features=crossterm,serde
 //! ```
 //!
 //! [crates-io]: https://crates.io/crates/keybinds

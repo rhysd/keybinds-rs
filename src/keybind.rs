@@ -11,10 +11,10 @@ use arbitrary::Arbitrary;
 ///
 /// struct Action;
 ///
-/// let mut dispatcher = Keybinds::default();
-/// dispatcher.push(Keybind::new('x', Action));
-/// dispatcher.push(Keybind::new(KeyInput::new(Key::Left, Mods::CTRL), Action));
-/// dispatcher.push(Keybind::new(KeySeq::from(vec!['H'.into(), 'i'.into()]), Action));
+/// let mut keybinds = Keybinds::default();
+/// keybinds.push(Keybind::new('x', Action));
+/// keybinds.push(Keybind::new(KeyInput::new(Key::Left, Mods::CTRL), Action));
+/// keybinds.push(Keybind::new(KeySeq::from(vec!['H'.into(), 'i'.into()]), Action));
 /// ```
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -57,18 +57,21 @@ impl<A> Keybind<A> {
 
 /// The default timeout value of the key binding matching by [`Keybinds`].
 ///
-/// The interval of key inputs must be smaller than it. The default value is 1 second.
+/// The interval of key inputs must be smaller than it. The default value is 1 second. To change the timeout, see
+/// [`Keybinds::set_timeout`].
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// A dispatcher that takes key inputs and dispatches the corresponding key bindings' actions.
 ///
-/// The [`Keybinds::dispatch`] method dispatches an action for the given key input. The dispatcher checks
-/// a key sequence. When the sequence matches to one of the defined key bindings, it returns the corresponding action.
-/// Note that it does not wait for an additional input if some key binding matches to the sequence. For example,
-/// if "a b" and "a b c" are defined, the sequence "a" → "b" matches to the binding "a b" and "a b c" will never be
-/// triggered.
+/// The [`Keybinds::dispatch`] method dispatches an action for the given key input. The dispatcher receives key inputs
+/// as a key sequence. When the sequence matches to one of the defined key bindings, it returns the corresponding
+/// action.
 ///
-/// If the interval of key inputs exceed the timeout (default to 1 second), the key sequence breaks there. For example,
+/// When some key binding matches to a key sequence, the dispatcher dispatches the corresponding action even if some
+/// other key bindings are ongoing. For example, if "a b" and "a b c" are defined, the sequence "a" → "b" matches to
+/// the binding "a b" ignoring matching to "a b c" is ongoing hence "a b c" will never be triggered.
+///
+/// If the interval of key inputs exceeds the timeout (default to 1 second), the key sequence breaks there. For example,
 /// when "b" input follows "a" input after 2 seconds, each inputs "a" and "b" are treated as single key inputs, not a
 /// key sequence "a b". Please see [`Keybinds::set_timeout`] for the code example.
 ///
@@ -81,21 +84,21 @@ pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 ///     Bar,
 /// }
 ///
-/// let mut dispatcher = Keybinds::default();
+/// let mut keybinds = Keybinds::default();
 ///
 /// // Key sequence "f" → "o" → "o"
-/// dispatcher.bind("f o o", Action::Foo).unwrap();
+/// keybinds.bind("f o o", Action::Foo).unwrap();
 /// // Sequence of key combinations
-/// dispatcher.bind("Ctrl+b Ctrl+a", Action::Bar).unwrap();
+/// keybinds.bind("Ctrl+b Ctrl+a", Action::Bar).unwrap();
 ///
-/// assert_eq!(dispatcher.dispatch('f'), None);
-/// assert_eq!(dispatcher.dispatch('o'), None);
-/// assert_eq!(dispatcher.dispatch('o'), Some(&Action::Foo));
+/// assert_eq!(keybinds.dispatch('f'), None);
+/// assert_eq!(keybinds.dispatch('o'), None);
+/// assert_eq!(keybinds.dispatch('o'), Some(&Action::Foo));
 ///
-/// assert_eq!(dispatcher.dispatch(KeyInput::new('b', Mods::CTRL)), None);
-/// assert_eq!(dispatcher.dispatch(KeyInput::new('a', Mods::CTRL)), Some(&Action::Bar));
+/// assert_eq!(keybinds.dispatch(KeyInput::new('b', Mods::CTRL)), None);
+/// assert_eq!(keybinds.dispatch(KeyInput::new('a', Mods::CTRL)), Some(&Action::Bar));
 /// ```
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Keybinds<A> {
     binds: Vec<Keybind<A>>,
     ongoing: Vec<KeyInput>,
@@ -142,8 +145,8 @@ impl<A> Keybinds<A> {
     ///     Keybind::new(KeyInput::new(Key::Up, Mods::CTRL), Action::Piyo),
     /// ];
     ///
-    /// let dispatcher = Keybinds::new(binds);
-    /// assert_eq!(dispatcher.as_slice().len(), 3);
+    /// let keybinds = Keybinds::new(binds);
+    /// assert_eq!(keybinds.as_slice().len(), 3);
     /// ```
     pub fn new(binds: Vec<Keybind<A>>) -> Self {
         Self {
@@ -161,10 +164,10 @@ impl<A> Keybinds<A> {
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
+    /// let mut keybinds = Keybinds::default();
     ///
-    /// dispatcher.push(Keybind::new('x', Action));
-    /// assert_eq!(dispatcher.as_slice().len(), 1);
+    /// keybinds.push(Keybind::new('x', Action));
+    /// assert_eq!(keybinds.as_slice().len(), 1);
     /// ```
     pub fn push(&mut self, bind: Keybind<A>) {
         self.binds.push(bind);
@@ -180,16 +183,16 @@ impl<A> Keybinds<A> {
     /// #[derive(PartialEq, Eq, Debug)]
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
+    /// let mut keybinds = Keybinds::default();
     ///
-    /// dispatcher.bind("Ctrl+x Ctrl+y", Action).unwrap();
-    /// dispatcher.bind("Foo+x", Action).unwrap_err(); // Unknown modifier "Foo"
+    /// keybinds.bind("Ctrl+x Ctrl+y", Action).unwrap();
+    /// keybinds.bind("Foo+x", Action).unwrap_err(); // Unknown modifier "Foo"
     ///
-    /// assert_eq!(dispatcher.as_slice().len(), 1);
+    /// assert_eq!(keybinds.as_slice().len(), 1);
     ///
     /// // Dispatch the action
-    /// assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);          // Matching is ongoing
-    /// assert_eq!(dispatcher.dispatch(KeyInput::new('y', Mods::CTRL)), Some(&Action)); // Dispatched
+    /// assert_eq!(keybinds.dispatch(KeyInput::new('x', Mods::CTRL)), None);          // Matching is ongoing
+    /// assert_eq!(keybinds.dispatch(KeyInput::new('y', Mods::CTRL)), Some(&Action)); // Dispatched
     /// ```
     pub fn bind(&mut self, key_sequence: &str, action: A) -> Result<()> {
         let seq: KeySeq = key_sequence.parse()?;
@@ -222,16 +225,16 @@ impl<A> Keybinds<A> {
     ///     Foo,
     /// }
     ///
-    /// let mut dispatcher = Keybinds::default();
+    /// let mut keybinds = Keybinds::default();
     ///
-    /// dispatcher.bind("f Ctrl+o Enter", Action::Foo).unwrap();
+    /// keybinds.bind("f Ctrl+o Enter", Action::Foo).unwrap();
     ///
     /// // Input "f" key with no modifiers
-    /// assert_eq!(dispatcher.dispatch('f'), None);
+    /// assert_eq!(keybinds.dispatch('f'), None);
     /// // Input "o" key with Ctrl modifier
-    /// assert_eq!(dispatcher.dispatch(KeyInput::new('o', Mods::CTRL)), None);
+    /// assert_eq!(keybinds.dispatch(KeyInput::new('o', Mods::CTRL)), None);
     /// // Input "Enter" key with no modifiers
-    /// assert_eq!(dispatcher.dispatch(Key::Enter), Some(&Action::Foo));
+    /// assert_eq!(keybinds.dispatch(Key::Enter), Some(&Action::Foo));
     /// ```
     pub fn dispatch<I: Into<KeyInput>>(&mut self, input: I) -> Option<&A> {
         let input = input.into();
@@ -273,42 +276,42 @@ impl<A> Keybinds<A> {
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
-    /// dispatcher.bind("a b", Action).unwrap();
+    /// let mut keybinds = Keybinds::default();
+    /// keybinds.bind("a b", Action).unwrap();
     ///
     /// // Set the timeout to very small value to demonstrate the usage.
-    /// dispatcher.set_timeout(Duration::from_millis(10));
+    /// keybinds.set_timeout(Duration::from_millis(10));
     ///
     /// // Input the first key input of key sequence "a b"
-    /// assert!(dispatcher.dispatch('a').is_none());
+    /// assert!(keybinds.dispatch('a').is_none());
     ///
     /// // Make the ongoing match expire (50ms > 10ms)
     /// sleep(Duration::from_millis(50));
     ///
     /// // Input the second key input of key sequence "a b". However it does not dispatch the action
     /// // because the matching expired.
-    /// assert!(dispatcher.dispatch('b').is_none());
+    /// assert!(keybinds.dispatch('b').is_none());
     /// ```
     pub fn set_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
     }
 
-    /// Reset the state of the dispatcher. This resets the ongoing matching of key binding.
+    /// Reset the state of the dispatcher. This resets the ongoing matching state of key binding.
     ///
     /// ```
     /// use keybinds::Keybinds;
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
-    /// dispatcher.bind("a b", Action).unwrap();
+    /// let mut keybinds = Keybinds::default();
+    /// keybinds.bind("a b", Action).unwrap();
     ///
-    /// assert!(dispatcher.dispatch('a').is_none());
+    /// assert!(keybinds.dispatch('a').is_none());
     ///
     /// // Abandon the ongoing matching for "a b"
-    /// dispatcher.reset();
+    /// keybinds.reset();
     ///
-    /// assert!(dispatcher.dispatch('b').is_none());
+    /// assert!(keybinds.dispatch('b').is_none());
     /// ```
     pub fn reset(&mut self) {
         self.ongoing.clear();
@@ -324,12 +327,12 @@ impl<A> Keybinds<A> {
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::<Action>::default();
-    /// assert_eq!(dispatcher.timeout(), DEFAULT_TIMEOUT);
+    /// let mut keybinds = Keybinds::<Action>::default();
+    /// assert_eq!(keybinds.timeout(), DEFAULT_TIMEOUT);
     ///
     /// let duration = Duration::from_millis(500);
-    /// dispatcher.set_timeout(duration);
-    /// assert_eq!(dispatcher.timeout(), duration);
+    /// keybinds.set_timeout(duration);
+    /// assert_eq!(keybinds.timeout(), duration);
     /// ```
     pub fn timeout(&self) -> Duration {
         self.timeout
@@ -360,14 +363,14 @@ impl<A> Keybinds<A> {
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
-    /// dispatcher.bind("a b", Action).unwrap();
+    /// let mut keybinds = Keybinds::default();
+    /// keybinds.bind("a b", Action).unwrap();
     ///
-    /// assert!(!dispatcher.is_ongoing());
-    /// dispatcher.dispatch('a');
-    /// assert!(dispatcher.is_ongoing());
-    /// dispatcher.dispatch('b');
-    /// assert!(!dispatcher.is_ongoing());
+    /// assert!(!keybinds.is_ongoing());
+    /// keybinds.dispatch('a');
+    /// assert!(keybinds.is_ongoing());
+    /// keybinds.dispatch('b');
+    /// assert!(!keybinds.is_ongoing());
     /// ```
     pub fn is_ongoing(&self) -> bool {
         self.last_input.is_some()
@@ -502,85 +505,85 @@ mod tests {
 
     #[test]
     fn dispatcher_is_ongoing() {
-        let mut dispatcher =
+        let mut keybinds =
             Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
 
-        assert!(!dispatcher.is_ongoing());
-        dispatcher.dispatch('x');
-        assert!(!dispatcher.is_ongoing());
-        dispatcher.dispatch('a');
-        assert!(dispatcher.is_ongoing());
-        dispatcher.dispatch('b');
-        assert!(!dispatcher.is_ongoing());
-        dispatcher.dispatch('y');
-        assert!(!dispatcher.is_ongoing());
-        dispatcher.dispatch('a');
-        assert!(dispatcher.is_ongoing());
-        dispatcher.dispatch('z');
-        assert!(!dispatcher.is_ongoing());
+        assert!(!keybinds.is_ongoing());
+        keybinds.dispatch('x');
+        assert!(!keybinds.is_ongoing());
+        keybinds.dispatch('a');
+        assert!(keybinds.is_ongoing());
+        keybinds.dispatch('b');
+        assert!(!keybinds.is_ongoing());
+        keybinds.dispatch('y');
+        assert!(!keybinds.is_ongoing());
+        keybinds.dispatch('a');
+        assert!(keybinds.is_ongoing());
+        keybinds.dispatch('z');
+        assert!(!keybinds.is_ongoing());
     }
 
     #[test]
     fn dispatcher_set_timeout() {
-        let mut dispatcher = Keybinds::<A>::default();
-        assert_eq!(dispatcher.timeout(), DEFAULT_TIMEOUT);
+        let mut keybinds = Keybinds::<A>::default();
+        assert_eq!(keybinds.timeout(), DEFAULT_TIMEOUT);
         let d = Duration::from_secs(2);
-        dispatcher.set_timeout(d);
-        assert_eq!(dispatcher.timeout(), d);
+        keybinds.set_timeout(d);
+        assert_eq!(keybinds.timeout(), d);
     }
 
     #[test]
     fn dispatcher_ignore_keys() {
-        let mut dispatcher =
+        let mut keybinds =
             Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
-        dispatcher.dispatch('a');
-        assert_eq!(dispatcher.dispatch(Key::Ignored), None);
-        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+        keybinds.dispatch('a');
+        assert_eq!(keybinds.dispatch(Key::Ignored), None);
+        assert_eq!(keybinds.dispatch('b'), Some(&A::Action1));
     }
 
     #[test]
     fn dispatcher_timeout_input() {
-        let mut dispatcher =
+        let mut keybinds =
             Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
-        dispatcher.set_timeout(Duration::from_millis(10));
+        keybinds.set_timeout(Duration::from_millis(10));
 
-        dispatcher.dispatch('a');
-        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+        keybinds.dispatch('a');
+        assert_eq!(keybinds.dispatch('b'), Some(&A::Action1));
 
-        dispatcher.dispatch('a');
+        keybinds.dispatch('a');
         sleep(Duration::from_millis(50));
-        assert_eq!(dispatcher.dispatch('b'), None);
+        assert_eq!(keybinds.dispatch('b'), None);
 
-        dispatcher.dispatch('a');
-        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
+        keybinds.dispatch('a');
+        assert_eq!(keybinds.dispatch('b'), Some(&A::Action1));
     }
 
     #[test]
-    fn dispatcher_bind() {
-        let mut dispatcher = Keybinds::default();
+    fn keybinds_bind() {
+        let mut keybinds = Keybinds::default();
 
-        dispatcher.bind("x", A::Action1).unwrap();
-        dispatcher.bind("a b", A::Action2).unwrap();
-        dispatcher.bind("", A::Action1).unwrap_err();
+        keybinds.bind("x", A::Action1).unwrap();
+        keybinds.bind("a b", A::Action2).unwrap();
+        keybinds.bind("", A::Action1).unwrap_err();
 
-        assert_eq!(dispatcher.dispatch('x'), Some(&A::Action1));
-        dispatcher.dispatch('a');
-        assert_eq!(dispatcher.dispatch('b'), Some(&A::Action2));
+        assert_eq!(keybinds.dispatch('x'), Some(&A::Action1));
+        keybinds.dispatch('a');
+        assert_eq!(keybinds.dispatch('b'), Some(&A::Action2));
 
-        dispatcher.dispatch('a');
-        assert!(dispatcher.is_ongoing());
-        dispatcher.bind("y", A::Action1).unwrap();
-        assert!(!dispatcher.is_ongoing());
+        keybinds.dispatch('a');
+        assert!(keybinds.is_ongoing());
+        keybinds.bind("y", A::Action1).unwrap();
+        assert!(!keybinds.is_ongoing());
     }
 
     #[test]
     fn dispatcher_reset() {
-        let mut dispatcher =
+        let mut keybinds =
             Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
-        dispatcher.dispatch('a');
-        assert!(dispatcher.is_ongoing());
-        dispatcher.reset();
-        assert!(!dispatcher.is_ongoing());
+        keybinds.dispatch('a');
+        assert!(keybinds.is_ongoing());
+        keybinds.reset();
+        assert!(!keybinds.is_ongoing());
     }
 
     #[test]
@@ -593,61 +596,61 @@ mod tests {
 
     #[test]
     fn distinguish_bindings_with_modifiers() {
-        let mut dispatcher = Keybinds::new(vec![
+        let mut keybinds = Keybinds::new(vec![
             Keybind::new(KeyInput::new('a', Mods::CTRL | Mods::ALT), A::Action1),
             Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
             Keybind::new('a', A::Action3),
         ]);
 
-        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action3));
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action3));
         assert_eq!(
-            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL)),
+            keybinds.dispatch(KeyInput::new('a', Mods::CTRL)),
             Some(&A::Action2),
         );
         assert_eq!(
-            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT)),
+            keybinds.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT)),
             Some(&A::Action1),
         );
         assert_eq!(
-            dispatcher.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT | Mods::WIN)),
+            keybinds.dispatch(KeyInput::new('a', Mods::CTRL | Mods::ALT | Mods::WIN)),
             None,
         );
     }
 
     #[test]
     fn keybinds_priority_order() {
-        let mut dispatcher = Keybinds::new(vec![
+        let mut keybinds = Keybinds::new(vec![
             Keybind::new('a', A::Action1),
             Keybind::new('a', A::Action2),
             Keybind::new('a', A::Action3),
         ]);
-        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
     }
 
     #[test]
     fn smaller_seq_is_prioritized() {
-        let mut dispatcher = Keybinds::new(vec![
+        let mut keybinds = Keybinds::new(vec![
             Keybind::new('a', A::Action1),
             Keybind::new(vec!['a'.into(), 'a'.into()], A::Action2),
             Keybind::new(vec!['a'.into(), 'b'.into()], A::Action3),
         ]);
 
-        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
-        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
-        assert_eq!(dispatcher.dispatch('b'), None);
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
+        assert_eq!(keybinds.dispatch('b'), None);
     }
 
     #[test]
     fn non_ascii_space() {
-        let mut dispatcher = Keybinds::new(vec![Keybind::new('　', A::Action1)]);
-        assert_eq!(dispatcher.dispatch('　'), Some(&A::Action1));
+        let mut keybinds = Keybinds::new(vec![Keybind::new('　', A::Action1)]);
+        assert_eq!(keybinds.dispatch('　'), Some(&A::Action1));
 
-        let mut dispatcher = Keybinds::default();
-        dispatcher.bind("　", A::Action1).unwrap();
-        dispatcher.bind("Ctrl+　", A::Action2).unwrap();
-        assert_eq!(dispatcher.dispatch('　'), Some(&A::Action1));
+        let mut keybinds = Keybinds::default();
+        keybinds.bind("　", A::Action1).unwrap();
+        keybinds.bind("Ctrl+　", A::Action2).unwrap();
+        assert_eq!(keybinds.dispatch('　'), Some(&A::Action1));
         assert_eq!(
-            dispatcher.dispatch(KeyInput::new('　', Mods::CTRL)),
+            keybinds.dispatch(KeyInput::new('　', Mods::CTRL)),
             Some(&A::Action2),
         );
     }

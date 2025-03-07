@@ -38,7 +38,7 @@ timeout = 500
     let config: Config = toml::from_str(configuration).unwrap();
     let mut keybinds = config.keyboard.bindings;
 
-    // Set the matching timeout if needed
+    // Set the key sequence matching timeout if needed
     if let Some(ms) = config.keyboard.timeout {
         keybinds.set_timeout(Duration::from_millis(ms));
     }
