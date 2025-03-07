@@ -1,4 +1,4 @@
-use keybinds::KeybindsOld;
+use keybinds::Keybinds;
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ enum Action {
 #[derive(Deserialize)]
 struct KeyboardConfig {
     // `Keybinds` implements serde's `Deserialize` to deserialize key bindings from a mapping object
-    bindings: KeybindsOld<Action>,
+    bindings: Keybinds<Action>,
     // Timeout on waiting for the next input while the matching is ongoing.
     timeout: Option<u64>,
 }
@@ -34,16 +34,15 @@ timeout = 500
 "Ctrl+x Ctrl+c" = "ExitApp"
 "#;
 
-    // Parse the TOML input
-    let mut config: Config = toml::from_str(configuration).unwrap();
+    // Parse the TOML input into the `Config` instance
+    let config: Config = toml::from_str(configuration).unwrap();
+    let mut keybinds = config.keyboard.bindings;
 
-    // Use the key bindings parsed from the TOML input
-    let mut dispatcher = config.keyboard.bindings.take_dispatcher();
     // Set the matching timeout if needed
     if let Some(ms) = config.keyboard.timeout {
-        dispatcher.set_timeout(Duration::from_millis(ms));
+        keybinds.set_timeout(Duration::from_millis(ms));
     }
 
-    dbg!(dispatcher.keybinds());
-    dbg!(dispatcher.timeout());
+    dbg!(keybinds.as_slice());
+    dbg!(keybinds.timeout());
 }

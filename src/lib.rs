@@ -109,4 +109,4 @@ pub mod arbitrary;
 
 pub use error::{Error, Result};
 pub use key::{Key, KeyInput, KeySeq, Match, Mods};
-pub use keybind::{Found, Keybind, Keybinds, KeybindsOld, DEFAULT_TIMEOUT};
+pub use keybind::{Keybind, Keybinds, DEFAULT_TIMEOUT};

@@ -4,7 +4,7 @@
 //!
 //! ```
 //! use arbitrary::{Arbitrary, Result, Unstructured};
-//! use keybinds::{Key, KeyInput, KeySeq, Keybind, KeybindsOld, Mods};
+//! use keybinds::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
 //!
 //! // Actions dispatched by key bindings.
 //! #[derive(Arbitrary, Debug)]
@@ -25,9 +25,9 @@
 //! let _ = KeyInput::arbitrary(&mut unstructured).unwrap();
 //! let _ = KeySeq::arbitrary(&mut unstructured).unwrap();
 //! let _ = Keybind::<Action>::arbitrary(&mut unstructured).unwrap();
-//! let _ = KeybindsOld::<Action>::arbitrary(&mut unstructured).unwrap();
+//! let _ = Keybinds::<Action>::arbitrary(&mut unstructured).unwrap();
 //! ```
-use crate::Mods;
+use crate::{Keybinds, Mods};
 use arbitrary::{Arbitrary, Result, Unstructured};
 
 // Note: We don't use bitflags crate's `arbitrary` feature because it is quite inefficient.
@@ -52,5 +52,12 @@ impl Arbitrary<'_> for Mods {
             mods |= Mods::SHIFT;
         }
         Ok(mods)
+    }
+}
+
+// Note: Do not generate abitrary values for timeout and ongoing key sequence.
+impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Keybinds<A> {
+    fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
+        Ok(Self::new(u.arbitrary()?))
     }
 }

@@ -1,6 +1,4 @@
 use crate::{Key, KeyInput, KeySeq, Match, Result};
-use std::mem;
-use std::ops::Deref;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "arbitrary")]
@@ -57,212 +55,6 @@ impl<A> Keybind<A> {
     }
 }
 
-/// The result of finding a matched key binding by [`KeybindsOld::find`].
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Found<'a, A> {
-    /// The keybind corresponding to the key inputs was found.
-    Keybind(&'a Keybind<A>),
-    /// No keybind completely matched to the key inputs but some keybinds may match in the future. That means the
-    /// matching is still ongoing.
-    Ongoing,
-    /// No keybind matched.
-    None,
-}
-
-/// An array of key bindings used by [`Keybinds`].
-///
-/// This implements [`Deref`] for dereferencing as `&[Keybind]` so it allows accessing the elements by the immutable
-/// methods. Note that this struct does not implement `DerefMut` to prevent the dispatcher state from being broken by
-/// modifying the key bindings.
-///
-/// ```
-/// use keybinds::{KeybindsOld, Keybind, Key, Keybinds};
-///
-/// enum Action {
-///     Hello,
-///     Goodbye,
-/// }
-///
-/// let keybinds = KeybindsOld::from(vec![
-///     Keybind::new('H', Action::Hello),
-///     Keybind::new(Key::Enter, Action::Goodbye),
-///     // ...
-/// ]);
-/// let dispatcher = Keybinds::new(keybinds);
-/// ```
-#[derive(Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct KeybindsOld<A>(Vec<Keybind<A>>);
-
-impl<A> KeybindsOld<A> {
-    /// Search a key binding which is matched to the given inputs.
-    ///
-    /// The search result is matched or ongoing or unmatched. Please read the [`Found`] document for more details. When
-    /// the inputs match to multiple key bindings, the first one found will be returned.
-    ///
-    /// ```
-    /// use keybinds::{KeybindsOld, Keybind, KeySeq, Found};
-    ///
-    /// #[derive(Debug, PartialEq)]
-    /// enum Action {
-    ///     Foo,
-    ///     Bar,
-    /// }
-    ///
-    /// let binds = KeybindsOld::from(vec![
-    ///     Keybind::new(KeySeq::from(vec!['a'.into(), 'b'.into()]), Action::Foo),
-    ///     Keybind::new(KeySeq::from(vec!['a'.into(), 'c'.into()]), Action::Bar),
-    /// ]);
-    ///
-    /// // When 'a' is input, key bindings "a b" and "a c" are ongoing.
-    /// assert_eq!(binds.find(&['a'.into()]), Found::Ongoing);
-    ///
-    /// // Inputs 'a' → 'b' matches to the key binding "a b".
-    /// assert!(
-    ///     matches!(
-    ///         binds.find(&['a'.into(), 'b'.into()]),
-    ///         Found::Keybind(matched) if matched.action == Action::Foo,
-    ///     ),
-    /// );
-    ///
-    /// // Input 'x' matches nothing.
-    /// assert_eq!(binds.find(&['x'.into()]), Found::None);
-    /// ```
-    pub fn find(&self, inputs: &[KeyInput]) -> Found<'_, A> {
-        let mut saw_prefix = false;
-        for bind in self.0.iter() {
-            match bind.seq.match_to(inputs) {
-                Match::Matched => return Found::Keybind(bind),
-                Match::Prefix => saw_prefix = true,
-                Match::Unmatch => continue,
-            }
-        }
-        if saw_prefix {
-            Found::Ongoing
-        } else {
-            Found::None
-        }
-    }
-
-    /// Create a [`Keybinds`] instance from the key bindings.
-    ///
-    /// This method is a utility to easily create a dispatcher instance from your configuration without moving out
-    /// the [`KeybindsOld`] instance. After calling this method, this instance is cleared to avoid a heap allocation.
-    ///
-    /// ```
-    /// use keybinds::{KeybindsOld, Keybind};
-    ///
-    /// struct Action;
-    ///
-    /// // Configuration of your app
-    /// struct Config {
-    ///     bindings: KeybindsOld<Action>,
-    /// }
-    ///
-    /// // Get your app configuration from somewhere (e.g. parsing from a configuration file)
-    /// let mut config = Config {
-    ///     bindings: KeybindsOld::from(vec![
-    ///         Keybind::new('a', Action),
-    ///         // ...
-    ///     ]),
-    /// };
-    ///
-    /// // Create a dispatcher instance without moving out `bindings` field from the `Config` instance
-    /// let mut dispatcher = config.bindings.take_dispatcher();
-    ///
-    /// # fn do_something(_config: &Config) {}
-    /// // The `Config` instance is still accessible here
-    /// do_something(&config);
-    /// ```
-    pub fn take_dispatcher(&mut self) -> Keybinds<A> {
-        Keybinds::new(mem::take(self))
-    }
-}
-
-/// Create an empty keybinds instance.
-///
-/// ```
-/// use keybinds::KeybindsOld;
-///
-/// struct Action;
-///
-/// assert!(KeybindsOld::<Action>::default().is_empty());
-/// ```
-impl<A> Default for KeybindsOld<A> {
-    fn default() -> Self {
-        Self(vec![])
-    }
-}
-
-impl<A> Deref for KeybindsOld<A> {
-    type Target = [Keybind<A>];
-
-    fn deref(&self) -> &Self::Target {
-        self.0.as_slice()
-    }
-}
-
-impl<A> From<Vec<Keybind<A>>> for KeybindsOld<A> {
-    fn from(binds: Vec<Keybind<A>>) -> Self {
-        Self(binds)
-    }
-}
-
-/// Collect [`KeybindsOld`] from an iterator of [`Keybind`].
-///
-/// ```
-/// use keybinds::{KeybindsOld, Keybind, KeySeq};
-///
-/// enum Action {
-///     Foo,
-///     Bar,
-///     Piyo,
-/// }
-///
-/// let config = [
-///     ("f o o",         Action::Foo),
-///     ("Ctrl+b Ctrl+a", Action::Bar),
-///     ("Enter",         Action::Piyo),
-/// ];
-///
-/// let binds: KeybindsOld<_> = config
-///         .into_iter()
-///         .map(|(k, a)| k.parse().map(|k: KeySeq| Keybind::new(k, a)))
-///         .collect::<Result<_, _>>()
-///         .unwrap();
-///
-/// ```
-impl<A> FromIterator<Keybind<A>> for KeybindsOld<A> {
-    fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
-        KeybindsOld(iter.into_iter().collect())
-    }
-}
-
-/// Convert [`KeybindsOld`] into an array of [`Keybind`] instances. This method is useful to update the key bindings.
-///
-/// ```
-/// use keybinds::{KeybindsOld, Keybind};
-///
-/// enum Action {
-///     Foo,
-///     Bar,
-/// }
-///
-/// let binds = KeybindsOld::from(vec![Keybind::new('a', Action::Foo)]);
-///
-/// // Update the bindings later
-/// let mut binds: Vec<_> = binds.into();
-/// binds.push(Keybind::new('b', Action::Bar));
-///
-/// // Recreate the `KeybindsOld` instance again.
-/// let binds: KeybindsOld<_> = binds.into();
-/// ```
-impl<A> From<KeybindsOld<A>> for Vec<Keybind<A>> {
-    fn from(binds: KeybindsOld<A>) -> Self {
-        binds.0
-    }
-}
-
 /// The default timeout value of the key binding matching by [`Keybinds`].
 ///
 /// The interval of key inputs must be smaller than it. The default value is 1 second.
@@ -303,36 +95,37 @@ pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 /// assert_eq!(dispatcher.dispatch(KeyInput::new('b', Mods::CTRL)), None);
 /// assert_eq!(dispatcher.dispatch(KeyInput::new('a', Mods::CTRL)), Some(&Action::Bar));
 /// ```
+#[derive(Debug)]
 pub struct Keybinds<A> {
-    binds: KeybindsOld<A>,
+    binds: Vec<Keybind<A>>,
     ongoing: Vec<KeyInput>,
     last_input: Option<Instant>,
     timeout: Duration,
 }
 
 impl<A> Default for Keybinds<A> {
-    /// Create an empty dispatcher.
+    /// Create an empty [`Keybinds`] instance.
     ///
     /// ```
     /// use keybinds::Keybinds;
     ///
     /// struct Action;
     ///
-    /// let mut dispatcher = Keybinds::default();
-    /// assert!(dispatcher.keybinds().is_empty());
+    /// let mut keybinds = Keybinds::default();
+    /// assert!(keybinds.as_slice().is_empty());
     ///
-    /// dispatcher.bind("Ctrl+X", Action).unwrap();
-    /// assert!(!dispatcher.keybinds().is_empty());
+    /// keybinds.bind("Ctrl+X", Action).unwrap();
+    /// assert!(!keybinds.as_slice().is_empty());
     /// ```
     fn default() -> Self {
-        Self::new(KeybindsOld::default())
+        Self::new(vec![])
     }
 }
 
 impl<A> Keybinds<A> {
-    /// Create a dispatcher instance from the given key bindings. This constructor function is useful for creating
-    /// a dispatcher from [`KeybindsOld`] or `Vec<Keybind>`. If you want to create a [`KeybindsOld`] instance from
-    /// `Iterator<Item = Keybind>`, [`Iterator::collect`] is also useful.
+    /// Create a [`Keybinds`] instance from the array of key bindings.
+    ///
+    /// If you want to collect a [`Keybinds`] instance from an iterator, [`Keybinds::from_iter`] is also useful.
     ///
     /// ```
     /// use keybinds::{Keybind, Keybinds, Key, Mods, KeyInput};
@@ -350,11 +143,11 @@ impl<A> Keybinds<A> {
     /// ];
     ///
     /// let dispatcher = Keybinds::new(binds);
-    /// assert_eq!(dispatcher.keybinds().len(), 3);
+    /// assert_eq!(dispatcher.as_slice().len(), 3);
     /// ```
-    pub fn new<K: Into<KeybindsOld<A>>>(binds: K) -> Self {
+    pub fn new(binds: Vec<Keybind<A>>) -> Self {
         Self {
-            binds: binds.into(),
+            binds,
             ongoing: vec![],
             last_input: None,
             timeout: DEFAULT_TIMEOUT,
@@ -371,10 +164,10 @@ impl<A> Keybinds<A> {
     /// let mut dispatcher = Keybinds::default();
     ///
     /// dispatcher.push(Keybind::new('x', Action));
-    /// assert_eq!(dispatcher.keybinds().len(), 1);
+    /// assert_eq!(dispatcher.as_slice().len(), 1);
     /// ```
     pub fn push(&mut self, bind: Keybind<A>) {
-        self.binds.0.push(bind);
+        self.binds.push(bind);
         self.reset();
     }
 
@@ -392,7 +185,7 @@ impl<A> Keybinds<A> {
     /// dispatcher.bind("Ctrl+x Ctrl+y", Action).unwrap();
     /// dispatcher.bind("Foo+x", Action).unwrap_err(); // Unknown modifier "Foo"
     ///
-    /// assert_eq!(dispatcher.keybinds().len(), 1);
+    /// assert_eq!(dispatcher.as_slice().len(), 1);
     ///
     /// // Dispatch the action
     /// assert_eq!(dispatcher.dispatch(KeyInput::new('x', Mods::CTRL)), None);          // Matching is ongoing
@@ -449,19 +242,25 @@ impl<A> Keybinds<A> {
         self.ongoing.push(input);
 
         // `self.reset` cannot be called because the borrow checker needs to split field lifetimes.
-        match self.binds.find(&self.ongoing) {
-            Found::Keybind(bind) => {
-                self.ongoing.clear();
-                self.last_input = None;
-                Some(&bind.action)
-            }
-            Found::Ongoing => None, // Matching is still ongoing
-            Found::None => {
-                self.ongoing.clear();
-                self.last_input = None;
-                None
+
+        let mut is_ongoing = false;
+        for bind in self.binds.iter() {
+            match bind.seq.match_to(&self.ongoing) {
+                Match::Matched => {
+                    self.ongoing.clear();
+                    self.last_input = None;
+                    return Some(&bind.action);
+                }
+                Match::Prefix => is_ongoing = true,
+                Match::Unmatch => continue,
             }
         }
+
+        if !is_ongoing {
+            self.ongoing.clear();
+            self.last_input = None;
+        }
+        None
     }
 
     /// Set the timeout to wait for the next key input while matching to key bindings is ongoing. For the default
@@ -536,21 +335,22 @@ impl<A> Keybinds<A> {
         self.timeout
     }
 
-    /// Get the reference to the inner [`KeybindsOld`] instance.
+    /// Get the reference to the inner slice of [`Keybind`] instances.
     ///
     /// ```
-    /// use keybinds::{Keybinds, KeybindsOld, Keybind};
+    /// use keybinds::{Keybinds, Keybind};
     ///
     /// #[derive(Clone, PartialEq, Eq, Debug)]
     /// struct Action;
     ///
-    /// let binds = KeybindsOld::from(vec![Keybind::new('a', Action)]);
+    /// let mut keybinds = Keybinds::default();
     ///
-    /// let dispatcher = Keybinds::new(binds.clone());
-    /// assert_eq!(dispatcher.keybinds(), &binds);
+    /// keybinds.bind("a", Action).unwrap();
+    ///
+    /// assert_eq!(keybinds.as_slice(), &[Keybind::new('a', Action)]);
     /// ```
-    pub fn keybinds(&self) -> &KeybindsOld<A> {
-        &self.binds
+    pub fn as_slice(&self) -> &[Keybind<A>] {
+        self.binds.as_slice()
     }
 
     /// Return whether the matching for key bindings is ongoing.
@@ -573,23 +373,59 @@ impl<A> Keybinds<A> {
         self.last_input.is_some()
     }
 
-    /// Convert to the inner [`KeybindsOld`] instance. This method is useful when you need to modify key bindings.
+    /// Convert to the inner [`Vec`] of [`Keybind`] instances. This method is useful when you need to modify the key
+    /// bindings.
     ///
     /// ```
-    /// use keybinds::{Keybinds, KeybindsOld, Keybind};
+    /// use keybinds::{Keybinds, Keybind};
     ///
     /// #[derive(Clone, PartialEq, Eq, Debug)]
     /// struct Action;
     ///
-    /// let original = KeybindsOld::from(vec![Keybind::new('a', Action)]);
+    /// let mut keybinds = Keybinds::new(vec![Keybind::new('a', Action)]);
     ///
-    /// let dispatcher = Keybinds::new(original.clone());
-    /// let binds = dispatcher.into_keybinds();
+    /// let mut config = keybinds.into_vec();
+    /// config[0] = Keybind::new('b', Action);
     ///
-    /// assert_eq!(original, binds);
+    /// // Recreate the `Keybinds` instance
+    /// let mut keybinds = Keybinds::new(config);
+    ///
+    /// assert_eq!(keybinds.dispatch('a'), None);
+    /// assert_eq!(keybinds.dispatch('b'), Some(&Action));
     /// ```
-    pub fn into_keybinds(self) -> KeybindsOld<A> {
+    pub fn into_vec(self) -> Vec<Keybind<A>> {
         self.binds
+    }
+}
+
+/// Collect [`Keybinds`] instance from an iterator of [`Keybind`].
+///
+/// ```
+/// use keybinds::{Keybinds, Keybind, KeySeq};
+///
+/// enum Action {
+///     Foo,
+///     Bar,
+///     Piyo,
+/// }
+///
+/// let config = [
+///     ("f o o",         Action::Foo),
+///     ("Ctrl+b Ctrl+a", Action::Bar),
+///     ("Enter",         Action::Piyo),
+/// ];
+///
+/// let binds: Keybinds<_> = config
+///         .into_iter()
+///         .map(|(k, a)| k.parse().map(|k: KeySeq| Keybind::new(k, a)))
+///         .collect::<Result<_, _>>()
+///         .unwrap();
+///
+/// assert_eq!(binds.as_slice().len(), 3);
+/// ```
+impl<A> FromIterator<Keybind<A>> for Keybinds<A> {
+    fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
+        Keybinds::new(iter.into_iter().collect())
     }
 }
 
@@ -605,6 +441,7 @@ mod tests {
         Action2,
         Action3,
         Action4,
+        Action5,
     }
 
     #[test]
@@ -613,10 +450,14 @@ mod tests {
             Keybind::new('a', A::Action1),
             Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
             Keybind::new(vec!['B'.into(), 'c'.into()], A::Action3),
-            Keybind::new(Key::Up, A::Action4),
+            Keybind::new(
+                vec!['H'.into(), 'e'.into(), 'l'.into(), 'l'.into(), 'o'.into()],
+                A::Action4,
+            ),
+            Keybind::new(Key::Up, A::Action5),
         ];
 
-        let mut keybinds = Keybinds::new(KeybindsOld(binds.clone()));
+        let mut keybinds = Keybinds::new(binds.clone());
 
         for bind in binds {
             keybinds.reset();
@@ -633,8 +474,7 @@ mod tests {
 
     #[test]
     fn discard_ongoing_nothing_matched() {
-        let binds = vec![Keybind::new('a', A::Action1)];
-        let mut keybinds = Keybinds::new(binds);
+        let mut keybinds = Keybinds::new(vec![Keybind::new('a', A::Action1)]);
 
         assert_eq!(keybinds.dispatch('x'), None);
         assert_eq!(keybinds.dispatch('y'), None);
@@ -656,14 +496,14 @@ mod tests {
             ),
         ];
 
-        let binds: KeybindsOld<_> = expected.clone().into_iter().collect();
-        assert_eq!(*binds, expected);
+        let binds: Keybinds<_> = expected.iter().cloned().collect();
+        assert_eq!(binds.as_slice(), &expected);
     }
 
     #[test]
     fn dispatcher_is_ongoing() {
-        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
-        let mut dispatcher = Keybinds::new(binds);
+        let mut dispatcher =
+            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
 
         assert!(!dispatcher.is_ongoing());
         dispatcher.dispatch('x');
@@ -691,8 +531,8 @@ mod tests {
 
     #[test]
     fn dispatcher_ignore_keys() {
-        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
-        let mut dispatcher = Keybinds::new(binds);
+        let mut dispatcher =
+            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
         dispatcher.dispatch('a');
         assert_eq!(dispatcher.dispatch(Key::Ignored), None);
         assert_eq!(dispatcher.dispatch('b'), Some(&A::Action1));
@@ -700,8 +540,8 @@ mod tests {
 
     #[test]
     fn dispatcher_timeout_input() {
-        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
-        let mut dispatcher = Keybinds::new(binds);
+        let mut dispatcher =
+            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
         dispatcher.set_timeout(Duration::from_millis(10));
 
         dispatcher.dispatch('a');
@@ -735,8 +575,8 @@ mod tests {
 
     #[test]
     fn dispatcher_reset() {
-        let binds = vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)];
-        let mut dispatcher = Keybinds::new(binds);
+        let mut dispatcher =
+            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
         dispatcher.dispatch('a');
         assert!(dispatcher.is_ongoing());
         dispatcher.reset();
@@ -744,21 +584,20 @@ mod tests {
     }
 
     #[test]
-    fn default_dispatcher() {
-        let mut dispatcher = Keybinds::<()>::default();
-        assert!(dispatcher.keybinds().is_empty());
-        assert_eq!(dispatcher.dispatch('a'), None);
-        assert!(!dispatcher.is_ongoing());
+    fn default_keybinds() {
+        let mut binds = Keybinds::<()>::default();
+        assert!(binds.as_slice().is_empty());
+        assert_eq!(binds.dispatch('a'), None);
+        assert!(!binds.is_ongoing());
     }
 
     #[test]
     fn distinguish_bindings_with_modifiers() {
-        let binds = vec![
+        let mut dispatcher = Keybinds::new(vec![
             Keybind::new(KeyInput::new('a', Mods::CTRL | Mods::ALT), A::Action1),
             Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
             Keybind::new('a', A::Action3),
-        ];
-        let mut dispatcher = Keybinds::new(binds);
+        ]);
 
         assert_eq!(dispatcher.dispatch('a'), Some(&A::Action3));
         assert_eq!(
@@ -777,23 +616,21 @@ mod tests {
 
     #[test]
     fn keybinds_priority_order() {
-        let binds = vec![
+        let mut dispatcher = Keybinds::new(vec![
             Keybind::new('a', A::Action1),
             Keybind::new('a', A::Action2),
             Keybind::new('a', A::Action3),
-        ];
-        let mut dispatcher = Keybinds::new(binds);
+        ]);
         assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
     }
 
     #[test]
     fn smaller_seq_is_prioritized() {
-        let binds = vec![
+        let mut dispatcher = Keybinds::new(vec![
             Keybind::new('a', A::Action1),
             Keybind::new(vec!['a'.into(), 'a'.into()], A::Action2),
             Keybind::new(vec!['a'.into(), 'b'.into()], A::Action3),
-        ];
-        let mut dispatcher = Keybinds::new(binds);
+        ]);
 
         assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
         assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
@@ -802,8 +639,7 @@ mod tests {
 
     #[test]
     fn non_ascii_space() {
-        let binds = vec![Keybind::new('　', A::Action1)];
-        let mut dispatcher = Keybinds::new(binds);
+        let mut dispatcher = Keybinds::new(vec![Keybind::new('　', A::Action1)]);
         assert_eq!(dispatcher.dispatch('　'), Some(&A::Action1));
 
         let mut dispatcher = Keybinds::default();
@@ -814,17 +650,5 @@ mod tests {
             dispatcher.dispatch(KeyInput::new('　', Mods::CTRL)),
             Some(&A::Action2),
         );
-    }
-
-    #[test]
-    fn keybinds_take_dispatcher() {
-        let mut binds = KeybindsOld::from(vec![
-            Keybind::new('a', A::Action1),
-            Keybind::new('b', A::Action2),
-        ]);
-        let mut dispatcher = binds.take_dispatcher();
-        assert!(binds.is_empty());
-        assert_eq!(dispatcher.keybinds().len(), 2);
-        assert_eq!(dispatcher.dispatch('a'), Some(&A::Action1));
     }
 }

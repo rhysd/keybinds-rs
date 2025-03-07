@@ -48,7 +48,7 @@ impl Default for Example {
             maximized: false,
             theme: Theme::Dark,
             help: keybinds
-                .keybinds()
+                .as_slice()
                 .iter()
                 .map(|b| (format!("{}", b.seq), b.action))
                 .collect(),

@@ -1,4 +1,4 @@
-use keybinds::{KeySeq, Keybind, KeybindsOld};
+use keybinds::{KeySeq, Keybind, Keybinds};
 use serde::Serialize;
 use std::io::stdin;
 
@@ -11,25 +11,25 @@ enum Action {
 // Configuration of your app
 #[derive(Serialize)]
 struct Config {
-    bindings: KeybindsOld<Action>,
+    bindings: Keybinds<Action>,
 }
 
 fn main() {
     println!("Input your favorite key bindings like Ctrl+a per line.");
     println!("Input an empty line to finish.");
 
-    let mut binds = vec![];
+    let mut config = vec![];
     for line in stdin().lines().map(Result::unwrap) {
         if line.is_empty() {
             break;
         }
         let seq: KeySeq = line.parse().unwrap();
-        binds.push(Keybind::new(seq, Action::DoSomething));
+        config.push(Keybind::new(seq, Action::DoSomething));
     }
 
     let config = Config {
         // `Keybinds` is a map from key bindings to the actions
-        bindings: KeybindsOld::from(binds),
+        bindings: Keybinds::new(config),
     };
 
     // Generate configuration file content using serde

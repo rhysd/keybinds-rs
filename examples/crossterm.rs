@@ -1,6 +1,6 @@
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute};
-use keybinds::{Keybinds, KeybindsOld};
+use keybinds::Keybinds;
 use serde::Deserialize;
 use std::io;
 
@@ -21,7 +21,7 @@ enum Action {
 // Configuration of your app
 #[derive(Deserialize)]
 struct Config {
-    keyboard: KeybindsOld<Action>,
+    keyboard: Keybinds<Action>,
 }
 
 const CONFIG_FILE: &str = r#"
@@ -62,15 +62,13 @@ const CONFIG_FILE: &str = r#"
 fn main() -> io::Result<()> {
     // Parse the configuration from the file content
     let config: Config = toml::from_str(CONFIG_FILE).unwrap();
-
-    // Create the key binding dispatcher to handle key input events
-    let mut dispatcher = Keybinds::new(config.keyboard);
+    let mut keybinds = config.keyboard;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     while let Ok(event) = event::read() {
         // If the event triggered some action, handle it using `match`
-        if let Some(action) = dispatcher.dispatch(&event) {
+        if let Some(action) = keybinds.dispatch(&event) {
             match action {
                 Action::Exit => break,
                 Action::Up => execute!(stdout, cursor::MoveUp(1))?,
