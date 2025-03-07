@@ -1,5 +1,5 @@
 use arbitrary::{Arbitrary, Result, Unstructured};
-use keybinds::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
+use keybinds::{Key, KeyInput, KeySeq, Keybind, KeybindsOld, Mods};
 
 // Actions dispatched by key bindings.
 #[derive(Arbitrary, Debug)]
@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     println!("{:?}", KeyInput::arbitrary(&mut unstructured)?);
     println!("{:?}", KeySeq::arbitrary(&mut unstructured)?);
     println!("{:?}", Keybind::<Action>::arbitrary(&mut unstructured)?);
-    println!("{:?}", Keybinds::<Action>::arbitrary(&mut unstructured)?);
+    println!("{:?}", KeybindsOld::<Action>::arbitrary(&mut unstructured)?);
 
     Ok(())
 }

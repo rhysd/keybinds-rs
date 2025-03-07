@@ -3,11 +3,11 @@
 //! This module provides the conversions from iced's event or key types to [`Key`], [`Mods`], and
 //! [`KeyInput`].
 //!
-//! Put [`KeybindDispatcher`][crate::KeybindDispatcher] as a part of state of your application and
+//! Put [`Keybinds`][crate::Keybinds] as a part of state of your application and
 //! dispatch the action in the `update` method. Key events can be subscribed as [`iced::Subscription`].
 //!
 //! ```no_run
-//! use keybinds::KeybindDispatcher;
+//! use keybinds::Keybinds;
 //! use iced::event::listen_with;
 //! use iced::{keyboard, Event, Element, Subscription, Task};
 //!
@@ -23,12 +23,12 @@
 //! }
 //!
 //! struct App {
-//!     keybinds: KeybindDispatcher<Action>,
+//!     keybinds: Keybinds<Action>,
 //! }
 //!
 //! impl Default for App {
 //!     fn default() -> Self {
-//!         let mut keybinds = KeybindDispatcher::default();
+//!         let mut keybinds = Keybinds::default();
 //!
 //!         // Define the key bindings
 //!         keybinds.bind("H e l l o", Action::SayHello).unwrap();

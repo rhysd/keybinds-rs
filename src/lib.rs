@@ -23,7 +23,7 @@
 //! # Minimal example
 //!
 //! ```
-//! use keybinds::{KeybindDispatcher, KeyInput, Key, Mods};
+//! use keybinds::{Keybinds, KeyInput, Key, Mods};
 //!
 //! // Actions dispatched by key bindings
 //! #[derive(PartialEq, Eq, Debug)]
@@ -34,7 +34,7 @@
 //! }
 //!
 //! // Create a dispatcher to dispatch actions for upcoming key inputs
-//! let mut dispatcher = KeybindDispatcher::default();
+//! let mut dispatcher = Keybinds::default();
 //!
 //! // Register key bindings to dispatch the actions
 //!
@@ -109,4 +109,4 @@ pub mod arbitrary;
 
 pub use error::{Error, Result};
 pub use key::{Key, KeyInput, KeySeq, Match, Mods};
-pub use keybind::{Found, Keybind, KeybindDispatcher, Keybinds, DEFAULT_TIMEOUT};
+pub use keybind::{Found, Keybind, Keybinds, KeybindsOld, DEFAULT_TIMEOUT};

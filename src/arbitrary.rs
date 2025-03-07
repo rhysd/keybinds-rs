@@ -4,7 +4,7 @@
 //!
 //! ```
 //! use arbitrary::{Arbitrary, Result, Unstructured};
-//! use keybinds::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
+//! use keybinds::{Key, KeyInput, KeySeq, Keybind, KeybindsOld, Mods};
 //!
 //! // Actions dispatched by key bindings.
 //! #[derive(Arbitrary, Debug)]
@@ -25,7 +25,7 @@
 //! let _ = KeyInput::arbitrary(&mut unstructured).unwrap();
 //! let _ = KeySeq::arbitrary(&mut unstructured).unwrap();
 //! let _ = Keybind::<Action>::arbitrary(&mut unstructured).unwrap();
-//! let _ = Keybinds::<Action>::arbitrary(&mut unstructured).unwrap();
+//! let _ = KeybindsOld::<Action>::arbitrary(&mut unstructured).unwrap();
 //! ```
 use crate::Mods;
 use arbitrary::{Arbitrary, Result, Unstructured};

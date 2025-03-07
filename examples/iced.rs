@@ -2,7 +2,7 @@ use iced::alignment::Horizontal;
 use iced::event::{listen_with, Event};
 use iced::widget::{button, column, container, row, text, Column};
 use iced::{keyboard, window, Element, Length::Fill, Subscription, Task, Theme};
-use keybinds::{Key, KeyInput, KeybindDispatcher};
+use keybinds::{Key, KeyInput, Keybinds};
 use std::fmt::Write;
 
 // Actions dispatched by the key bindings
@@ -25,7 +25,7 @@ struct Example {
     window_id: window::Id,
     ongoing_input: String,
     last_action: String,
-    keybinds: KeybindDispatcher<Action>,
+    keybinds: Keybinds<Action>,
     maximized: bool,
     theme: Theme,
     help: Vec<(String, Action)>,
@@ -33,7 +33,7 @@ struct Example {
 
 impl Default for Example {
     fn default() -> Self {
-        let mut keybinds = KeybindDispatcher::default();
+        let mut keybinds = Keybinds::default();
 
         // Define the key bindings
         keybinds.bind("Mod+m", Action::ToggleMaximize).unwrap();

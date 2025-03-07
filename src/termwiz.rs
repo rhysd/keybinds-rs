@@ -4,7 +4,7 @@
 //! and [`KeyInput`].
 //!
 //! ```no_run
-//! use keybinds::{KeyInput, KeybindDispatcher};
+//! use keybinds::{KeyInput, Keybinds};
 //! use termwiz::caps::Capabilities;
 //! use termwiz::terminal::buffered::BufferedTerminal;
 //! use termwiz::terminal::{new_terminal, Terminal};
@@ -16,7 +16,7 @@
 //! }
 //!
 //! // Create an action dispatcher to dispatch actions for upcoming key inputs
-//! let mut dispatcher = KeybindDispatcher::default();
+//! let mut dispatcher = Keybinds::default();
 //!
 //! // Key bindings to dispatch the actions
 //! dispatcher.bind("h i", Action::SayHi).unwrap();

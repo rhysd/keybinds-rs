@@ -1,4 +1,4 @@
-use keybinds::{KeySeq, Keybind, Keybinds};
+use keybinds::{KeySeq, Keybind, KeybindsOld};
 use serde::Serialize;
 use std::io::stdin;
 
@@ -11,7 +11,7 @@ enum Action {
 // Configuration of your app
 #[derive(Serialize)]
 struct Config {
-    bindings: Keybinds<Action>,
+    bindings: KeybindsOld<Action>,
 }
 
 fn main() {
@@ -29,7 +29,7 @@ fn main() {
 
     let config = Config {
         // `Keybinds` is a map from key bindings to the actions
-        bindings: Keybinds::from(binds),
+        bindings: KeybindsOld::from(binds),
     };
 
     // Generate configuration file content using serde

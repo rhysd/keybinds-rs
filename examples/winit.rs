@@ -1,5 +1,5 @@
 use keybinds::winit::WinitEventConverter;
-use keybinds::{Key, KeybindDispatcher};
+use keybinds::{Key, Keybinds};
 use winit::application::ApplicationHandler;
 use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -16,13 +16,13 @@ enum Action {
 
 struct App {
     window: Option<Window>,
-    dispatcher: KeybindDispatcher<Action>,
+    dispatcher: Keybinds<Action>,
     converter: WinitEventConverter,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let mut dispatcher = KeybindDispatcher::default();
+        let mut dispatcher = Keybinds::default();
 
         // Key bindings to dispatch the actions
         dispatcher.bind("h i", Action::SayHi).unwrap();

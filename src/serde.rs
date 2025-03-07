@@ -1,11 +1,11 @@
 //! Support for [`serde`] crate.
 //!
-//! This module provides [`Deserialize`] and [`Serialize`] traits support for [`Keybinds`] and some other types to
+//! This module provides [`Deserialize`] and [`Serialize`] traits support for [`KeybindsOld`] and some other types to
 //! easily parse key bindings from a configuration file.
 //!
 //! ```
 //! use serde::{Serialize, Deserialize};
-//! use keybinds::{Keybinds, Key, Mods, KeyInput};
+//! use keybinds::{KeybindsOld, Key, Mods, KeyInput};
 //!
 //! // Actions dispatched by key bindings
 //! #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -17,8 +17,8 @@
 //! // Configuration file format of your application
 //! #[derive(Serialize, Deserialize)]
 //! struct Config {
-//!     // `Keybinds` implements serde's `Deserialize`
-//!     bindings: Keybinds<Action>,
+//!     // `KeybindsOld` implements serde's `Deserialize`
+//!     bindings: KeybindsOld<Action>,
 //! }
 //!
 //! // Configuration file content
@@ -36,7 +36,7 @@
 //!
 //! assert_eq!(&generated, configuration);
 //! ```
-use crate::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
+use crate::{Key, KeyInput, KeySeq, Keybind, KeybindsOld, Mods};
 use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::fmt;
@@ -81,14 +81,14 @@ impl<'de> Deserialize<'de> for KeySeq {
     }
 }
 
-impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
+impl<'de, A: Deserialize<'de>> Deserialize<'de> for KeybindsOld<A> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         use std::marker::PhantomData;
 
         struct V<A>(PhantomData<A>);
 
         impl<'de, A: Deserialize<'de>> Visitor<'de> for V<A> {
-            type Value = Keybinds<A>;
+            type Value = KeybindsOld<A>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("key bindings object as pairs of key sequences and actions")
@@ -99,7 +99,7 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
                 while let Some((seq, action)) = access.next_entry::<KeySeq, A>()? {
                     binds.push(Keybind::new(seq, action));
                 }
-                Ok(Keybinds::from(binds))
+                Ok(KeybindsOld::from(binds))
             }
         }
 
@@ -131,7 +131,7 @@ impl Serialize for KeySeq {
     }
 }
 
-impl<A: Serialize> Serialize for Keybinds<A> {
+impl<A: Serialize> Serialize for KeybindsOld<A> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(Some(self.len()))?;
         for keybind in self.iter() {
@@ -159,7 +159,7 @@ mod tests {
 
     #[derive(Serialize, Deserialize, Debug)]
     struct Config {
-        bindings: Keybinds<A>,
+        bindings: KeybindsOld<A>,
     }
 
     #[test]
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn deserialize_empty_table() {
-        let _: Keybinds<A> = toml::from_str("").unwrap();
+        let _: KeybindsOld<A> = toml::from_str("").unwrap();
     }
 
     #[test]
@@ -214,7 +214,7 @@ mod tests {
         ];
 
         for input in tests {
-            let _ = toml::from_str::<Keybinds<A>>(input)
+            let _ = toml::from_str::<KeybindsOld<A>>(input)
                 .expect_err(&format!("invalid input {input:?}"));
         }
     }
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn deserialize_mod_key_bind() {
         let input = r#""Mod+x" = "Action1""#;
-        let actual: Keybinds<A> = toml::from_str(input).unwrap();
+        let actual: KeybindsOld<A> = toml::from_str(input).unwrap();
         let expected = [Keybind::new(KeyInput::new('x', Mods::MOD), A::Action1)];
         assert_eq!(actual.deref(), expected);
     }
@@ -252,7 +252,7 @@ mod tests {
             ),
         ];
         let config = Config {
-            bindings: Keybinds::from(binds),
+            bindings: KeybindsOld::from(binds),
         };
         let actual = toml::to_string_pretty(&config).unwrap();
         let expected = r#"[bindings]

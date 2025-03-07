@@ -1,4 +1,4 @@
-use keybinds::Keybinds;
+use keybinds::KeybindsOld;
 use serde::Deserialize;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ enum Action {
 #[derive(Deserialize)]
 struct KeyboardConfig {
     // `Keybinds` implements serde's `Deserialize` to deserialize key bindings from a mapping object
-    bindings: Keybinds<Action>,
+    bindings: KeybindsOld<Action>,
     // Timeout on waiting for the next input while the matching is ongoing.
     timeout: Option<u64>,
 }

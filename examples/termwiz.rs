@@ -1,4 +1,4 @@
-use keybinds::{KeyInput, KeybindDispatcher};
+use keybinds::{KeyInput, Keybinds};
 use termwiz::caps::Capabilities;
 use termwiz::cell::AttributeChange;
 use termwiz::color::{AnsiColor, ColorAttribute};
@@ -18,7 +18,7 @@ enum Action {
 
 fn main() -> Result<(), Error> {
     // Create an action dispatcher to dispatch actions for upcoming key inputs
-    let mut dispatcher = KeybindDispatcher::default();
+    let mut dispatcher = Keybinds::default();
 
     // Key bindings to dispatch the actions
     dispatcher.bind("h i", Action::SayHi).unwrap();

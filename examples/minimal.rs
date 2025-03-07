@@ -1,4 +1,4 @@
-use keybinds::{Key, KeyInput, KeybindDispatcher};
+use keybinds::{Key, KeyInput, Keybinds};
 use std::io::{self, Read};
 
 // Actions dispatched by key bindings
@@ -10,7 +10,7 @@ enum Action {
 
 fn main() -> io::Result<()> {
     // Create a dispatcher to dispatch actions for upcoming key inputs
-    let mut dispatcher = KeybindDispatcher::default();
+    let mut dispatcher = Keybinds::default();
 
     // Register key bindings to dispatch the actions
     dispatcher.bind("h e l l o", Action::SayHello).unwrap();
