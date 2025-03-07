@@ -39,7 +39,7 @@
 //! disable_raw_mode().unwrap();
 //! ```
 use crate::{Key, KeyInput, Mods};
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, MediaKeyCode};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MediaKeyCode};
 
 impl From<KeyCode> for Key {
     fn from(code: KeyCode) -> Self {
@@ -102,6 +102,9 @@ impl From<KeyModifiers> for Mods {
 
 impl From<&KeyEvent> for KeyInput {
     fn from(event: &KeyEvent) -> Self {
+        if event.kind == KeyEventKind::Release {
+            return Key::Ignored.into();
+        }
         Self::new(event.code, event.modifiers)
     }
 }
@@ -130,7 +133,7 @@ impl From<Event> for KeyInput {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crossterm::event::{KeyEventKind, KeyEventState, ModifierKeyCode};
+    use crossterm::event::{KeyEventState, ModifierKeyCode};
 
     #[test]
     fn convert_key_code() {
@@ -172,6 +175,24 @@ mod tests {
                 state: KeyEventState::NONE,
             }),
             KeyInput::new('A', Mods::CTRL),
+        );
+        assert_eq!(
+            KeyInput::from(KeyEvent {
+                code: KeyCode::Char('A'),
+                modifiers: KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+                kind: KeyEventKind::Repeat,
+                state: KeyEventState::NONE,
+            }),
+            KeyInput::new('A', Mods::CTRL),
+        );
+        assert_eq!(
+            KeyInput::from(KeyEvent {
+                code: KeyCode::Char('A'),
+                modifiers: KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+                kind: KeyEventKind::Release,
+                state: KeyEventState::NONE,
+            }),
+            KeyInput::new(Key::Ignored, Mods::NONE),
         );
     }
 
