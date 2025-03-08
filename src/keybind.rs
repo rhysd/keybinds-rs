@@ -402,34 +402,63 @@ impl<A> Keybinds<A> {
     }
 }
 
-/// Collect [`Keybinds`] instance from an iterator of [`Keybind`].
-///
-/// ```
-/// use keybinds::{Keybinds, Keybind, KeySeq};
-///
-/// enum Action {
-///     Foo,
-///     Bar,
-///     Piyo,
-/// }
-///
-/// let config = [
-///     ("f o o",         Action::Foo),
-///     ("Ctrl+b Ctrl+a", Action::Bar),
-///     ("Enter",         Action::Piyo),
-/// ];
-///
-/// let binds: Keybinds<_> = config
-///         .into_iter()
-///         .map(|(k, a)| k.parse().map(|k: KeySeq| Keybind::new(k, a)))
-///         .collect::<Result<_, _>>()
-///         .unwrap();
-///
-/// assert_eq!(binds.as_slice().len(), 3);
-/// ```
 impl<A> FromIterator<Keybind<A>> for Keybinds<A> {
+    /// Collect [`Keybinds`] instance from an iterator of [`Keybind`].
+    ///
+    /// ```
+    /// use keybinds::{Keybinds, Keybind, KeySeq};
+    ///
+    /// enum Action {
+    ///     Foo,
+    ///     Bar,
+    ///     Piyo,
+    /// }
+    ///
+    /// let config = [
+    ///     ("f o o",         Action::Foo),
+    ///     ("Ctrl+b Ctrl+a", Action::Bar),
+    ///     ("Enter",         Action::Piyo),
+    /// ];
+    ///
+    /// let binds: Keybinds<_> = config
+    ///         .into_iter()
+    ///         .map(|(k, a)| k.parse().map(|k: KeySeq| Keybind::new(k, a)))
+    ///         .collect::<Result<_, _>>()
+    ///         .unwrap();
+    ///
+    /// assert_eq!(binds.as_slice().len(), 3);
+    /// ```
     fn from_iter<T: IntoIterator<Item = Keybind<A>>>(iter: T) -> Self {
         Keybinds::new(iter.into_iter().collect())
+    }
+}
+
+impl<A> Extend<Keybind<A>> for Keybinds<A> {
+    /// Extend the key bindings with the iterator of [`Keybind`] instances. When some key binding matching is ongoing,
+    /// it will be reset.
+    ///
+    /// ```
+    /// use keybinds::{Keybinds, Keybind};
+    ///
+    /// struct Action;
+    ///
+    /// let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], Action)]);
+    ///
+    /// keybinds.dispatch('a');
+    /// assert!(keybinds.is_ongoing());
+    ///
+    /// keybinds.extend([Keybind::new('c', Action), Keybind::new('d', Action)]);
+    /// assert_eq!(keybinds.as_slice().len(), 3);
+    ///
+    /// // The matching state was reset
+    /// assert!(!keybinds.is_ongoing());
+    /// ```
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = Keybind<A>>,
+    {
+        self.binds.extend(iter);
+        self.reset();
     }
 }
 
@@ -647,5 +676,32 @@ mod tests {
             keybinds.dispatch(KeyInput::new('　', Mods::CTRL)),
             Some(&A::Action2),
         );
+    }
+
+    #[test]
+    fn keybinds_push() {
+        let mut keybinds = Keybinds::default();
+        assert_eq!(keybinds.dispatch('a'), None);
+        keybinds.push(Keybind::new('a', A::Action1));
+        assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));
+
+        keybinds.push(Keybind::new(['b', 'c'], A::Action2));
+        assert_eq!(keybinds.dispatch('b'), None);
+        assert!(keybinds.is_ongoing());
+        keybinds.push(Keybind::new('c', A::Action3));
+        assert!(!keybinds.is_ongoing());
+    }
+
+    #[test]
+    fn keybinds_extend() {
+        let mut keybinds = Keybinds::new(vec![Keybind::new(['x', 'y'], A::Action1)]);
+        assert_eq!(keybinds.dispatch('x'), None);
+        assert!(keybinds.is_ongoing());
+        keybinds.extend([
+            Keybind::new('a', A::Action1),
+            Keybind::new('b', A::Action1),
+            Keybind::new('c', A::Action1),
+        ]);
+        assert!(!keybinds.is_ongoing());
     }
 }

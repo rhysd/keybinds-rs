@@ -8,6 +8,11 @@ use std::str::FromStr;
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
+// Note: We use `Key::F1`...`Key::F35` variants instead of `Key::F(u8)` variant because
+//  * it reduces the size of `Key` from 8 bytes to 4 bytes because `u8` value requires a padding. Thanks to this
+//    reduction, `KeyInput` fits to 1 word and can implement `Copy`.
+//  * it can avoid invalid keys like `Key::F(0)` or `Key::F(999)`.
+
 /// Single logical key on keyboard.
 ///
 /// The 'logical key' is the key after applying modifier keys. For example, `Key::Char('A')` usually means the result
