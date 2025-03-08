@@ -6,7 +6,7 @@
 //! ```no_run
 //! use crossterm::event::{read, Event};
 //! use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-//! use keybinds::{KeyInput, KeybindDispatcher};
+//! use keybinds::{KeyInput, Keybinds};
 //! use std::io;
 //!
 //! #[derive(PartialEq, Eq, Debug)]
@@ -15,9 +15,9 @@
 //!     Exit,
 //! }
 //!
-//! let mut dispatcher = KeybindDispatcher::default();
-//! dispatcher.bind("h i", Action::SayHi).unwrap();
-//! dispatcher.bind("Ctrl+x Ctrl+c", Action::Exit).unwrap();
+//! let mut keybinds = Keybinds::default();
+//! keybinds.bind("h i", Action::SayHi).unwrap();
+//! keybinds.bind("Ctrl+x Ctrl+c", Action::Exit).unwrap();
 //!
 //! enable_raw_mode().unwrap();
 //!
@@ -26,8 +26,8 @@
 //!         // Convert crossterm's `KeyEvent` into `KeyInput`
 //!         println!("Key input `{:?}`\r", KeyInput::from(event));
 //!
-//!         // `KeybindDispatcher::dispatch` accepts crossterm's `KeyEvent`
-//!         if let Some(action) = dispatcher.dispatch(event) {
+//!         // `Keybinds::dispatch` accepts crossterm's `KeyEvent`
+//!         if let Some(action) = keybinds.dispatch(event) {
 //!             match action {
 //!                 Action::SayHi => println!("Hi!"),
 //!                 Action::Exit => break,

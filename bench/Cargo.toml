@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [[bench]]
-name = "parse"
+name = "bench"
 harness = false
 
 [dependencies]

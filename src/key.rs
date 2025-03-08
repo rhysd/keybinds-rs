@@ -56,6 +56,9 @@ pub enum Key {
     VolumeUp,
     VolumeDown,
     Mute,
+    // TODO: Make this to F1..F35 variants because it can reduce the size of `Key` to 4 bytes so that `KeyInput` fits
+    // to the size of implementing `Copy` trait. And also, invalid function keys such as F(0) or F(999) can no longer be
+    // created.
     F(u8),
     /// Special virtual key for keys which are not identified.
     Unidentified,
@@ -536,6 +539,8 @@ pub enum Match {
     /// The key inputs did not match to the key sequence.
     Unmatch,
 }
+
+// TODO: Ues smallvec for KeySeq implementation
 
 /// The key sequence bound to some action. It consists of one or more [`KeyInput`] instances.
 ///

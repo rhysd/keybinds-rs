@@ -1,6 +1,6 @@
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute};
-use keybinds::{KeybindDispatcher, Keybinds};
+use keybinds::Keybinds;
 use serde::Deserialize;
 use std::io;
 
@@ -18,13 +18,13 @@ enum Action {
     End,
 }
 
-// Configuration of your app
+// Configuration of your application
 #[derive(Deserialize)]
 struct Config {
     keyboard: Keybinds<Action>,
 }
 
-const CONFIG_FILE: &str = r#"
+const CONFIG_FILE_CONTENT: &str = r#"
 [keyboard]
 "Esc" = "Exit"
 
@@ -61,16 +61,17 @@ const CONFIG_FILE: &str = r#"
 
 fn main() -> io::Result<()> {
     // Parse the configuration from the file content
-    let config: Config = toml::from_str(CONFIG_FILE).unwrap();
+    let config: Config = toml::from_str(CONFIG_FILE_CONTENT).unwrap();
 
-    // Create the key binding dispatcher to handle key input events
-    let mut dispatcher = KeybindDispatcher::new(config.keyboard);
+    // `Keybinds` instance is a key bindings dispatcher that receives key inputs and
+    // dispatches the corresponding actions.
+    let mut keybinds = config.keyboard;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     while let Ok(event) = event::read() {
         // If the event triggered some action, handle it using `match`
-        if let Some(action) = dispatcher.dispatch(&event) {
+        if let Some(action) = keybinds.dispatch(&event) {
             match action {
                 Action::Exit => break,
                 Action::Up => execute!(stdout, cursor::MoveUp(1))?,

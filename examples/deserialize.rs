@@ -34,16 +34,15 @@ timeout = 500
 "Ctrl+x Ctrl+c" = "ExitApp"
 "#;
 
-    // Parse the TOML input
-    let mut config: Config = toml::from_str(configuration).unwrap();
+    // Parse the TOML input into the `Config` instance
+    let config: Config = toml::from_str(configuration).unwrap();
+    let mut keybinds = config.keyboard.bindings;
 
-    // Use the key bindings parsed from the TOML input
-    let mut dispatcher = config.keyboard.bindings.take_dispatcher();
-    // Set the matching timeout if needed
+    // Set the key sequence matching timeout if needed
     if let Some(ms) = config.keyboard.timeout {
-        dispatcher.set_timeout(Duration::from_millis(ms));
+        keybinds.set_timeout(Duration::from_millis(ms));
     }
 
-    dbg!(dispatcher.keybinds());
-    dbg!(dispatcher.timeout());
+    dbg!(keybinds.as_slice());
+    dbg!(keybinds.timeout());
 }

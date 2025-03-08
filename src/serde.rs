@@ -99,7 +99,7 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
                 while let Some((seq, action)) = access.next_entry::<KeySeq, A>()? {
                     binds.push(Keybind::new(seq, action));
                 }
-                Ok(Keybinds::from(binds))
+                Ok(Keybinds::new(binds))
             }
         }
 
@@ -133,8 +133,8 @@ impl Serialize for KeySeq {
 
 impl<A: Serialize> Serialize for Keybinds<A> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map = serializer.serialize_map(Some(self.len()))?;
-        for keybind in self.iter() {
+        let mut map = serializer.serialize_map(Some(self.as_slice().len()))?;
+        for keybind in self.as_slice().iter() {
             map.serialize_entry(&keybind.seq, &keybind.action)?;
         }
         map.end()
@@ -146,7 +146,6 @@ mod tests {
     use super::*;
     use crate::{KeyInput, Mods};
     use serde::{Deserialize, Serialize};
-    use std::ops::Deref;
 
     #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Debug)]
     enum A {
@@ -192,7 +191,7 @@ mod tests {
                 A::Action4,
             ),
         ];
-        assert_eq!(actual.deref(), &expected);
+        assert_eq!(actual.as_slice(), &expected);
     }
 
     #[test]
@@ -214,8 +213,9 @@ mod tests {
         ];
 
         for input in tests {
-            let _ = toml::from_str::<Keybinds<A>>(input)
-                .expect_err(&format!("invalid input {input:?}"));
+            if let Ok(k) = toml::from_str::<Keybinds<A>>(input) {
+                panic!("parse was successful: {k:?} (input={input:?}");
+            }
         }
     }
 
@@ -224,7 +224,7 @@ mod tests {
         let input = r#""Mod+x" = "Action1""#;
         let actual: Keybinds<A> = toml::from_str(input).unwrap();
         let expected = [Keybind::new(KeyInput::new('x', Mods::MOD), A::Action1)];
-        assert_eq!(actual.deref(), expected);
+        assert_eq!(actual.as_slice(), &expected);
     }
 
     #[test]
@@ -252,7 +252,7 @@ mod tests {
             ),
         ];
         let config = Config {
-            bindings: Keybinds::from(binds),
+            bindings: Keybinds::new(binds),
         };
         let actual = toml::to_string_pretty(&config).unwrap();
         let expected = r#"[bindings]
