@@ -56,10 +56,41 @@ pub enum Key {
     VolumeUp,
     VolumeDown,
     Mute,
-    // TODO: Make this to F1..F35 variants because it can reduce the size of `Key` to 4 bytes so that `KeyInput` fits
-    // to the size of implementing `Copy` trait. And also, invalid function keys such as F(0) or F(999) can no longer be
-    // created.
-    F(u8),
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    F13,
+    F14,
+    F15,
+    F16,
+    F17,
+    F18,
+    F19,
+    F20,
+    F21,
+    F22,
+    F23,
+    F24,
+    F25,
+    F26,
+    F27,
+    F28,
+    F29,
+    F30,
+    F31,
+    F32,
+    F33,
+    F34,
+    F35,
     /// Special virtual key for keys which are not identified.
     Unidentified,
     /// Special virtual key for ignoring the key input. This key is completely ignored by a key binding dispatcher.
@@ -78,7 +109,7 @@ impl Key {
     /// assert!(Key::Insert.is_named());
     /// assert!(Key::Enter.is_named());
     /// assert!(Key::Home.is_named());
-    /// assert!(Key::F(1).is_named());
+    /// assert!(Key::F1.is_named());
     /// assert!(Key::Char(' ').is_named());
     /// assert!(Key::Char('+').is_named());
     /// assert!(!Key::Char('x').is_named());
@@ -120,7 +151,7 @@ impl FromStr for Key {
     /// assert_eq!("Enter".parse(), Ok(Key::Enter));
     /// assert_eq!("Space".parse(), Ok(Key::Char(' ')));
     /// assert_eq!("Plus".parse(), Ok(Key::Char('+')));
-    /// assert_eq!("F1".parse(), Ok(Key::F(1)));
+    /// assert_eq!("F1".parse(), Ok(Key::F1));
     ///
     /// assert!("Unknown".parse::<Key>().is_err());
     /// assert!("".parse::<Key>().is_err());
@@ -131,12 +162,6 @@ impl FromStr for Key {
             let mut c = s.chars();
             if let (Some(c), None) = (c.next(), c.next()) {
                 return Ok(Self::Char(c));
-            }
-        }
-
-        if s.starts_with(['f', 'F']) {
-            if let Ok(x) = s[1..].parse() {
-                return Ok(Self::F(x));
             }
         }
 
@@ -181,6 +206,41 @@ impl FromStr for Key {
             "volumeup" | "VolumeUp" | "VOLUMEUP" => Ok(Self::VolumeUp),
             "volumedown" | "VolumeDown" | "VOLUMEDOWN" => Ok(Self::VolumeDown),
             "mute" | "Mute" | "MUTE" => Ok(Self::Mute),
+            "f1" | "F1" => Ok(Self::F1),
+            "f2" | "F2" => Ok(Self::F2),
+            "f3" | "F3" => Ok(Self::F3),
+            "f4" | "F4" => Ok(Self::F4),
+            "f5" | "F5" => Ok(Self::F5),
+            "f6" | "F6" => Ok(Self::F6),
+            "f7" | "F7" => Ok(Self::F7),
+            "f8" | "F8" => Ok(Self::F8),
+            "f9" | "F9" => Ok(Self::F9),
+            "f10" | "F10" => Ok(Self::F10),
+            "f11" | "F11" => Ok(Self::F11),
+            "f12" | "F12" => Ok(Self::F12),
+            "f13" | "F13" => Ok(Self::F13),
+            "f14" | "F14" => Ok(Self::F14),
+            "f15" | "F15" => Ok(Self::F15),
+            "f16" | "F16" => Ok(Self::F16),
+            "f17" | "F17" => Ok(Self::F17),
+            "f18" | "F18" => Ok(Self::F18),
+            "f19" | "F19" => Ok(Self::F19),
+            "f20" | "F20" => Ok(Self::F20),
+            "f21" | "F21" => Ok(Self::F21),
+            "f22" | "F22" => Ok(Self::F22),
+            "f23" | "F23" => Ok(Self::F23),
+            "f24" | "F24" => Ok(Self::F24),
+            "f25" | "F25" => Ok(Self::F25),
+            "f26" | "F26" => Ok(Self::F26),
+            "f27" | "F27" => Ok(Self::F27),
+            "f28" | "F28" => Ok(Self::F28),
+            "f29" | "F29" => Ok(Self::F29),
+            "f30" | "F30" => Ok(Self::F30),
+            "f31" | "F31" => Ok(Self::F31),
+            "f32" | "F32" => Ok(Self::F32),
+            "f33" | "F33" => Ok(Self::F33),
+            "f34" | "F34" => Ok(Self::F34),
+            "f35" | "F35" => Ok(Self::F35),
             "" => Err(Error::EmptyKey),
             _ => Err(Error::UnknownKey(s.into())),
         }
@@ -196,7 +256,7 @@ impl fmt::Display for Key {
     /// assert_eq!(format!("{}", Key::Char('X')), "X");
     /// assert_eq!(format!("{}", Key::Down), "Down");
     /// assert_eq!(format!("{}", Key::Insert), "Insert");
-    /// assert_eq!(format!("{}", Key::F(5)), "F5");
+    /// assert_eq!(format!("{}", Key::F5), "F5");
     /// assert_eq!(format!("{}", Key::Char(' ')), "Space");
     /// assert_eq!(format!("{}", Key::Char('+')), "Plus");
     /// ```
@@ -243,7 +303,41 @@ impl fmt::Display for Key {
             Self::VolumeUp => f.write_str("VolumeUp"),
             Self::VolumeDown => f.write_str("VolumeDown"),
             Self::Mute => f.write_str("Mute"),
-            Self::F(i) => write!(f, "F{i}"),
+            Self::F1 => f.write_str("F1"),
+            Self::F2 => f.write_str("F2"),
+            Self::F3 => f.write_str("F3"),
+            Self::F4 => f.write_str("F4"),
+            Self::F5 => f.write_str("F5"),
+            Self::F6 => f.write_str("F6"),
+            Self::F7 => f.write_str("F7"),
+            Self::F8 => f.write_str("F8"),
+            Self::F9 => f.write_str("F9"),
+            Self::F10 => f.write_str("F10"),
+            Self::F11 => f.write_str("F11"),
+            Self::F12 => f.write_str("F12"),
+            Self::F13 => f.write_str("F13"),
+            Self::F14 => f.write_str("F14"),
+            Self::F15 => f.write_str("F15"),
+            Self::F16 => f.write_str("F16"),
+            Self::F17 => f.write_str("F17"),
+            Self::F18 => f.write_str("F18"),
+            Self::F19 => f.write_str("F19"),
+            Self::F20 => f.write_str("F20"),
+            Self::F21 => f.write_str("F21"),
+            Self::F22 => f.write_str("F22"),
+            Self::F23 => f.write_str("F23"),
+            Self::F24 => f.write_str("F24"),
+            Self::F25 => f.write_str("F25"),
+            Self::F26 => f.write_str("F26"),
+            Self::F27 => f.write_str("F27"),
+            Self::F28 => f.write_str("F28"),
+            Self::F29 => f.write_str("F29"),
+            Self::F30 => f.write_str("F30"),
+            Self::F31 => f.write_str("F31"),
+            Self::F32 => f.write_str("F32"),
+            Self::F33 => f.write_str("F33"),
+            Self::F34 => f.write_str("F34"),
+            Self::F35 => f.write_str("F35"),
             Self::Unidentified => f.write_str("Unidentified"),
             Self::Ignored => f.write_str("Ignored"),
         }
@@ -404,7 +498,7 @@ impl fmt::Display for Mods {
 ///
 /// This struct is equivalent to a key combination in the [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
 /// such as "Ctrl+x".
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct KeyInput {
     key: Key,
@@ -771,9 +865,9 @@ mod tests {
             ),
             ("Mod+x", KeyInput::new('x', Mods::MOD)),
             ("Super+x", KeyInput::new('x', Mods::SUPER)),
-            ("F1", KeyInput::new(Key::F(1), Mods::NONE)),
-            ("Ctrl+F1", KeyInput::new(Key::F(1), Mods::CTRL)),
-            ("F20", KeyInput::new(Key::F(20), Mods::NONE)),
+            ("F1", KeyInput::new(Key::F1, Mods::NONE)),
+            ("Ctrl+F1", KeyInput::new(Key::F1, Mods::CTRL)),
+            ("F20", KeyInput::new(Key::F20, Mods::NONE)),
             ("Up", KeyInput::new(Key::Up, Mods::NONE)),
             ("Space", KeyInput::new(' ', Mods::NONE)),
             (
@@ -785,7 +879,7 @@ mod tests {
             ("Shift+Up", KeyInput::new(Key::Up, Mods::SHIFT)),
             (
                 "Ctrl+Shift+F7",
-                KeyInput::new(Key::F(7), Mods::SHIFT | Mods::CTRL),
+                KeyInput::new(Key::F7, Mods::SHIFT | Mods::CTRL),
             ),
             ("Shift+Plus", KeyInput::new('+', Mods::SHIFT)),
             ("Shift+Space", KeyInput::new(' ', Mods::SHIFT)),
@@ -993,7 +1087,7 @@ mod tests {
             (KeySeq::from('a'), "a"),
             (KeySeq::from('A'), "A"),
             (KeySeq::from(Key::Up), "Up"),
-            (KeySeq::from(Key::F(11)), "F11"),
+            (KeySeq::from(Key::F11), "F11"),
             (KeySeq::from(' '), "Space"),
             (KeySeq::from('+'), "Plus"),
             (KeySeq::from(KeyInput::new('a', Mods::CTRL)), "Ctrl+a"),

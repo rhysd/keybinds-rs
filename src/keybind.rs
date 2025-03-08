@@ -465,10 +465,10 @@ mod tests {
         for bind in binds {
             keybinds.reset();
             let len = bind.seq.as_slice().len();
-            for (idx, input) in bind.seq.as_slice().iter().enumerate() {
+            for (idx, input) in bind.seq.as_slice().iter().copied().enumerate() {
                 let is_last = idx + 1 == len;
                 let expected = is_last.then_some(bind.action);
-                let actual = keybinds.dispatch(input.clone());
+                let actual = keybinds.dispatch(input);
                 assert_eq!(actual, expected.as_ref(), "bind={bind:?}");
                 assert_eq!(keybinds.is_ongoing(), !is_last, "bind={bind:?}");
             }
