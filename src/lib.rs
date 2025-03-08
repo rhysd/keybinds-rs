@@ -70,6 +70,11 @@
 //! cargo run --example crossterm --features=crossterm,serde
 //! ```
 //!
+//! # Features
+//!
+//! The list of crate features can be found in [Cargo.toml](./Cargo.toml). Please read the comments on each features
+//! which explains about it.
+//!
 //! [crates-io]: https://crates.io/crates/keybinds
 //! [serde]: https://serde.rs/
 //! [crossterm]: https://crates.io/crates/crossterm

@@ -58,13 +58,28 @@ required-features = ["iced"]
 doc-scrape-examples = true
 
 [features]
+# No feature is enabled by default. See `minimal` example to know how to use this crate with no specific framework
+# dependency.
 default = []
+# Deserialization/Serialization support using serde crate.
+# This feature is useful to parse/generate key bindings in configuration files with human-friendly formats such
+# as TOML or YAML. See `deserialize` and `serialize` examples for the usage.
 serde = ["dep:serde"]
+# Support for crossterm crate. This feature provides the conversion from crossterm's key event types into keybinds'
+# key input types. See `crossterm` example for the usage.
 crossterm = ["dep:crossterm"]
+# Support for winit crate. This feature provides the conversion from winit's key event types into keybinds'
+# key input types. See `winit` example for the usage.
 winit = ["dep:winit"]
+# Support for termwiz crate. This feature provides the conversion from termwiz's key event types into keybinds'
+# key input types. See `termwiz` example for the usage.
 termwiz = ["dep:termwiz"]
-arbitrary = ["dep:arbitrary"]
+# Support for iced crate. This feature provides the conversion from iced's key event types into keybinds' key input
+# types. See `iced` example for the usage.
 iced = ["dep:iced"]
+# Support for structure-aware fuzzing using arbitrary crate. This allows generating values of several keybinds' types
+# from random byte slices. See `arbitrary` example for the usage.
+arbitrary = ["dep:arbitrary"]
 
 # TODO: Consider `default-features = false` for optional crates to reduce the number of dependencies
 [dependencies]

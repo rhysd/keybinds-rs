@@ -18,13 +18,13 @@ enum Action {
     End,
 }
 
-// Configuration of your app
+// Configuration of your application
 #[derive(Deserialize)]
 struct Config {
     keyboard: Keybinds<Action>,
 }
 
-const CONFIG_FILE: &str = r#"
+const CONFIG_FILE_CONTENT: &str = r#"
 [keyboard]
 "Esc" = "Exit"
 
@@ -61,7 +61,10 @@ const CONFIG_FILE: &str = r#"
 
 fn main() -> io::Result<()> {
     // Parse the configuration from the file content
-    let config: Config = toml::from_str(CONFIG_FILE).unwrap();
+    let config: Config = toml::from_str(CONFIG_FILE_CONTENT).unwrap();
+
+    // `Keybinds` instance is a key bindings dispatcher that receives key inputs and
+    // dispatches the corresponding actions.
     let mut keybinds = config.keyboard;
 
     enable_raw_mode()?;
