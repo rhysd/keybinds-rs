@@ -213,8 +213,9 @@ mod tests {
         ];
 
         for input in tests {
-            let result = toml::from_str::<Keybinds<A>>(input);
-            assert!(matches!(result, Err(_)), "input={input:?}");
+            if let Ok(k) = toml::from_str::<Keybinds<A>>(input) {
+                panic!("parse was successful: {k:?} (input={input:?}");
+            }
         }
     }
 
