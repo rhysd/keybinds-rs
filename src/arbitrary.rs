@@ -27,7 +27,7 @@
 //! let _ = Keybind::<Action>::arbitrary(&mut unstructured).unwrap();
 //! let _ = Keybinds::<Action>::arbitrary(&mut unstructured).unwrap();
 //! ```
-use crate::{Keybinds, Mods};
+use crate::{KeyInput, KeySeq, Keybinds, Mods};
 use arbitrary::{Arbitrary, Result, Unstructured};
 
 // Note: We don't use bitflags crate's `arbitrary` feature because it is quite inefficient.
@@ -52,6 +52,13 @@ impl Arbitrary<'_> for Mods {
             mods |= Mods::SHIFT;
         }
         Ok(mods)
+    }
+}
+
+// Note: We don't use `arbitrary` feature of smallvec trait because it will be removed at smallvec v2.
+impl Arbitrary<'_> for KeySeq {
+    fn arbitrary(u: &mut Unstructured<'_>) -> Result<Self> {
+        u.arbitrary_iter::<KeyInput>()?.collect()
     }
 }
 

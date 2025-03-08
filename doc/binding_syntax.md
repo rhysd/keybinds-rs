@@ -58,7 +58,7 @@ the logical key input `(` with US keyboard, and it also produces the logical key
 ## Key sequence
 
 Key sequence is a sequence of key combinations. Key combinations are concatenated with one or more spaces like
-`a b` or `Ctrl+x Ctrl+s`. Spaces prefixed or suffixed to a sequence are ignored.
+`a b` or `Ctrl+x Ctrl+s`. Spaces prefixed or suffixed to a sequence are ignored. Empty key sequence is invalid.
 
 ## Modifiers
 

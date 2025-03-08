@@ -5,7 +5,7 @@
 //!
 //! - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
 //! - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style
-//! - Core API independent from any platforms and frameworks with minimal dependencies (only one crate)
+//! - Core API independent from any platforms and frameworks with minimal dependencies (only two crates)
 //! - Support several platforms and frameworks as optional features
 //!   - [crossterm][]
 //!   - [termwiz][]

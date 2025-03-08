@@ -1,7 +1,8 @@
 use crate::Error;
 use bitflags::bitflags;
+use smallvec::{smallvec, SmallVec};
 use std::fmt;
-use std::slice;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 #[cfg(feature = "arbitrary")]
@@ -463,7 +464,7 @@ impl FromStr for Mods {
 impl fmt::Display for Mods {
     /// Generate a string representation of the modifier key following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
     ///
-    /// When multiple modifiers are pressed at once they are joint with "+". When no modifier key is pressed, it generates an empty string.
+    /// When multiple modifiers are pressed at once they are joined with "+". When no modifier key is pressed, it generates an empty string.
     ///
     /// ```
     /// use keybinds::Mods;
@@ -634,38 +635,49 @@ pub enum Match {
     Unmatch,
 }
 
-// TODO: Ues smallvec for KeySeq implementation
-
 /// The key sequence bound to some action. It consists of one or more [`KeyInput`] instances.
 ///
-/// This enum is equivalent to a key sequence in the [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
+/// This type represents a key sequence in the [syntax document](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
 /// such as "Ctrl+x Ctrl+s".
 ///
-/// A key sequence usually consists of a single key input, except for complex key bindings like Vim style. This
-/// type is implemented as an enum that can represent either a single key input or multiple key inputs so that it can
-/// avoid heap allocations in most cases.
-///
-/// [`KeySeq::as_slice`] is useful to handle both variants in a uniform way.
+/// A key sequence usually consists of a single key input or two key inputs, except for complex key bindings like Vim
+/// style. This type is allocated on stack until it has two inputs. When it has more inputs, they are spilled onto the
+/// heap.
 ///
 /// ```
-/// use keybinds::{KeySeq, KeyInput, Mods};
+/// use keybinds::{KeySeq, KeyInput, Key, Mods};
 ///
-/// let seq: KeySeq = vec![KeyInput::new('x', Mods::CTRL), 'a'.into()].into();
-/// assert_eq!(seq.as_slice().len(), 2);
+/// let mut seq = KeySeq::from([KeyInput::new('x', Mods::CTRL), 'a'.into()]);
+///
+/// // Add more elements
+/// seq.push('b'.into());
+///
+/// // Modify the sequence
+/// seq[2] = Key::Enter.into();
+///
+/// // Dereference as a slice
+/// assert_eq!(seq.len(), 3);
 /// ```
-#[derive(Clone, Eq, Debug)]
-#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub enum KeySeq {
-    Multiple(Vec<KeyInput>),
-    Single(KeyInput),
-}
-
-impl PartialEq for KeySeq {
-    fn eq(&self, other: &Self) -> bool {
-        // Consider that `KeySeq::Multiple(vec!['a'.into()])` should be equal to `KeySeq::Single('a'.into())`
-        self.as_slice() == other.as_slice()
-    }
-}
+///
+/// This type works similar to slices. It can be dereferenced as `&[KeyInput]` and `&mut [KeyInput]`. More elements can
+/// be added by [`KeySeq::push`] or [`KeySeq::extend`]. When you need to remove some elements, convert it to `Vec` and
+/// modify it.
+///
+/// ```
+/// use keybinds::KeySeq;
+///
+/// let seq: KeySeq = ['a', 'b', 'c'].into_iter().collect();
+///
+/// let mut vec: Vec<_> = seq.iter().copied().collect();
+/// vec.remove(1);
+///
+/// let seq2: KeySeq = vec.into_iter().collect();
+///
+/// assert_ne!(seq, seq2);
+/// ```
+///
+#[derive(Clone, PartialEq, Eq, Default, Hash, Debug)]
+pub struct KeySeq(SmallVec<[KeyInput; 2]>);
 
 impl KeySeq {
     /// Match the given inputs to the key sequence. The result [`Match`] is one of following cases:
@@ -677,7 +689,7 @@ impl KeySeq {
     /// ```
     /// use keybinds::{KeySeq, Match};
     ///
-    /// let seq = KeySeq::from(vec!['x'.into(), 'y'.into(), 'z'.into()]);
+    /// let seq = KeySeq::from(['x', 'y', 'z']);
     ///
     /// let matched = ['x'.into(), 'y'.into(), 'z'.into()];
     /// let ongoing_1 = ['x'.into()];
@@ -692,7 +704,7 @@ impl KeySeq {
     /// assert_eq!(seq.match_to(&unmatch_2), Match::Unmatch);
     /// ```
     pub fn match_to(&self, inputs: &[KeyInput]) -> Match {
-        let mut ls = self.as_slice().iter();
+        let mut ls = self.0.iter();
         let mut rs = inputs.iter();
         loop {
             match (ls.next(), rs.next()) {
@@ -705,117 +717,119 @@ impl KeySeq {
         }
     }
 
-    /// Get the key sequence as a slice without copying anything.
+    /// Get the key sequence as a slice. Note that this type also implements [`Deref`].
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput};
+    ///
+    /// let seq: KeySeq = ['a', 'b'].into_iter().collect();
+    ///
+    /// assert_eq!(seq.as_slice(), &[KeyInput::from('a'), KeyInput::from('b')]);
+    /// ```
+    pub fn as_slice(&self) -> &[KeyInput] {
+        self.0.as_slice()
+    }
+
+    /// Push the input to the end of the key sequence.
     ///
     /// ```
     /// use keybinds::KeySeq;
     ///
-    /// assert_eq!(KeySeq::Single('x'.into()).as_slice(), &['x'.into()]);
-    /// assert_eq!(
-    ///     KeySeq::Multiple(vec!['x'.into(), 'y'.into()]).as_slice(),
-    ///     &['x'.into(), 'y'.into()],
-    /// );
-    /// assert_eq!(KeySeq::Multiple(vec![]).as_slice(), &[]);
+    /// let mut seq: KeySeq = ['a', 'b'].into_iter().collect();
+    ///
+    /// seq.push('c'.into());
+    ///
+    /// assert_eq!(seq.as_slice(), &['a'.into(), 'b'.into(), 'c'.into()]);
     /// ```
-    pub fn as_slice(&self) -> &[KeyInput] {
-        match self {
-            Self::Multiple(v) => v.as_slice(),
-            Self::Single(k) => slice::from_ref(k),
-        }
-    }
-
-    fn push(self, input: KeyInput) -> Self {
-        match self {
-            Self::Multiple(v) if v.is_empty() => Self::Single(input),
-            Self::Multiple(mut v) => {
-                v.push(input);
-                Self::Multiple(v)
-            }
-            Self::Single(k) => Self::Multiple(vec![k, input]),
-        }
+    pub fn push(&mut self, input: KeyInput) {
+        self.0.push(input);
     }
 }
 
 impl FromStr for KeySeq {
     type Err = Error;
 
-    /// Parse the key sequence from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    /// Parse a key sequence from [`str`] following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
     ///
-    /// When the sequence is invalid such as unknown keys or empty input, this method returns an error.
+    /// This method expects at least one key in the sequence. When the sequence is invalid such as unknown keys or
+    /// empty input, this method returns an error.
     ///
     /// ```
     /// use keybinds::{KeySeq, KeyInput, Key, Mods};
     ///
-    /// assert_eq!("x".parse(), Ok(KeySeq::from(KeyInput::from('x'))));
+    /// assert_eq!("x".parse(), Ok(KeySeq::from(['x'])));
     /// assert_eq!(
     ///     "Ctrl+Up Alt+Down".parse(),
-    ///     Ok(KeySeq::from(vec![
+    ///     Ok(KeySeq::from([
     ///         KeyInput::new(Key::Up, Mods::CTRL),
-    ///         KeyInput::new(Key::Down, Mods::ALT)]
-    ///     )),
+    ///         KeyInput::new(Key::Down, Mods::ALT),
+    ///     ])),
     /// );
     /// assert_eq!(
     ///     "h e l l o".parse(),
-    ///     Ok(KeySeq::from(vec![
-    ///         KeyInput::from('h'),
-    ///         KeyInput::from('e'),
-    ///         KeyInput::from('l'),
-    ///         KeyInput::from('l'),
-    ///         KeyInput::from('o'),
-    ///     ])),
+    ///     Ok(KeySeq::from(['h', 'e', 'l', 'l', 'o'])),
     /// );
     ///
     /// // Errors
-    /// assert!("".parse::<KeySeq>().is_err());
-    /// assert!("x Fooo".parse::<KeySeq>().is_err());
+    /// assert!("".parse::<KeySeq>().is_err());       // Empty key sequence
+    /// assert!("x Fooo".parse::<KeySeq>().is_err()); // Unknown named key
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut keys = s.split_ascii_whitespace();
-        if let Some(key) = keys.next() {
-            let mut seq = Self::Single(key.parse()?);
-            for key in keys {
-                seq = seq.push(key.parse()?);
-            }
-            Ok(seq)
-        } else {
-            Err(Error::EmptyKeySequence)
+        let vec: SmallVec<_> = s
+            .split_ascii_whitespace()
+            .map(|key| key.parse())
+            .collect::<Result<_, _>>()?;
+        if vec.is_empty() {
+            return Err(Error::EmptyKeySequence);
         }
+        Ok(Self(vec))
     }
 }
 
-impl<K: Into<KeyInput>> From<K> for KeySeq {
+impl<I: Into<KeyInput>> From<I> for KeySeq {
     /// Convert a single key input into a key sequence.
     ///
     /// ```
-    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    /// use keybinds::{KeySeq, Key};
     ///
-    /// assert_eq!(KeySeq::from('x'), KeySeq::Single(KeyInput::new(Key::Char('x'), Mods::NONE)));
+    /// assert_eq!(KeySeq::from('x'), KeySeq::from(['x']));
+    /// assert_eq!(KeySeq::from(Key::Enter), KeySeq::from([Key::Enter]));
     /// ```
-    fn from(key: K) -> Self {
-        Self::Single(key.into())
+    fn from(key: I) -> Self {
+        Self(smallvec![key.into()])
     }
 }
 
-impl From<Vec<KeyInput>> for KeySeq {
-    /// Convert multiple key inputs into a key sequence.
+impl<const N: usize, I: Into<KeyInput>> From<[I; N]> for KeySeq {
+    /// Convert an array of key inputs into a key sequence.
     ///
     /// ```
     /// use keybinds::{KeySeq, KeyInput, Key, Mods};
     ///
-    /// assert_eq!(
-    ///     KeySeq::from(vec!['H'.into(), 'i'.into()]),
-    ///     KeySeq::Multiple(vec![
-    ///         KeyInput::new(Key::Char('H'), Mods::NONE),
-    ///         KeyInput::new(Key::Char('i'), Mods::NONE),
-    ///     ]),
-    /// );
+    /// let seq = KeySeq::from([Key::Enter.into(), KeyInput::new('x', Mods::CTRL)]);
+    /// assert_eq!(seq[0].key(), Key::Enter);
+    /// assert_eq!(seq[1].mods(), Mods::CTRL);
     /// ```
-    fn from(mut v: Vec<KeyInput>) -> Self {
-        if v.len() == 1 {
-            Self::Single(v.pop().unwrap())
-        } else {
-            Self::Multiple(v)
-        }
+    fn from(arr: [I; N]) -> Self {
+        Self(arr.into_iter().map(Into::into).collect())
+    }
+}
+
+impl<I: Into<KeyInput>> FromIterator<I> for KeySeq {
+    /// Collect a key sequence from an iterator of key inputs.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    ///
+    /// let seq: KeySeq = ['H', 'i'].into_iter().collect();
+    ///
+    /// assert_eq!(format!("{seq}"), "H i");
+    /// ```
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = I>,
+    {
+        Self(iter.into_iter().map(Into::into).collect())
     }
 }
 
@@ -823,19 +837,19 @@ impl fmt::Display for KeySeq {
     /// Generate a string representation of the key sequence following the
     /// [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
     ///
-    /// Key inputs are joint with one single space. If the sequence is empty, this method writes nothing.
+    /// Key inputs are joined with one space. If the sequence is empty, this method writes nothing.
     ///
     /// ```
     /// use keybinds::{KeySeq, KeyInput, Key, Mods};
     ///
-    /// let seq = KeySeq::from(vec![
+    /// let seq = KeySeq::from([
     ///     KeyInput::new('x', Mods::CTRL),
     ///     KeyInput::new(Key::Enter, Mods::ALT),
     /// ]);
-    /// assert_eq!(format!("{}", seq), "Ctrl+x Alt+Enter");
+    /// assert_eq!(format!("{seq}"), "Ctrl+x Alt+Enter");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut inputs = self.as_slice().iter();
+        let mut inputs = self.0.iter();
         if let Some(first) = inputs.next() {
             write!(f, "{}", first)?;
             for input in inputs {
@@ -846,12 +860,38 @@ impl fmt::Display for KeySeq {
     }
 }
 
+impl<I: Into<KeyInput>> Extend<I> for KeySeq {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = I>,
+    {
+        self.0.extend(iter.into_iter().map(Into::into));
+    }
+}
+
+impl Deref for KeySeq {
+    type Target = [KeyInput];
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_slice()
+    }
+}
+
+impl DerefMut for KeySeq {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0.as_mut_slice()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn parse_key_input_ok() {
+        let seq: KeySeq = ['a'].into_iter().collect();
+        assert!(!seq.as_ref().is_empty());
+
         let tests = [
             ("x", KeyInput::new('x', Mods::NONE)),
             ("A", KeyInput::new('A', Mods::NONE)),
@@ -918,17 +958,14 @@ mod tests {
             ("x", KeySeq::from('x')),
             ("Enter", KeySeq::from(Key::Enter)),
             ("Ctrl+x", KeySeq::from(KeyInput::new('x', Mods::CTRL))),
-            (
-                "a b c",
-                KeySeq::from(vec!['a'.into(), 'b'.into(), 'c'.into()]),
-            ),
+            ("a b c", KeySeq::from(['a', 'b', 'c'])),
             (
                 "Up Down Enter",
-                KeySeq::from(vec![Key::Up.into(), Key::Down.into(), Key::Enter.into()]),
+                KeySeq::from([Key::Up, Key::Down, Key::Enter]),
             ),
             (
                 "Ctrl+Alt+a Super+b Mod+c",
-                KeySeq::from(vec![
+                KeySeq::from([
                     KeyInput::new('a', Mods::ALT | Mods::CTRL),
                     KeyInput::new('b', Mods::SUPER),
                     KeyInput::new('c', Mods::MOD),
@@ -936,11 +973,12 @@ mod tests {
             ),
             (
                 "　 Ctrl+　",
-                KeySeq::from(vec![
+                KeySeq::from([
                     KeyInput::new('　', Mods::NONE),
                     KeyInput::new('　', Mods::CTRL),
                 ]),
             ),
+            ("　 　 　", KeySeq::from(['　', '　', '　'])),
         ];
 
         for (seq, expected) in tests {
@@ -998,57 +1036,33 @@ mod tests {
         for (actual, expected) in [
             (
                 KeySeq::from('a'),
-                KeySeq::Single(KeyInput {
+                KeySeq(smallvec![KeyInput {
                     key: Key::Char('a'),
                     mods: Mods::NONE,
-                }),
+                }]),
             ),
             (
                 KeySeq::from(Key::Enter),
-                KeySeq::Single(KeyInput {
-                    key: Key::Enter,
-                    mods: Mods::NONE,
-                }),
+                KeySeq(smallvec![KeyInput::from(Key::Enter)]),
             ),
             (
-                KeySeq::from(vec![KeyInput::from('x')]),
-                KeySeq::Single(KeyInput {
-                    key: Key::Char('x'),
-                    mods: Mods::NONE,
-                }),
+                KeySeq::from([KeyInput::from('x')]),
+                KeySeq(smallvec![KeyInput::from('x')]),
             ),
             (
-                KeySeq::from(vec!['x'.into(), 'y'.into()]),
-                KeySeq::Multiple(vec![
-                    KeyInput {
-                        key: Key::Char('x'),
-                        mods: Mods::NONE,
-                    },
-                    KeyInput {
-                        key: Key::Char('y'),
-                        mods: Mods::NONE,
-                    },
-                ]),
+                KeySeq::from(['x', 'y']),
+                KeySeq(smallvec![KeyInput::from('x'), KeyInput::from('y')]),
             ),
             (
                 KeySeq::from(KeyInput::new(Key::Enter, Mods::CTRL)),
-                KeySeq::Single(KeyInput {
+                KeySeq(smallvec![KeyInput {
                     key: Key::Enter,
                     mods: Mods::CTRL,
-                }),
+                }]),
             ),
         ] {
             assert_eq!(actual, expected);
         }
-    }
-
-    #[test]
-    fn keyseq_eq() {
-        use KeySeq::*;
-        assert_eq!(Multiple(vec!['a'.into()]), Single('a'.into()));
-        assert_eq!(Single('a'.into()), Multiple(vec!['a'.into()]));
-        assert_ne!(Multiple(vec!['a'.into()]), Single('b'.into()));
-        assert_ne!(Single('a'.into()), Multiple(vec!['b'.into()]));
     }
 
     #[test]
@@ -1081,9 +1095,9 @@ mod tests {
     }
 
     #[test]
-    fn display() {
+    fn display_keyseq() {
         let tests = [
-            (KeySeq::from(vec![]), ""),
+            (KeySeq::from([] as [KeyInput; 0]), ""),
             (KeySeq::from('a'), "a"),
             (KeySeq::from('A'), "A"),
             (KeySeq::from(Key::Up), "Up"),
@@ -1118,28 +1132,17 @@ mod tests {
                 KeySeq::from(KeyInput::new(Key::Char('+'), Mods::SHIFT)),
                 "Shift+Plus",
             ),
-            (KeySeq::from(vec!['a'.into(), 'b'.into()]), "a b"),
+            (KeySeq::from(['a', 'b']), "a b"),
+            (KeySeq::from(['a', 'b', 'c', 'd', 'e']), "a b c d e"),
+            (KeySeq::from([Key::Left, Key::Right]), "Left Right"),
             (
-                KeySeq::from(vec![
-                    'a'.into(),
-                    'b'.into(),
-                    'c'.into(),
-                    'd'.into(),
-                    'e'.into(),
-                ]),
-                "a b c d e",
-            ),
-            (
-                KeySeq::from(vec![Key::Left.into(), Key::Right.into()]),
-                "Left Right",
-            ),
-            (
-                KeySeq::from(vec![
+                KeySeq::from([
                     KeyInput::new(Key::Left, Mods::SHIFT),
                     KeyInput::new('X', Mods::ALT | Mods::CTRL),
                 ]),
                 "Shift+Left Ctrl+Alt+X",
             ),
+            (KeySeq::from(['　', '　']), "　 　"),
         ];
 
         for (seq, expected) in tests {

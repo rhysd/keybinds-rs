@@ -178,16 +178,10 @@ mod tests {
         let actual = config.bindings;
         let expected = [
             Keybind::new('j', A::Action1),
-            Keybind::new(
-                vec![
-                    KeyInput::new('g', Mods::NONE),
-                    KeyInput::new('g', Mods::NONE),
-                ],
-                A::Action2,
-            ),
+            Keybind::new(['g', 'g'], A::Action2),
             Keybind::new(KeyInput::new('o', Mods::CTRL), A::Action3),
             Keybind::new(
-                vec![
+                [
                     KeyInput::new('S', Mods::CTRL),
                     KeyInput::new('G', Mods::ALT | Mods::CTRL),
                 ],
@@ -236,18 +230,9 @@ mod tests {
             Keybind::new('a', A::Action1),
             Keybind::new(Key::Up, A::Action2),
             Keybind::new(KeyInput::new(Key::Enter, Mods::CTRL), A::Action3),
+            Keybind::new(KeySeq::from(['H', 'e', 'l', 'l', 'o']), A::Action4),
             Keybind::new(
-                KeySeq::from(vec![
-                    'H'.into(),
-                    'e'.into(),
-                    'l'.into(),
-                    'l'.into(),
-                    'o'.into(),
-                ]),
-                A::Action4,
-            ),
-            Keybind::new(
-                KeySeq::from(vec![
+                KeySeq::from([
                     KeyInput::new('X', Mods::ALT | Mods::CTRL),
                     KeyInput::new(Key::Up, Mods::SHIFT),
                 ]),
@@ -271,6 +256,6 @@ Up = "Action2"
 
     #[test]
     fn serialize_error() {
-        let _ = toml::to_string_pretty(&KeySeq::from(vec![])).unwrap_err();
+        let _ = toml::to_string_pretty(&KeySeq::default()).unwrap_err();
     }
 }

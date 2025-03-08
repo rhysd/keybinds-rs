@@ -13,8 +13,9 @@ use arbitrary::Arbitrary;
 ///
 /// let mut keybinds = Keybinds::default();
 /// keybinds.push(Keybind::new('x', Action));
+/// keybinds.push(Keybind::new(['x', 'y'], Action));
 /// keybinds.push(Keybind::new(KeyInput::new(Key::Left, Mods::CTRL), Action));
-/// keybinds.push(Keybind::new(KeySeq::from(vec!['H'.into(), 'i'.into()]), Action));
+/// keybinds.push(Keybind::new(KeySeq::from([KeyInput::new('x', Mods::ALT), KeyInput::new('y', Mods::ALT)]), Action));
 /// ```
 #[derive(Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -40,7 +41,7 @@ impl<A> Keybind<A> {
     ///
     /// // Complex key binding ("Ctrl+Up Alt+Down")
     /// let _ = Keybind::new(
-    ///     KeySeq::from(vec![
+    ///     KeySeq::from([
     ///         KeyInput::new(Key::Up, Mods::CTRL),
     ///         KeyInput::new(Key::Down, Mods::ALT),
     ///     ]),
@@ -452,11 +453,8 @@ mod tests {
         let binds = vec![
             Keybind::new('a', A::Action1),
             Keybind::new(KeyInput::new('a', Mods::CTRL), A::Action2),
-            Keybind::new(vec!['B'.into(), 'c'.into()], A::Action3),
-            Keybind::new(
-                vec!['H'.into(), 'e'.into(), 'l'.into(), 'l'.into(), 'o'.into()],
-                A::Action4,
-            ),
+            Keybind::new(['B', 'c'], A::Action3),
+            Keybind::new(['H', 'e', 'l', 'l', 'o'], A::Action4),
             Keybind::new(Key::Up, A::Action5),
         ];
 
@@ -491,7 +489,7 @@ mod tests {
         let expected = vec![
             Keybind::new('a', A::Action1),
             Keybind::new(
-                vec![
+                [
                     KeyInput::new('b', Mods::CTRL),
                     KeyInput::new('c', Mods::MOD),
                 ],
@@ -505,8 +503,7 @@ mod tests {
 
     #[test]
     fn dispatcher_is_ongoing() {
-        let mut keybinds =
-            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
+        let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], A::Action1)]);
 
         assert!(!keybinds.is_ongoing());
         keybinds.dispatch('x');
@@ -534,8 +531,7 @@ mod tests {
 
     #[test]
     fn dispatcher_ignore_keys() {
-        let mut keybinds =
-            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
+        let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], A::Action1)]);
         keybinds.dispatch('a');
         assert_eq!(keybinds.dispatch(Key::Ignored), None);
         assert_eq!(keybinds.dispatch('b'), Some(&A::Action1));
@@ -543,8 +539,7 @@ mod tests {
 
     #[test]
     fn dispatcher_timeout_input() {
-        let mut keybinds =
-            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
+        let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], A::Action1)]);
         keybinds.set_timeout(Duration::from_millis(10));
 
         keybinds.dispatch('a');
@@ -578,8 +573,7 @@ mod tests {
 
     #[test]
     fn dispatcher_reset() {
-        let mut keybinds =
-            Keybinds::new(vec![Keybind::new(vec!['a'.into(), 'b'.into()], A::Action1)]);
+        let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], A::Action1)]);
         keybinds.dispatch('a');
         assert!(keybinds.is_ongoing());
         keybinds.reset();
@@ -631,8 +625,8 @@ mod tests {
     fn smaller_seq_is_prioritized() {
         let mut keybinds = Keybinds::new(vec![
             Keybind::new('a', A::Action1),
-            Keybind::new(vec!['a'.into(), 'a'.into()], A::Action2),
-            Keybind::new(vec!['a'.into(), 'b'.into()], A::Action3),
+            Keybind::new(['a', 'a'], A::Action2),
+            Keybind::new(['a', 'b'], A::Action3),
         ]);
 
         assert_eq!(keybinds.dispatch('a'), Some(&A::Action1));

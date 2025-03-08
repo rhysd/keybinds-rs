@@ -12,7 +12,7 @@ in Safe Rust.
 
 - Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`. ([document](./doc/binding_syntax.md))
 - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
-- Provide the core API independent from any platforms and frameworks with minimal dependencies (only one crate). ([example](./examples/minimal.rs))
+- Provide the core API independent from any platforms and frameworks with minimal dependencies (only two crates). ([example](./examples/minimal.rs))
 - Support several platforms and frameworks as optional features.
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
