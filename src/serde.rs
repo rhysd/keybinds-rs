@@ -38,7 +38,7 @@
 //! ```
 use crate::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
 use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
-use serde::ser::{Serialize, SerializeMap, Serializer};
+use serde::ser::{Error as _, Serialize, SerializeMap, Serializer};
 use std::fmt;
 
 impl<'de> Deserialize<'de> for KeyInput {
@@ -127,6 +127,9 @@ impl Serialize for KeyInput {
 
 impl Serialize for KeySeq {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        if self.as_slice().is_empty() {
+            return Err(S::Error::custom("Key sequence must not be empty"));
+        }
         serializer.collect_str(self)
     }
 }
@@ -264,5 +267,10 @@ Up = "Action2"
 "#;
 
         assert_eq!(&actual, expected);
+    }
+
+    #[test]
+    fn serialize_error() {
+        let _ = toml::to_string_pretty(&KeySeq::from(vec![])).unwrap_err();
     }
 }
