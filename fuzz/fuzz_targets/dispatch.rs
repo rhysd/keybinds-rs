@@ -1,12 +1,11 @@
 #![no_main]
 use arbitrary::{Arbitrary, Result, Unstructured};
-use keybinds::{KeyInput, Keybinds, KeybindsOld};
+use keybinds::{KeyInput, Keybinds};
 use libfuzzer_sys::fuzz_target;
 
 fn run(data: &[u8]) -> Result<()> {
     let mut u = Unstructured::new(data);
-    let binds: KeybindsOld<u8> = u.arbitrary()?;
-    let mut dispatcher = Keybinds::new(binds);
+    let mut dispatcher = Keybinds::<u8>::new(u.arbitrary()?);
     for _ in 0..20 {
         let _ = dispatcher.dispatch(KeyInput::arbitrary(&mut u)?);
     }
