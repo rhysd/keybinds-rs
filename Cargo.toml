@@ -101,7 +101,7 @@ members = [".", "bench", "fuzz"]
 
 # To generate the document locally, run the following command.
 # ```
-# cargo +nightly doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features --open
+# RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo +nightly doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features --open
 # ```
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]

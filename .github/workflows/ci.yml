@@ -21,3 +21,12 @@ jobs:
       - run: cargo test --all-features
       - run: cargo check
         working-directory: ./fuzz
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features
+        env:
+          RUSTDOCFLAGS: --cfg docsrs --deny=warnings

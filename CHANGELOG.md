@@ -2,7 +2,7 @@
 # [v0.0.8](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.8) - 2025-03-06
 
 - **BREAKING:** `KeyInput::new` now takes `Into<Mods>` instead of `Mods`.
-- **BREAKING:** Implement `FromIterator<Keybind>` for `Keybinds` instead of `KeybindDisptacher`.
+- **BREAKING:** Implement `FromIterator<Keybind>` for `Keybinds` instead of `KeybindDispatcher`.
 - Add API documents to all the APIs. Read it on [docs.rs](https://docs.rs/keybinds/latest/keybinds/).
 - Add `KeybindDispatcher::into_keybinds`.
 - Add `Keybinds::take_dispatcher` method.

@@ -158,7 +158,8 @@ impl<A> Keybinds<A> {
         }
     }
 
-    /// Push a new [`Keybind`] instance. If this method is called while some maching is ongoing, the matching is reset.
+    /// Push a new [`Keybind`] instance. If this method is called while some key binding matching is ongoing, the
+    /// matching is reset.
     ///
     /// ```
     /// use keybinds::{Keybinds, Keybind};

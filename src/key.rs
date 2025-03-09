@@ -871,11 +871,12 @@ impl<I: Into<KeyInput>> FromIterator<I> for KeySeq {
     /// Collect a key sequence from an iterator of key inputs.
     ///
     /// ```
-    /// use keybinds::{KeySeq, KeyInput, Key, Mods};
+    /// use std::iter::repeat;
+    /// use keybinds::{KeySeq, KeyInput, Mods};
     ///
-    /// let seq: KeySeq = ['H', 'i'].into_iter().collect();
+    /// let seq: KeySeq = repeat(KeyInput::new('a', Mods::CTRL)).take(3).collect();
     ///
-    /// assert_eq!(format!("{seq}"), "H i");
+    /// assert_eq!(format!("{seq}"), "Ctrl+a Ctrl+a Ctrl+a");
     /// ```
     fn from_iter<T>(iter: T) -> Self
     where
@@ -889,7 +890,7 @@ impl fmt::Display for KeySeq {
     /// Generate a string representation of the key sequence following the
     /// [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
     ///
-    /// Key inputs are joined with one space. If the sequence is empty, this method writes nothing.
+    /// Key inputs are joined with single spaces. If the sequence is empty, this method writes nothing.
     ///
     /// ```
     /// use keybinds::{KeySeq, KeyInput, Key, Mods};

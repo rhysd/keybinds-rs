@@ -85,6 +85,7 @@
 //! [examples]: https://github.com/rhysd/keybinds-rs/tree/main/examples
 //!
 #![doc = include_str!("../doc/binding_syntax.md")]
+//! [!Caution]: #modifiers
 #![forbid(unsafe_code)]
 #![warn(clippy::dbg_macro, clippy::print_stdout)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg, doc_cfg_hide))]

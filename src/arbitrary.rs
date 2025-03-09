@@ -62,7 +62,7 @@ impl Arbitrary<'_> for KeySeq {
     }
 }
 
-// Note: Do not generate abitrary values for timeout and ongoing key sequence.
+// Note: Do not generate arbitrary values for timeout and ongoing key sequence.
 impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Keybinds<A> {
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self> {
         Ok(Self::new(u.arbitrary()?))
