@@ -2,7 +2,6 @@ use crate::Error;
 use bitflags::bitflags;
 use smallvec::{smallvec, SmallVec};
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
 #[cfg(feature = "arbitrary")]
@@ -657,28 +656,28 @@ pub enum Match {
 /// // Add more elements
 /// seq.push('b'.into());
 ///
-/// // Modify the sequence
-/// seq[2] = Key::Enter.into();
+/// // Modify the inner slice
+/// seq.as_mut_slice()[2] = Key::Enter.into();
 ///
-/// // Dereference as a slice
-/// assert_eq!(seq.len(), 3);
+/// // Access the inner slice
+/// assert_eq!(seq.as_slice().len(), 3);
 /// ```
 ///
-/// This type works similar to slices. It can be dereferenced as `&[KeyInput]` and `&mut [KeyInput]`. More elements can
-/// be added by [`KeySeq::push`] or [`KeySeq::extend`]. When you need to remove some elements, convert it to `Vec` and
-/// modify it.
+/// More elements can be added by [`KeySeq::push`], [`KeySeq::insert`], or [`KeySeq::extend`]. There is no API to
+/// remove elements for now because no use case has been revealed. However you can do it by converting the key
+/// sequence into [`Vec`].
 ///
 /// ```
-/// use keybinds::KeySeq;
+/// use keybinds::{KeySeq, KeyInput};
 ///
 /// let seq: KeySeq = ['a', 'b', 'c'].into_iter().collect();
 ///
-/// let mut vec: Vec<_> = seq.iter().copied().collect();
+/// let mut vec: Vec<_> = seq.as_slice().iter().copied().collect();
 /// vec.remove(1);
 ///
-/// let seq2: KeySeq = vec.into_iter().collect();
+/// let seq: KeySeq = vec.into_iter().collect();
 ///
-/// assert_ne!(seq, seq2);
+/// assert_eq!(seq.as_slice(), &[KeyInput::from('a'), KeyInput::from('c')]);
 /// ```
 ///
 #[derive(Clone, PartialEq, Eq, Default, Hash, Debug)]
@@ -722,7 +721,7 @@ impl KeySeq {
         }
     }
 
-    /// Get the key sequence as a slice. Note that this type also implements [`Deref`].
+    /// Get the key sequence as a slice.
     ///
     /// ```
     /// use keybinds::{KeySeq, KeyInput};
@@ -735,19 +734,66 @@ impl KeySeq {
         self.0.as_slice()
     }
 
-    /// Push the input to the end of the key sequence.
+    /// Mutably borrow the inner slice.
     ///
     /// ```
-    /// use keybinds::KeySeq;
+    /// use keybinds::{KeySeq, KeyInput};
     ///
     /// let mut seq: KeySeq = ['a', 'b'].into_iter().collect();
     ///
-    /// seq.push('c'.into());
+    /// seq.as_mut_slice()[1] = 'x'.into();
     ///
-    /// assert_eq!(seq.as_slice(), &['a'.into(), 'b'.into(), 'c'.into()]);
+    /// assert_eq!(seq.as_slice(), &[KeyInput::from('a'), KeyInput::from('x')]);
+    /// ```
+    pub fn as_mut_slice(&mut self) -> &mut [KeyInput] {
+        self.0.as_mut_slice()
+    }
+
+    /// Push the input to the end of the key sequence. This method is useful to build a key sequence conditionally.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Mods};
+    ///
+    /// struct Config {
+    ///     prefix_key: Option<KeyInput>,
+    /// }
+    ///
+    /// // let config = ...
+    /// # let config = Config { prefix_key: Some('t'.into()) };
+    ///
+    /// let mut seq = KeySeq::default();
+    ///
+    /// if let Some(key) = config.prefix_key {
+    ///     seq.push(key);
+    /// }
+    ///
+    /// seq.extend([
+    ///     KeyInput::new('x', Mods::CTRL),
+    ///     KeyInput::new('c', Mods::CTRL),
+    /// ]);
+    ///
+    /// let len = seq.as_slice().len();
+    /// assert!(len == 2 || len == 3);
     /// ```
     pub fn push(&mut self, input: KeyInput) {
         self.0.push(input);
+    }
+
+    /// Insert the input at the index of the key sequence. This method is useful to insert some prefix key after
+    /// building the sequence.
+    ///
+    /// ```
+    /// use keybinds::{KeySeq, KeyInput, Mods};
+    ///
+    /// let mut seq: KeySeq = ['a', 'b'].into_iter().collect();
+    /// let prefix = KeyInput::new('x', Mods::CTRL);
+    ///
+    /// seq.insert(0, prefix);
+    ///
+    /// assert_eq!(seq.as_slice(), &[prefix, 'a'.into(), 'b'.into()]);
+    /// ```
+    pub fn insert(&mut self, idx: usize, input: KeyInput) {
+        self.0.insert(idx, input);
     }
 }
 
@@ -812,8 +858,9 @@ impl<const N: usize, I: Into<KeyInput>> From<[I; N]> for KeySeq {
     /// use keybinds::{KeySeq, KeyInput, Key, Mods};
     ///
     /// let seq = KeySeq::from([Key::Enter.into(), KeyInput::new('x', Mods::CTRL)]);
-    /// assert_eq!(seq[0].key(), Key::Enter);
-    /// assert_eq!(seq[1].mods(), Mods::CTRL);
+    /// let slice = seq.as_slice();
+    /// assert_eq!(slice[0].key(), Key::Enter);
+    /// assert_eq!(slice[1].mods(), Mods::CTRL);
     /// ```
     fn from(arr: [I; N]) -> Self {
         Self(arr.into_iter().map(Into::into).collect())
@@ -866,25 +913,12 @@ impl fmt::Display for KeySeq {
 }
 
 impl<I: Into<KeyInput>> Extend<I> for KeySeq {
+    /// Extend the key sequence with the iterator of key inputs. See [`KeySeq::push`] for an example.
     fn extend<T>(&mut self, iter: T)
     where
         T: IntoIterator<Item = I>,
     {
         self.0.extend(iter.into_iter().map(Into::into));
-    }
-}
-
-impl Deref for KeySeq {
-    type Target = [KeyInput];
-
-    fn deref(&self) -> &Self::Target {
-        self.0.as_slice()
-    }
-}
-
-impl DerefMut for KeySeq {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0.as_mut_slice()
     }
 }
 
@@ -895,7 +929,7 @@ mod tests {
     #[test]
     fn parse_key_input_ok() {
         let seq: KeySeq = ['a'].into_iter().collect();
-        assert!(!seq.as_ref().is_empty());
+        assert!(!seq.as_slice().is_empty());
 
         let tests = [
             ("x", KeyInput::new('x', Mods::NONE)),
@@ -1068,6 +1102,13 @@ mod tests {
         ] {
             assert_eq!(actual, expected);
         }
+    }
+
+    #[test]
+    fn key_seq_as_slice() {
+        let mut seq: KeySeq = ['a', 'b', 'c'].into_iter().collect();
+        seq.as_mut_slice()[1] = 'x'.into();
+        assert_eq!(seq.as_slice(), &['a'.into(), 'x'.into(), 'c'.into()]);
     }
 
     #[test]
