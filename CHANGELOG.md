@@ -1,3 +1,22 @@
+<a id="v0.0.9"></a>
+# [v0.0.9](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.9) - 2025-03-09
+
+- **BREAKING:** Merge `KeybindDispatcher` into `Keybinds`. Now `Keybinds` directly has `dispatch` method and dispatches actions. This change makes the API simpler. Note that setting different timeout values to compared objects makes `==` operator return `false` even if the key bindings are completely equal.
+- **BREAKING:** Rewrite `KeySeq` using [smallvec](https://docs.rs/smallvec/latest/smallvec). Now it is a struct instead of enum and it no longer allows accessing the internal state.
+  - Key sequences containing up to 2 key inputs can be allocated on stack instead of heap (previously only a single key input could be allocated on stack).
+  - `KeySeq` now implements `Hash` trait.
+  - Methods for adding inputs to a key sequence were implemented.
+- **BREAKING:** Replace `Key::F(u8)` variant with `Key::F1`...`Key::F35` variants. This change brings the following benefits.
+  - The size of `Key` was reduced from 8 bytes to 4 bytes because `u8` value required a 3 bytes padding.
+  - Invalid keys such as `Key::F(0)` or `Key::F(99)` are now not possible.
+- Implement `Extend` for `Keybinds` to append multiple key bindings.
+- Fix crossterm's button release event is not ignored as `Key::Ignored`.
+- Fix an empty key sequence does not cause an error on serialization.
+- Explain the crate features in [Cargo.toml](https://github.com/rhysd/keybinds-rs/blob/main/Cargo.toml).
+
+[Changes][v0.0.9]
+
+
 <a id="v0.0.8"></a>
 # [v0.0.8](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.8) - 2025-03-06
 
@@ -113,6 +132,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.0.9]: https://github.com/rhysd/keybinds-rs/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://github.com/rhysd/keybinds-rs/compare/v0.0.7...v0.0.8
 [v0.0.7]: https://github.com/rhysd/keybinds-rs/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/rhysd/keybinds-rs/compare/v0.0.5...v0.0.6
