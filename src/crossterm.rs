@@ -121,7 +121,7 @@ impl From<KeyModifiers> for Mods {
         if from.contains(KeyModifiers::CONTROL) {
             to |= Mods::CTRL;
         }
-        if from.contains(KeyModifiers::ALT) || from.contains(KeyModifiers::META) {
+        if from.intersects(KeyModifiers::ALT | KeyModifiers::META) {
             to |= Mods::ALT;
         }
         if from.contains(KeyModifiers::SUPER) {

@@ -147,25 +147,16 @@ impl From<KeyCode> for Key {
 impl From<Modifiers> for Mods {
     fn from(mods: Modifiers) -> Self {
         let mut ret = Mods::NONE;
-        if mods.contains(Modifiers::CTRL)
-            || mods.contains(Modifiers::RIGHT_CTRL)
-            || mods.contains(Modifiers::LEFT_CTRL)
-        {
+        if mods.intersects(Modifiers::CTRL | Modifiers::RIGHT_CTRL | Modifiers::LEFT_CTRL) {
             ret |= Mods::CTRL;
         }
-        if mods.contains(Modifiers::ALT)
-            || mods.contains(Modifiers::RIGHT_ALT)
-            || mods.contains(Modifiers::LEFT_ALT)
-        {
+        if mods.intersects(Modifiers::ALT | Modifiers::RIGHT_ALT | Modifiers::LEFT_ALT) {
             ret |= Mods::ALT;
         }
         if mods.contains(Modifiers::SUPER) {
             ret |= Mods::SUPER;
         }
-        if mods.contains(Modifiers::SHIFT)
-            || mods.contains(Modifiers::LEFT_SHIFT)
-            || mods.contains(Modifiers::RIGHT_SHIFT)
-        {
+        if mods.intersects(Modifiers::SHIFT | Modifiers::LEFT_SHIFT | Modifiers::RIGHT_SHIFT) {
             ret |= Mods::SHIFT;
         }
         ret

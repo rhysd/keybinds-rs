@@ -1,7 +1,8 @@
 //! Support for [`serde`] crate.
 //!
-//! This module provides [`Deserialize`] and [`Serialize`] traits support for [`Keybinds`] and some other types to
-//! easily parse key bindings from a configuration file.
+//! This module provides [`Deserialize`] and [`Serialize`] traits support for [`Keybinds`] and some other types
+//! following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+//! This is useful for parsing key bindings from a configuration file.
 //!
 //! ```
 //! use serde::{Serialize, Deserialize};
@@ -18,12 +19,12 @@
 //! #[derive(Serialize, Deserialize)]
 //! struct Config {
 //!     // `Keybinds` implements serde's `Deserialize`
-//!     bindings: Keybinds<Action>,
+//!     keyboard: Keybinds<Action>,
 //! }
 //!
 //! // Configuration file content
 //! let configuration =
-//! r#"[bindings]
+//! r#"[keyboard]
 //! "Ctrl+Alt+Enter" = "OpenFile"
 //! "Ctrl+x Ctrl+c" = "ExitApp"
 //! "#;
