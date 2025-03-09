@@ -40,7 +40,7 @@ character-key   ::= /* Any unicode character except for spaces */
 named-key       ::= 'Space' | 'Plus' | 'Up' | 'Right' | 'Down' | 'Left' | 'Enter' | 'Backspace' | 'Delete' | 'Home' | 'End' | 'PageUp' | 'PageDown' | 'Esc' | 'Tab' | 'Backtab' | 'Insert' | 'Copy' | 'Cut' | 'Paste' | 'Clear' | 'Undo' | 'Redo' | 'ZoomIn' | 'ZoomOut' | 'ScrollLock' | 'NumLock' | 'FnLock' | 'PrintScreen' | 'Menu' | 'Play' | 'Pause' | 'PlayPause' | 'Stop' | 'Rewind' | 'NextTrack' | 'PrevTrack' | 'VolumeUp' | 'VolumeDown' | 'Mute' |
                     'space' | 'plus' | 'up' | 'right' | 'down' | 'left' | 'enter' | 'backspace' | 'delete' | 'home' | 'end' | 'pageup' | 'pagedown' | 'esc' | 'tab' | 'backtab' | 'insert' | 'copy' | 'cut' | 'paste' | 'clear' | 'undo' | 'redo' | 'zoomin' | 'zoomout' | 'scrolllock' | 'numlock' | 'fnlock' | 'printscreen' | 'menu' | 'play' | 'pause' | 'playpause' | 'stop' | 'rewind' | 'nexttrack' | 'prevtrack' | 'volumeup' | 'volumedown' | 'mute' |
                     'SPACE' | 'PLUS' | 'UP' | 'RIGHT' | 'DOWN' | 'LEFT' | 'ENTER' | 'BACKSPACE' | 'DELETE' | 'HOME' | 'END' | 'PAGEUP' | 'PAGEDOWN' | 'ESC' | 'TAB' | 'BACKTAB' | 'INSERT' | 'COPY' | 'CUT' | 'PASTE' | 'CLEAR' | 'UNDO' | 'REDO' | 'ZOOMIN' | 'ZOOMOUT' | 'SCROLLLOCK' | 'NUMLOCK' | 'FNLOCK' | 'PRINTSCREEN' | 'MENU' | 'PLAY' | 'PAUSE' | 'PLAYPAUSE' | 'STOP' | 'REWIND' | 'NEXTTRACK' | 'PREVTRACK' | 'VOLUMEUP' | 'VOLUMEDOWN' | 'MUTE'
-function-key    ::= 'F' [1-9] ([0-9])*
+function-key    ::= 'F1' | 'F2' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7' | 'F8' | 'F9' | 'F10' | 'F11' | 'F12' | 'F13' | 'F14' | 'F15' | 'F16' | 'F17' | 'F18' | 'F19' | 'F20' | 'F21' | 'F22' | 'F23' | 'F24' | 'F25' | 'F26' | 'F27' | 'F28' | 'F29' | 'F30' | 'F31' | 'F32' | 'F33' | 'F34' | 'F35'
 ```
 
 ## Key combination
