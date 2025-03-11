@@ -135,6 +135,8 @@ impl From<KeyModifiers> for Mods {
 }
 
 impl From<&KeyEvent> for KeyInput {
+    /// Convert crossterm's key events to [`KeyInput`]. The key release events are converted into `Key::Ignored` with no
+    /// modifiers.
     fn from(event: &KeyEvent) -> Self {
         if event.kind == KeyEventKind::Release {
             return Key::Ignored.into();
@@ -150,6 +152,8 @@ impl From<KeyEvent> for KeyInput {
 }
 
 impl From<&Event> for KeyInput {
+    /// Convert crossterm's events to [`KeyInput`]. Events unrelated to key presses are converted into `Key::Ignored`
+    /// with no modifiers.
     fn from(event: &Event) -> Self {
         match event {
             Event::Key(event) => event.into(),

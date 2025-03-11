@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 
-/// Single key binding. A pair of key sequence and its action.
+/// Single key binding. A pair of a key sequence and its action.
 ///
 /// ```
 /// use keybinds::{Keybinds, Keybind, KeySeq, KeyInput, Key, Mods};

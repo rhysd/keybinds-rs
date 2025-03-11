@@ -74,13 +74,14 @@ The following modifier keys are available:
 
 > [!Caution]
 >
-> `Shift` modifier key is only available with named keys, such as `Shift+Up`. For example, when you want to
-> define a key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you should use `A` instead of `Shift+a`. This
-> restriction helps avoid some confusing edge cases and may be relaxed in the future.
+> `Shift` modifier key is only available with named keys, such as `Shift+Up`. For example, when you want to define a
+> key binding for <kbd>Shift</kbd> + <kbd>A</kbd>, you should use the logical input `A` instead of the physical input
+> `Shift+a`. This restriction helps avoid some confusing edge cases at this point and may be relaxed in the future.
 
 ## Named keys
 
-The following modifier keys are available.
+The following modifier keys are available. `Space` and `Plus` are named keys because they have conflicts with the key
+sequence syntax.
 
 - `Space`
 - `Plus`

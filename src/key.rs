@@ -103,8 +103,9 @@ pub enum Key {
 }
 
 impl Key {
-    /// Returns true when it is a named key such as "Up". As an edge case, space key and the "+" key are also treated
-    /// as named key even if they are instances of `Key::Char` variant.
+    /// Returns true when it is a named key such as "Up". As an edge case, the space key and the "+" key are also
+    /// treated as named keys following the [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md)
+    /// although they are instances of `Key::Char` variant.
     ///
     /// ```
     /// use keybinds::Key;
@@ -122,7 +123,7 @@ impl Key {
     /// ```
     pub fn is_named(self) -> bool {
         match self {
-            Self::Char(c) if c == ' ' || c == '+' => true,
+            Self::Char(' ' | '+') => true,
             Self::Char(_) | Self::Ignored | Self::Unidentified => false,
             _ => true,
         }
@@ -198,7 +199,7 @@ impl FromStr for Key {
             "zoomout" | "ZoomOut" | "ZOOMOUT" => Ok(Self::ZoomOut),
             "scrolllock" | "ScrollLock" | "SCROLLLOCK" => Ok(Self::ScrollLock),
             "fnlock" | "FnLock" | "FNLOCK" => Ok(Self::FnLock),
-            "numlock" | "NumLock" | "NUMLOCK" => Ok(Self::ScrollLock),
+            "numlock" | "NumLock" | "NUMLOCK" => Ok(Self::NumLock),
             "printscreen" | "PrintScreen" | "PRINTSCREEN" => Ok(Self::PrintScreen),
             "menu" | "Menu" | "MENU" => Ok(Self::Menu),
             "play" | "Play" | "PLAY" => Ok(Self::Play),

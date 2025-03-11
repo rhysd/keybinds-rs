@@ -202,6 +202,8 @@ impl From<Modifiers> for Mods {
 }
 
 impl From<&KeyEvent> for KeyInput {
+    /// Convert iced's key events to [`KeyInput`]. Events except for key presses are converted into `Key::Ignored` with
+    /// no modifiers.
     fn from(event: &KeyEvent) -> Self {
         match event {
             KeyEvent::KeyPressed {
@@ -221,6 +223,8 @@ impl From<KeyEvent> for KeyInput {
 }
 
 impl From<&Event> for KeyInput {
+    /// Convert iced's events to [`KeyInput`]. Events unrelated to key presses are converted into `Key::Ignored` with
+    /// no modifiers.
     fn from(event: &Event) -> Self {
         match event {
             Event::Keyboard(event) => event.into(),
