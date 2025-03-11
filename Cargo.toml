@@ -18,6 +18,8 @@ include = [
     "/README.md",
     "/CHANGELOG.md",
 ]
+# 1.80 is necessary for using `str::trim_ascii`.
+rust-version = "1.80.0"
 
 [[example]]
 name = "minimal"

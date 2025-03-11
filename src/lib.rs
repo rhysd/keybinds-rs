@@ -72,8 +72,13 @@
 //!
 //! # Features
 //!
-//! The list of crate features can be found in [Cargo.toml](./Cargo.toml). Please read the comments on each features
-//! which explains about it.
+//! The list of crate features can be found in `[features]` section of [Cargo.toml][metadata]. Please read the comments
+//! on each features which explains about it.
+//!
+//! # Minimal supported Rust version
+//!
+//! See `rust-version` field of [Cargo.toml][metadata] for the minimal supported Rust version. Note that enabling
+//! optional features may require some higher Rust versions due to the optional dependencies introduced by them.
 //!
 //! [crates-io]: https://crates.io/crates/keybinds
 //! [serde]: https://serde.rs/
@@ -83,6 +88,7 @@
 //! [termwiz]: https://crates.io/crates/termwiz
 //! [arbitrary]: https://crates.io/crates/arbitrary
 //! [examples]: https://github.com/rhysd/keybinds-rs/tree/main/examples
+//! [metadata]: https://github.com/rhysd/keybinds-rs/blob/main/Cargo.toml
 //!
 #![doc = include_str!("../doc/binding_syntax.md")]
 //! [!Caution]: #modifiers

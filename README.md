@@ -138,8 +138,13 @@ cargo run --example crossterm --features=crossterm,serde
 
 ## Features
 
-The list of crate features can be found in [Cargo.toml](./Cargo.toml). Please read the comments on each features which
-explains about it.
+The list of crate features can be found in `[features]` section of [Cargo.toml](./Cargo.toml). Please read the comments
+on each features which explains about it.
+
+## Minimal supported Rust version
+
+See `rust-version` field of [Cargo.toml](./Cargo.toml) for the minimal supported Rust version. Note that enabling
+optional features may require some higher Rust versions due to the optional dependencies introduced by them.
 
 ## License
 
