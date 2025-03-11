@@ -234,3 +234,75 @@ impl From<Event> for KeyInput {
         Self::from(&event)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use iced::keyboard::key::{Code, Physical};
+    use iced::keyboard::Location;
+    use iced::window::Event as WindowEvent;
+
+    #[test]
+    fn key_to_key() {
+        assert_eq!(Key::from(IcedKey::Character("+".into())), Key::Char('+'));
+        assert_eq!(Key::from(IcedKey::Named(Named::Space)), Key::Char(' '));
+        assert_eq!(Key::from(IcedKey::Named(Named::ArrowUp)), Key::Up);
+        assert_eq!(Key::from(IcedKey::Named(Named::Control)), Key::Ignored);
+        assert_eq!(Key::from(IcedKey::Unidentified), Key::Unidentified);
+        assert_eq!(Key::from(IcedKey::Named(Named::Compose)), Key::Unidentified);
+    }
+
+    #[test]
+    fn modifiers_to_mods() {
+        assert_eq!(Mods::from(Modifiers::empty()), Mods::NONE);
+        assert_eq!(Mods::from(Modifiers::CTRL), Mods::CTRL);
+        assert_eq!(
+            Mods::from(Modifiers::CTRL | Modifiers::ALT),
+            Mods::CTRL | Mods::ALT,
+        );
+        assert_eq!(Mods::from(Modifiers::LOGO), Mods::SUPER);
+        assert_eq!(Mods::from(Modifiers::SHIFT), Mods::SHIFT);
+    }
+
+    #[test]
+    fn key_event_to_input() {
+        assert_eq!(
+            KeyInput::from(KeyEvent::KeyPressed {
+                key: IcedKey::Character("x".into()),
+                modified_key: IcedKey::Character("X".into()),
+                physical_key: Physical::Code(Code::KeyX),
+                location: Location::Standard,
+                modifiers: Modifiers::SHIFT,
+                text: Some("X".into()),
+            }),
+            KeyInput::from(Key::Char('X')),
+        );
+        assert_eq!(
+            KeyInput::from(KeyEvent::KeyReleased {
+                key: IcedKey::Character("x".into()),
+                location: Location::Standard,
+                modifiers: Modifiers::CTRL,
+            }),
+            KeyInput::from(Key::Ignored),
+        );
+    }
+
+    #[test]
+    fn event_to_input() {
+        assert_eq!(
+            KeyInput::from(Event::Keyboard(KeyEvent::KeyPressed {
+                key: IcedKey::Character("x".into()),
+                modified_key: IcedKey::Character("X".into()),
+                physical_key: Physical::Code(Code::KeyX),
+                location: Location::Standard,
+                modifiers: Modifiers::SHIFT,
+                text: Some("X".into()),
+            })),
+            KeyInput::from(Key::Char('X')),
+        );
+        assert_eq!(
+            KeyInput::from(Event::Window(WindowEvent::Closed)),
+            KeyInput::from(Key::Ignored),
+        );
+    }
+}
