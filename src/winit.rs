@@ -9,7 +9,7 @@
 //! use keybinds::winit::WinitEventConverter;
 //! use keybinds::Keybinds;
 //! use winit::application::ApplicationHandler;
-//! use winit::event::WindowEvent;
+//! use winit::event::{Event, WindowEvent};
 //! use winit::event_loop::{ActiveEventLoop, EventLoop};
 //! use winit::window::{Theme, Window, WindowId};
 //!
@@ -201,7 +201,18 @@ impl From<ModifiersState> for Mods {
     }
 }
 
+impl From<&Modifiers> for Mods {
+    fn from(mods: &Modifiers) -> Self {
+        Self::from(mods.state())
+    }
+}
+
+/// Trait to handle various kinds of winit's event values in a uniform way.
+///
+/// The types that implements this trait can be passed to [`WinitEventConverter::convert`] method call.
 pub trait WinitEvent {
+    /// Convert the event into [`KeyInput`] instance with the [`WinitEventConverter`] instance. The covnerter contains
+    /// the current modifiers state.
     fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput;
 }
 
@@ -236,20 +247,104 @@ impl<T> WinitEvent for Event<T> {
     }
 }
 
+/// Event converter to convert winit's events into [`KeyInput`] with managing the current modifiers state.
+///
+/// The following winit's event types can be converted.
+/// - [`winit::event::Event`]
+/// - [`winit::event::WindowEvent`]
+/// - [`winit::event::KeyEvent`]
+///
+/// ```
+/// use winit::event::{Event, WindowEvent};
+/// use winit::window::WindowId;
+/// use winit::keyboard::ModifiersState;
+/// use keybinds::{Key, Mods, KeyInput};
+/// use keybinds::winit::{WinitEventConverter, WinitEvent};
+///
+/// let mut converter = WinitEventConverter::default();
+///
+/// # struct Dummy(winit::keyboard::Key);
+/// # impl WinitEvent for Dummy {
+/// #     fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput {
+/// #         KeyInput::new(keybinds::Key::from(&self.0), conv.mods())
+/// #     }
+/// # }
+/// // Receive 'x' key press event
+/// // let event = ...
+/// # let event = Dummy(winit::keyboard::Key::Character("x".into()));
+/// assert_eq!(converter.convert(&event), KeyInput::new('x', Mods::NONE));
+///
+/// // Receive a modifiers state change event
+/// let event = Event::<()>::WindowEvent {
+///     window_id: WindowId::dummy(),
+///     event: WindowEvent::ModifiersChanged(ModifiersState::CONTROL.into()),
+/// };
+/// assert_eq!(converter.convert(&event), KeyInput::new(Key::Ignored, Mods::NONE));
+///
+/// // Receive 'x' key press event again. The current modifier state is reflected
+/// // to the converted `KeyInput` instance
+/// // let event = ...
+/// # let event = Dummy(winit::keyboard::Key::Character("x".into()));
+/// assert_eq!(converter.convert(&event), KeyInput::new('x', Mods::CTRL));
+/// ```
 #[derive(Default)]
 pub struct WinitEventConverter {
     mods: Mods,
 }
 
 impl WinitEventConverter {
+    /// Returns the current modifiers state.
+    ///
+    /// ```
+    /// use winit::event::{Event, WindowEvent};
+    /// use winit::window::WindowId;
+    /// use winit::keyboard::ModifiersState;
+    /// use keybinds::Mods;
+    /// use keybinds::winit::WinitEventConverter;
+    ///
+    /// let mut converter = WinitEventConverter::default();
+    ///
+    /// // Initially no modifiers are being pressed.
+    /// assert_eq!(converter.mods(), Mods::NONE);
+    ///
+    /// // Receive a modifiers state changed event here.
+    /// let event = Event::<()>::WindowEvent {
+    ///     window_id: WindowId::dummy(),
+    ///     event: WindowEvent::ModifiersChanged(ModifiersState::CONTROL.into()),
+    /// };
+    /// converter.convert(&event);
+    ///
+    /// // The CTRL modifier is being pressed.
+    /// assert_eq!(converter.mods(), Mods::CTRL);
+    /// ```
     pub fn mods(&self) -> Mods {
         self.mods
     }
 
+    /// Update the current modifiers state. This method needs to be called only when you pass winit's `KeyEvent` to the
+    /// `convert` method. Otherwise, when you pass `Event` or `WindowEvent`, this method is implicitly called while
+    /// converting them into [`KeyInput`].
+    ///
+    /// ```
+    /// use winit::keyboard::ModifiersState;
+    /// use keybinds::Mods;
+    /// use keybinds::winit::WinitEventConverter;
+    ///
+    /// let mut converter = WinitEventConverter::default();
+    ///
+    /// assert_eq!(converter.mods(), Mods::NONE);
+    ///
+    /// let state = ModifiersState::CONTROL.into();
+    /// converter.on_modifiers_changed(&state);
+    ///
+    /// assert_eq!(converter.mods(), Mods::CTRL);
+    /// ```
     pub fn on_modifiers_changed(&mut self, mods: &Modifiers) {
-        self.mods = mods.state().into();
+        self.mods = mods.into();
     }
 
+    /// Convert winit's events into [`KeyInput`] instances with managing the current modifiers state. See the document
+    /// for [`WinitEventConverter`] for an example.
     pub fn convert<E: WinitEvent>(&mut self, event: &E) -> KeyInput {
         event.to_key_input(self)
     }
@@ -258,7 +353,7 @@ impl WinitEventConverter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use winit::keyboard::{NativeKey, SmolStr};
+    use winit::keyboard::NativeKey;
     use NamedKey::*;
     use WinitKey::*;
 
@@ -269,9 +364,9 @@ mod tests {
         assert_eq!(Key::from(Named(F1)), Key::F1);
         assert_eq!(Key::from(Named(Control)), Key::Ignored);
         assert_eq!(Key::from(Named(TVInput)), Key::Unidentified);
-        assert_eq!(Key::from(Character(SmolStr::new("a"))), Key::Char('a'));
-        assert_eq!(Key::from(Character(SmolStr::new("A"))), Key::Char('A'));
-        assert_eq!(Key::from(Character(SmolStr::new("foo"))), Key::Unidentified);
+        assert_eq!(Key::from(Character("a".into())), Key::Char('a'));
+        assert_eq!(Key::from(Character("A".into())), Key::Char('A'));
+        assert_eq!(Key::from(Character("foo".into())), Key::Unidentified);
         assert_eq!(
             Key::from(Unidentified(NativeKey::Unidentified)),
             Key::Unidentified,
@@ -303,17 +398,15 @@ mod tests {
     fn converter_convert_keys() {
         let mut conv = WinitEventConverter::default();
 
-        // We cannot test `on_modifiers_changed` because `winit::event::Modifiers` does not provide
-        // a constructor.
         assert_eq!(conv.mods(), Mods::NONE);
 
         assert_eq!(conv.convert(&Named(Space)), KeyInput::new(' ', Mods::NONE));
         assert_eq!(
-            conv.convert(&Character(SmolStr::new("("))),
+            conv.convert(&Character("(".into())),
             KeyInput::new('(', Mods::NONE),
         );
         assert_eq!(
-            conv.convert(&Character(SmolStr::new("A"))),
+            conv.convert(&Character("A".into())),
             KeyInput::new('A', Mods::NONE),
         );
         assert_eq!(
@@ -323,6 +416,13 @@ mod tests {
         assert_eq!(
             conv.convert(&Named(Control)),
             KeyInput::new(Key::Ignored, Mods::NONE),
+        );
+
+        conv.on_modifiers_changed(&ModifiersState::CONTROL.into());
+
+        assert_eq!(
+            conv.convert(&Character("x".into())),
+            KeyInput::new('x', Mods::CTRL),
         );
     }
 }
