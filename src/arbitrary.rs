@@ -68,3 +68,28 @@ impl<'a, A: Arbitrary<'a>> Arbitrary<'a> for Keybinds<A> {
         Ok(Self::new(u.arbitrary()?))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Key, Keybind};
+
+    #[test]
+    fn arbitrary_values() {
+        let raw_data = b"
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et
+            dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
+            ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
+            fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+            mollit anim id est laborum.
+        ";
+        let mut u = Unstructured::new(raw_data);
+
+        let _ = Key::arbitrary(&mut u).unwrap();
+        let _ = Mods::arbitrary(&mut u).unwrap();
+        let _ = KeyInput::arbitrary(&mut u).unwrap();
+        let _ = KeySeq::arbitrary(&mut u).unwrap();
+        let _ = Keybind::<()>::arbitrary(&mut u).unwrap();
+        let _ = Keybinds::<()>::arbitrary(&mut u).unwrap();
+    }
+}
