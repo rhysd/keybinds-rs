@@ -64,12 +64,11 @@ Key sequence is a sequence of key combinations. Key combinations are concatenate
 
 The following modifier keys are available:
 
-- `Ctrl`: <kbd>Ctrl</kbd> key
-- `Cmd`: <kbd>Command</kbd> key
+- `Ctrl`: <kbd>Ctrl</kbd> key (alias: `Control`)
+- `Cmd`: <kbd>Command</kbd> key (alias: `Command`)
 - `Mod`: <kbd>Command</kbd> key on macOS, <kbd>Ctrl</kbd> key on other platforms
 - `Super`: <kbd>Windows</kbd> key on platforms other than macOS, Command key on macOS
-- `Alt`: <kbd>Alt</kbd> or <kbd>Meta</kbd> key
-- `Option`: An alias to <kbd>Alt</kbd> key
+- `Alt`: <kbd>Alt</kbd> or <kbd>Meta</kbd> key (alias: `Option`)
 - `Shift`: <kbd>Shift</kbd> key (can only modify named keys)
 
 > [!Caution]

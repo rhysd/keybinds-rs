@@ -3,6 +3,7 @@ use arbitrary::{Arbitrary, Result, Unstructured};
 use keybinds::{KeyInput, Keybinds};
 use libfuzzer_sys::fuzz_target;
 
+#[inline]
 fn run(data: &[u8]) -> Result<()> {
     let mut u = Unstructured::new(data);
     let mut dispatcher = Keybinds::<u8>::new(u.arbitrary()?);
