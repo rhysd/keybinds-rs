@@ -95,9 +95,8 @@ sequence syntax.
 - `End`
 - `PageUp`
 - `PageDown`
-- `Esc`
+- `Esc` (alias: `Escape`)
 - `Tab`
-- `Backtab`
 - `Insert`
 - `Copy`
 - `Cut`

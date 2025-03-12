@@ -42,6 +42,10 @@ use crate::{Key, KeyInput, Mods};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MediaKeyCode};
 
 impl From<KeyCode> for Key {
+    /// Convert crossterm's key code into [`Key`].
+    ///
+    /// Note that [`crossterm::event::KeyCode::BackTab`] is converted into [`Key::Unidentified`] as a fallback. For
+    /// correct conversion, consider converting [`crossterm::event::KeyEvent`] into [`KeyInput`] instead.
     fn from(code: KeyCode) -> Self {
         match code {
             KeyCode::Backspace => Self::Backspace,
@@ -55,7 +59,6 @@ impl From<KeyCode> for Key {
             KeyCode::PageUp => Self::PageUp,
             KeyCode::PageDown => Self::PageDown,
             KeyCode::Tab => Self::Tab,
-            KeyCode::BackTab => Self::Backtab,
             KeyCode::Delete => Self::Delete,
             KeyCode::Insert => Self::Insert,
             KeyCode::F(1) => Self::F1,
@@ -141,6 +144,9 @@ impl From<&KeyEvent> for KeyInput {
         if event.kind == KeyEventKind::Release {
             return Key::Ignored.into();
         }
+        if event.code == KeyCode::BackTab {
+            return Self::new(Key::Tab, Mods::from(event.modifiers) | Mods::SHIFT);
+        }
         Self::new(event.code, event.modifiers)
     }
 }
@@ -186,6 +192,7 @@ mod tests {
         );
         assert_eq!(Key::from(KeyCode::Media(MediaKeyCode::Play)), Key::Play);
         assert_eq!(Key::from(KeyCode::F(12)), Key::F12);
+        assert_eq!(Key::from(KeyCode::BackTab), Key::Unidentified);
     }
 
     #[test]
@@ -231,6 +238,17 @@ mod tests {
                 state: KeyEventState::NONE,
             }),
             KeyInput::new(Key::Ignored, Mods::NONE),
+        );
+        // Edge case
+        // https://docs.rs/crossterm/latest/crossterm/event/enum.KeyCode.html#variant.BackTab
+        assert_eq!(
+            KeyInput::from(KeyEvent {
+                code: KeyCode::BackTab,
+                modifiers: KeyModifiers::empty(),
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            }),
+            KeyInput::new(Key::Tab, Mods::SHIFT),
         );
     }
 
