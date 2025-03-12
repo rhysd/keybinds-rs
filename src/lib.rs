@@ -3,7 +3,7 @@
 //! [keybinds-rs][crates-io] is a small crate to parse/generate/dispatch key bindings (keyboard shortcuts) written
 //! in Safe Rust.
 //!
-//! - Provide a syntax to easily define key bindings in a configuration file like `Ctrl+a`
+//! - Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`
 //! - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style
 //! - Core API independent from any platforms and frameworks with minimal dependencies (only two crates)
 //! - Support several platforms and frameworks as optional features
@@ -11,7 +11,7 @@
 //!   - [termwiz][]
 //!   - [winit][]
 //!   - [iced][]
-//! - Support parsing/generating the key bindings configuration using [serde][] optionally
+//! - Support parsing/generating a key bindings configuration using [serde][] optionally
 //! - Support structure-aware fuzzing using [arbitrary][] optionally.
 //!
 //! # Installation
@@ -75,7 +75,7 @@
 //! The list of crate features can be found in `[features]` section of [Cargo.toml][metadata]. Please read the comments
 //! on each features which explains about it.
 //!
-//! # Minimal supported Rust version
+//! # Minimal supported Rust version (MSRV)
 //!
 //! See `rust-version` field of [Cargo.toml][metadata] for the minimal supported Rust version. Note that enabling
 //! optional features may require some higher Rust versions due to the optional dependencies introduced by them.
@@ -90,6 +90,7 @@
 //! [examples]: https://github.com/rhysd/keybinds-rs/tree/main/examples
 //! [metadata]: https://github.com/rhysd/keybinds-rs/blob/main/Cargo.toml
 //!
+#![doc = include_str!("../doc/versioning.md")]
 #![doc = include_str!("../doc/binding_syntax.md")]
 //! [!Caution]: #modifiers
 #![forbid(unsafe_code)]

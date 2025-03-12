@@ -7,18 +7,19 @@ keybinds-rs
 **THIS CRATE IS WORK IN PROGRESS YET. The first beta release is planned as 0.1.0. Until then, this
 library can be buggy and have arbitrary breaking changes.**
 
-[keybinds-rs][crates-io] is a small crate to parse/generate/dispatch key bindings (keyboard shortcuts) written
-in Safe Rust.
+[keybinds-rs][crates-io] is a platform&framework-agnostic library to parse/generate/dispatch key bindings (keyboard
+shortcuts) written in Safe Rust.
 
-- Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`. ([document](./doc/binding_syntax.md))
+- Provide the [syntax](./doc/binding_syntax.md) to easily define key bindings in a configuration file like `Ctrl+a`.
 - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
-- Provide the core API independent from any platforms and frameworks with minimal dependencies (only two crates). ([example](./examples/minimal.rs))
+- Provide the core API independent from any platforms and frameworks with minimal (only two crates) dependencies. ([example](./examples/minimal.rs))
 - Support several platforms and frameworks as optional features.
   - [crossterm][] ([example](./examples/crossterm.rs))
   - [termwiz][] ([example](./examples/termwiz.rs))
   - [winit][] ([example](./examples/winit.rs))
   - [iced][] ([example](./examples/iced.rs))
-- Support [parsing](./examples/deserialize.rs)/[generating](./examples/serialize.rs) the key bindings configuration using [serde][] optionally.
+- Support [parsing](./examples/deserialize.rs)/[generating](./examples/serialize.rs) a key bindings configuration
+  using [serde][] optionally.
 - Support structure-aware fuzzing using [arbitrary][] optionally. ([example](./examples/arbitrary.rs))
 
 [API Documentation][api-doc]
@@ -141,10 +142,14 @@ cargo run --example crossterm --features=crossterm,serde
 The list of crate features can be found in `[features]` section of [Cargo.toml](./Cargo.toml). Please read the comments
 on each features which explains about it.
 
-## Minimal supported Rust version
+## Minimal supported Rust version (MSRV)
 
 See `rust-version` field of [Cargo.toml](./Cargo.toml) for the minimal supported Rust version. Note that enabling
 optional features may require some higher Rust versions due to the optional dependencies introduced by them.
+
+## Versioning
+
+See the [document](./doc/versioning.md).
 
 ## License
 
