@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e -u -o pipefail
+
+set -x
+cargo fmt -- --check
+cargo clippy-all -- -D warnings
+cargo test-all
+RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo +nightly doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features

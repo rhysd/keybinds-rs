@@ -212,7 +212,7 @@ impl From<&Modifiers> for Mods {
 ///
 /// The types that implements this trait can be passed to [`WinitEventConverter::convert`] method call.
 pub trait WinitEvent {
-    /// Convert the event into [`KeyInput`] instance with the [`WinitEventConverter`] instance. The covnerter contains
+    /// Convert the event into [`KeyInput`] instance with the [`WinitEventConverter`] instance. The converter manages
     /// the current modifiers state.
     fn to_key_input(&self, conv: &mut WinitEventConverter) -> KeyInput;
 }
