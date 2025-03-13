@@ -8,7 +8,7 @@ edition = "2021"
 cargo-fuzz = true
 
 [features]
-default = []
+default = ["arbitrary"]
 arbitrary = ["dep:arbitrary"]
 
 [dependencies]

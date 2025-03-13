@@ -18,18 +18,16 @@ jobs:
       - run: cargo fmt -- --check
       - run: cargo clippy -- -D warnings
       - run: cargo clippy --all-features --tests --examples --workspace --benches -- -D warnings
-      - run: cargo test --all-features --color=always
-      - run: cargo check
-        working-directory: ./fuzz
-  doc:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo doc --no-deps -Z rustdoc-map -Z rustdoc-scrape-examples --all-features
+      - run: cargo test --all-features -- --color always
+      - name: Check API document
+        run: cargo doc --no-deps --document-private-items --all-features
         env:
-          RUSTDOCFLAGS: --cfg docsrs --deny=warnings
+          RUSTDOCFLAGS: --deny=warnings
+      - name: Check fuzz tests
+        run: cargo check
+        working-directory: ./fuzz
+        env:
+          RUSTFLAGS: -D warnings
   msrv:
     runs-on: ubuntu-latest
     steps:
@@ -37,4 +35,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.80
       - uses: Swatinem/rust-cache@v2
       - run: cargo check
-      - run: cargo test --color=always
+        env:
+          RUSTFLAGS: -D warnings
+      - run: cargo test -- --color always
