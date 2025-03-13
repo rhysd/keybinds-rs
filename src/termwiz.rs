@@ -132,6 +132,7 @@ impl From<KeyCode> for Key {
             KeyCode::Copy => Self::Copy,
             KeyCode::Cut => Self::Cut,
             KeyCode::Paste => Self::Paste,
+            KeyCode::Help => Self::Help,
             KeyCode::VolumeMute => Self::Mute,
             KeyCode::VolumeDown => Self::VolumeDown,
             KeyCode::VolumeUp => Self::VolumeUp,

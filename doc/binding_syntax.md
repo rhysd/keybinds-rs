@@ -121,6 +121,7 @@ sequence syntax.
 - `VolumeUp`
 - `VolumeDown`
 - `Mute`
+- `Help`
 - `F1`, `F2`, `F3`, ...
 
 [ebnf]: https://www.w3.org/TR/2008/REC-xml-20081126/#sec-notation

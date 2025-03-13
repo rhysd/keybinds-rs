@@ -103,6 +103,7 @@ impl From<&WinitKey> for Key {
                 NamedKey::NumLock => Self::NumLock,
                 NamedKey::PrintScreen => Self::PrintScreen,
                 NamedKey::ContextMenu => Self::Menu,
+                NamedKey::Help => Self::Help,
                 NamedKey::MediaPlay => Self::Play,
                 NamedKey::MediaPause => Self::Pause,
                 NamedKey::MediaPlayPause => Self::PlayPause,
