@@ -60,6 +60,11 @@ name = "iced"
 required-features = ["iced"]
 doc-scrape-examples = true
 
+[[example]]
+name = "vim"
+required-features = ["crossterm"]
+doc-scrape-examples = true
+
 [features]
 # No feature is enabled by default. See `minimal` example to know how to use this crate with no specific framework
 # dependency.
@@ -98,6 +103,8 @@ winit = { version = "0.30.9", optional = true }
 [dev-dependencies]
 toml = { version = "0.8.20", default-features = false, features = ["parse", "display"] }
 serde = { version = "1.0.217", features = ["derive"] }
+tui-textarea = "0.7.0"
+ratatui = "0.29.0"
 
 [workspace]
 members = [".", "bench", "fuzz"]

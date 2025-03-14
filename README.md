@@ -11,7 +11,7 @@ library can be buggy and have arbitrary breaking changes.**
 shortcuts) written in Safe Rust.
 
 - Provide the [syntax](./doc/binding_syntax.md) to easily define key bindings in a configuration file like `Ctrl+a`.
-- Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style.
+- Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style. ([example](./examples/vim.rs))
 - Provide the core API independent from any platforms and frameworks with minimal (only two crates) dependencies. ([example](./examples/minimal.rs))
 - Support several platforms and frameworks as optional features.
   - [crossterm][] ([example](./examples/crossterm.rs))
