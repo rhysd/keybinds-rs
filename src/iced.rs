@@ -178,6 +178,17 @@ impl From<IcedKey> for Key {
 }
 
 impl From<&Modifiers> for Mods {
+    /// Convert iced's [`Modifiers`] into keybinds' [`Mods`].
+    ///
+    /// ```
+    /// use keybinds::Mods;
+    /// use iced::keyboard::Modifiers;
+    ///
+    /// assert_eq!(Mods::from(Modifiers::CTRL), Mods::CTRL);
+    /// assert_eq!(Mods::from(Modifiers::ALT), Mods::ALT);
+    /// assert_eq!(Mods::from(Modifiers::LOGO), Mods::SUPER);
+    /// assert_eq!(Mods::from(Modifiers::SHIFT), Mods::SHIFT);
+    /// ```
     fn from(from: &Modifiers) -> Self {
         let mut to = Mods::NONE;
         if from.contains(Modifiers::CTRL) {
@@ -204,7 +215,35 @@ impl From<Modifiers> for Mods {
 
 impl From<&KeyEvent> for KeyInput {
     /// Convert iced's key events to [`KeyInput`]. Events except for key presses are converted into `Key::Ignored` with
-    /// no modifiers.
+    /// no modifiers. Note that <kbd>Shift</kbd> modifier is removed when the pressed key is unnamed following the
+    /// [syntax](https://github.com/rhysd/keybinds-rs/blob/main/doc/binding_syntax.md).
+    ///
+    /// ```
+    /// use keybinds::{KeyInput, Mods};
+    /// use iced::keyboard::{Event, Modifiers, Key};
+    ///
+    /// // Key event for Ctrl+Shift+X
+    /// let event = Event::KeyPressed {
+    ///     key: Key::Character("x".into()),
+    ///     modified_key: Key::Character("X".into()),
+    ///     modifiers: Modifiers::CTRL | Modifiers::SHIFT,
+    ///     // ...
+    /// #   location: iced::keyboard::Location::Standard,
+    /// #   text: None,
+    /// #   physical_key: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::KeyX),
+    /// };
+    /// // `Mods::SHIFT` is removed because 'X' is already modified by Shift key
+    /// assert_eq!(KeyInput::from(event), KeyInput::new('X', Mods::CTRL));
+    ///
+    /// // Events other than key presses are ignored
+    /// let event = Event::KeyReleased {
+    ///     // ...
+    /// #   key: Key::Character("x".into()),
+    /// #   modifiers: Modifiers::CTRL | Modifiers::SHIFT,
+    /// #   location: iced::keyboard::Location::Standard,
+    /// };
+    /// assert_eq!(KeyInput::from(event), KeyInput::from(keybinds::Key::Ignored));
+    /// ```
     fn from(event: &KeyEvent) -> Self {
         match event {
             KeyEvent::KeyPressed {
