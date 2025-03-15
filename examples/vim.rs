@@ -10,41 +10,25 @@ use ratatui::Terminal;
 use std::env;
 use std::fmt;
 use std::fs;
-use std::io;
-use std::io::BufRead;
+use std::io::{self, BufRead};
 use tui_textarea::{CursorMove, Input, Key, Scrolling, TextArea};
-
-fn convert_key_input(input: KeyInput) -> Input {
-    let key = match input.key() {
-        keybinds::Key::Char(c) => Key::Char(c),
-        keybinds::Key::Copy => Key::Copy,
-        keybinds::Key::Cut => Key::Cut,
-        keybinds::Key::Delete => Key::Delete,
-        keybinds::Key::Enter => Key::Enter,
-        keybinds::Key::Up => Key::Up,
-        keybinds::Key::Right => Key::Right,
-        keybinds::Key::Down => Key::Down,
-        keybinds::Key::Left => Key::Left,
-        keybinds::Key::Home => Key::Home,
-        keybinds::Key::End => Key::End,
-        keybinds::Key::PageUp => Key::PageUp,
-        keybinds::Key::PageDown => Key::PageDown,
-        keybinds::Key::Tab => Key::Tab,
-        _ => Key::Null,
-    };
-    Input {
-        key,
-        ctrl: input.mods().contains(Mods::CTRL),
-        alt: input.mods().contains(Mods::ALT),
-        shift: input.mods().contains(Mods::SHIFT),
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Operator {
     Yank,
     Change,
     Delete,
+}
+
+impl Operator {
+    fn operate(self, textarea: &mut TextArea<'_>) {
+        match self {
+            Operator::Yank => textarea.copy(),
+            Operator::Change | Operator::Delete => {
+                textarea.cut();
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,173 +69,46 @@ enum Action {
     Operator(Operator),
 }
 
+impl Action {
+    fn is_operatable(self, mode: Mode) -> bool {
+        mode == Mode::Normal
+            && matches!(
+                self,
+                Action::Back
+                    | Action::Down
+                    | Action::Up
+                    | Action::Forward
+                    | Action::WordForward
+                    | Action::WordEnd
+                    | Action::WordBack
+                    | Action::Head
+                    | Action::End
+                    | Action::ScrollDown
+                    | Action::ScrollUp
+                    | Action::ScrollHalfPageDown
+                    | Action::ScrollHalfPageUp
+                    | Action::ScrollPageDown
+                    | Action::ScrollPageUp
+                    | Action::ScrollTop
+                    | Action::ScrollBottom
+                    | Action::Operator(_)
+            )
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Mode {
     Normal,
     Insert,
     Visual,
-    Operator(Operator),
 }
 
 impl Mode {
-    fn transition(self, action: Action, textarea: &mut TextArea<'_>) -> Option<Self> {
-        match action {
-            Action::Back => textarea.move_cursor(CursorMove::Back),
-            Action::Down => textarea.move_cursor(CursorMove::Down),
-            Action::Up => textarea.move_cursor(CursorMove::Up),
-            Action::Forward => textarea.move_cursor(CursorMove::Forward),
-            Action::WordForward => textarea.move_cursor(CursorMove::WordForward),
-            Action::WordEnd => {
-                textarea.move_cursor(CursorMove::WordEnd);
-                if let Self::Operator(_) = self {
-                    textarea.move_cursor(CursorMove::Forward); // Include the text under the cursor
-                }
-            }
-            Action::WordBack => textarea.move_cursor(CursorMove::WordBack),
-            Action::Head => textarea.move_cursor(CursorMove::Head),
-            Action::End => textarea.move_cursor(CursorMove::End),
-            Action::DeleteEnd => {
-                textarea.delete_line_by_end();
-                return Some(Self::Normal);
-            }
-            Action::ChangeEnd => {
-                textarea.delete_line_by_end();
-                textarea.cancel_selection();
-                return Some(Self::Insert);
-            }
-            Action::Paste => {
-                textarea.paste();
-                return Some(Self::Normal);
-            }
-            Action::Undo => {
-                textarea.undo();
-                return Some(Self::Normal);
-            }
-            Action::Redo => {
-                textarea.redo();
-                return Some(Self::Normal);
-            }
-            Action::DeleteChar => {
-                textarea.delete_next_char();
-                return Some(Self::Normal);
-            }
-            Action::Insert => {
-                textarea.cancel_selection();
-                return Some(Self::Insert);
-            }
-            Action::InsertNext => {
-                textarea.cancel_selection();
-                textarea.move_cursor(CursorMove::Forward);
-                return Some(Self::Insert);
-            }
-            Action::InsertEnd => {
-                textarea.cancel_selection();
-                textarea.move_cursor(CursorMove::End);
-                return Some(Self::Insert);
-            }
-            Action::InsertNextLine => {
-                textarea.move_cursor(CursorMove::End);
-                textarea.insert_newline();
-                return Some(Self::Insert);
-            }
-            Action::InsertPrevLine => {
-                textarea.move_cursor(CursorMove::Head);
-                textarea.insert_newline();
-                textarea.move_cursor(CursorMove::Up);
-                return Some(Self::Insert);
-            }
-            Action::InsertHead => {
-                textarea.cancel_selection();
-                textarea.move_cursor(CursorMove::Head);
-                return Some(Self::Insert);
-            }
-            Action::Quit => return None,
-            Action::ScrollDown => textarea.scroll((1, 0)),
-            Action::ScrollUp => textarea.scroll((-1, 0)),
-            Action::ScrollHalfPageDown => textarea.scroll(Scrolling::HalfPageDown),
-            Action::ScrollHalfPageUp => textarea.scroll(Scrolling::HalfPageUp),
-            Action::ScrollPageDown => textarea.scroll(Scrolling::PageDown),
-            Action::ScrollPageUp => textarea.scroll(Scrolling::PageUp),
-            Action::ScrollTop => textarea.move_cursor(CursorMove::Top),
-            Action::ScrollBottom => textarea.move_cursor(CursorMove::Bottom),
-            Action::Visual => {
-                textarea.start_selection();
-                return Some(Self::Visual);
-            }
-            Action::VisualLine => {
-                textarea.move_cursor(CursorMove::Head);
-                textarea.start_selection();
-                textarea.move_cursor(CursorMove::End);
-                return Some(Self::Visual);
-            }
-            Action::Normal => {
-                textarea.cancel_selection();
-                return Some(Self::Normal);
-            }
-            Action::Operator(op) => {
-                match self {
-                    Self::Normal => {
-                        textarea.start_selection();
-                        return Some(Self::Operator(op));
-                    }
-                    Self::Visual => match op {
-                        Operator::Yank => {
-                            textarea.move_cursor(CursorMove::Forward); // Vim's text selection is inclusive
-                            textarea.copy();
-                            return Some(Self::Normal);
-                        }
-                        Operator::Change => {
-                            textarea.move_cursor(CursorMove::Forward); // Vim's text selection is inclusive
-                            textarea.cut();
-                            return Some(Self::Insert);
-                        }
-                        Operator::Delete => {
-                            textarea.move_cursor(CursorMove::Forward); // Vim's text selection is inclusive
-                            textarea.cut();
-                            return Some(Self::Normal);
-                        }
-                    },
-                    Self::Operator(o) if op == o => {
-                        // Handle yy, dd, cc. (This is not strictly the same behavior as Vim)
-                        textarea.move_cursor(CursorMove::Head);
-                        textarea.start_selection();
-                        let cursor = textarea.cursor();
-                        textarea.move_cursor(CursorMove::Down);
-                        if cursor == textarea.cursor() {
-                            textarea.move_cursor(CursorMove::End); // At the last line, move to end of the line instead
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        if let Self::Operator(op) = self {
-            match op {
-                Operator::Yank => {
-                    textarea.copy();
-                    Some(Self::Normal)
-                }
-                Operator::Delete => {
-                    textarea.cut();
-                    Some(Self::Normal)
-                }
-                Operator::Change => {
-                    textarea.cut();
-                    Some(Self::Insert)
-                }
-            }
-        } else {
-            Some(self)
-        }
-    }
-
     fn block<'a>(&self) -> Block<'a> {
         let help = match self {
             Self::Normal => "type q to quit, type i to enter insert mode",
             Self::Insert => "type Esc to back to normal mode",
             Self::Visual => "type y to yank, type d to delete, type Esc to back to normal mode",
-            Self::Operator(_) => "move cursor to apply operator",
         };
         let title = format!("{} MODE ({})", self, help);
         Block::default().borders(Borders::ALL).title(title)
@@ -262,7 +119,6 @@ impl Mode {
             Self::Normal => Color::Reset,
             Self::Insert => Color::LightBlue,
             Self::Visual => Color::LightYellow,
-            Self::Operator(_) => Color::LightGreen,
         };
         Style::default().fg(color).add_modifier(Modifier::REVERSED)
     }
@@ -274,19 +130,21 @@ impl fmt::Display for Mode {
             Self::Normal => write!(f, "NORMAL"),
             Self::Insert => write!(f, "INSERT"),
             Self::Visual => write!(f, "VISUAL"),
-            Self::Operator(op) => write!(f, "OPERATOR({op:?})"),
         }
     }
 }
 
-struct VimKeybinds {
+struct Vim<'a> {
+    mode: Mode,
     normal: Keybinds<Action>,
     visual: Keybinds<Action>,
     insert: Keybinds<Action>,
+    pending: Option<Operator>,
+    textarea: TextArea<'a>,
 }
 
-impl VimKeybinds {
-    fn new() -> keybinds::Result<Self> {
+impl<'a> Vim<'a> {
+    fn new(mut textarea: TextArea<'a>) -> keybinds::Result<Self> {
         fn keybinds(map: &[(&str, Action)]) -> keybinds::Result<Keybinds<Action>> {
             map.iter()
                 .copied()
@@ -372,56 +230,219 @@ impl VimKeybinds {
 
         let insert = keybinds(&[("Esc", Action::Normal)])?;
 
+        let mode = Mode::Normal;
+        textarea.set_block(mode.block());
+        textarea.set_cursor_style(mode.cursor_style());
+
         Ok(Self {
+            mode,
             normal,
             visual,
             insert,
+            pending: None,
+            textarea,
         })
     }
 
-    fn dispatch(&mut self, input: KeyInput, mode: Mode) -> Option<Action> {
-        let keybinds = match mode {
-            Mode::Normal | Mode::Operator(_) => &mut self.normal,
+    fn transition(&self, action: Action) -> Option<Mode> {
+        match action {
+            Action::DeleteEnd
+            | Action::Paste
+            | Action::Undo
+            | Action::Redo
+            | Action::DeleteChar
+            | Action::Normal => Some(Mode::Normal),
+            Action::ChangeEnd
+            | Action::Insert
+            | Action::InsertNext
+            | Action::InsertEnd
+            | Action::InsertNextLine
+            | Action::InsertPrevLine
+            | Action::InsertHead => Some(Mode::Insert),
+            Action::Visual | Action::VisualLine => Some(Mode::Visual),
+            Action::Quit => None,
+            Action::Operator(op) if matches!(self.mode, Mode::Visual) => match op {
+                Operator::Yank => Some(Mode::Normal),
+                Operator::Change => Some(Mode::Insert),
+                Operator::Delete => Some(Mode::Normal),
+            },
+            _ => match self.pending {
+                Some(Operator::Yank) => Some(Mode::Normal),
+                Some(Operator::Delete) => Some(Mode::Normal),
+                Some(Operator::Change) => Some(Mode::Insert),
+                _ => Some(self.mode),
+            },
+        }
+    }
+
+    fn edit(&mut self, action: Action) {
+        match action {
+            Action::Back => self.textarea.move_cursor(CursorMove::Back),
+            Action::Down => self.textarea.move_cursor(CursorMove::Down),
+            Action::Up => self.textarea.move_cursor(CursorMove::Up),
+            Action::Forward => self.textarea.move_cursor(CursorMove::Forward),
+            Action::WordForward => self.textarea.move_cursor(CursorMove::WordForward),
+            Action::WordEnd => {
+                self.textarea.move_cursor(CursorMove::WordEnd);
+                if self.pending.is_some() {
+                    self.textarea.move_cursor(CursorMove::Forward); // Include the text under the cursor
+                }
+            }
+            Action::WordBack => self.textarea.move_cursor(CursorMove::WordBack),
+            Action::Head => self.textarea.move_cursor(CursorMove::Head),
+            Action::End => self.textarea.move_cursor(CursorMove::End),
+            Action::DeleteEnd => {
+                self.textarea.delete_line_by_end();
+            }
+            Action::ChangeEnd => {
+                self.textarea.delete_line_by_end();
+                self.textarea.cancel_selection();
+            }
+            Action::Paste => {
+                self.textarea.paste();
+            }
+            Action::Undo => {
+                self.textarea.undo();
+            }
+            Action::Redo => {
+                self.textarea.redo();
+            }
+            Action::DeleteChar => {
+                self.textarea.delete_next_char();
+            }
+            Action::Insert => {
+                self.textarea.cancel_selection();
+            }
+            Action::InsertNext => {
+                self.textarea.cancel_selection();
+                self.textarea.move_cursor(CursorMove::Forward);
+            }
+            Action::InsertEnd => {
+                self.textarea.cancel_selection();
+                self.textarea.move_cursor(CursorMove::End);
+            }
+            Action::InsertNextLine => {
+                self.textarea.move_cursor(CursorMove::End);
+                self.textarea.insert_newline();
+            }
+            Action::InsertPrevLine => {
+                self.textarea.move_cursor(CursorMove::Head);
+                self.textarea.insert_newline();
+                self.textarea.move_cursor(CursorMove::Up);
+            }
+            Action::InsertHead => {
+                self.textarea.cancel_selection();
+                self.textarea.move_cursor(CursorMove::Head);
+            }
+            Action::Quit => {}
+            Action::ScrollDown => self.textarea.scroll((1, 0)),
+            Action::ScrollUp => self.textarea.scroll((-1, 0)),
+            Action::ScrollHalfPageDown => self.textarea.scroll(Scrolling::HalfPageDown),
+            Action::ScrollHalfPageUp => self.textarea.scroll(Scrolling::HalfPageUp),
+            Action::ScrollPageDown => self.textarea.scroll(Scrolling::PageDown),
+            Action::ScrollPageUp => self.textarea.scroll(Scrolling::PageUp),
+            Action::ScrollTop => self.textarea.move_cursor(CursorMove::Top),
+            Action::ScrollBottom => self.textarea.move_cursor(CursorMove::Bottom),
+            Action::Visual => {
+                self.textarea.start_selection();
+            }
+            Action::VisualLine => {
+                self.textarea.move_cursor(CursorMove::Head);
+                self.textarea.start_selection();
+                self.textarea.move_cursor(CursorMove::End);
+            }
+            Action::Normal => {
+                self.textarea.cancel_selection();
+            }
+            Action::Operator(op) => {
+                match self.mode {
+                    Mode::Normal => {
+                        if self.pending == Some(op) {
+                            // Handle yy, dd, cc. (This is not strictly the same behavior as Vim)
+                            self.textarea.move_cursor(CursorMove::Head);
+                            self.textarea.start_selection();
+                            let cursor = self.textarea.cursor();
+                            self.textarea.move_cursor(CursorMove::Down);
+                            if cursor == self.textarea.cursor() {
+                                self.textarea.move_cursor(CursorMove::End); // At the last line, move to end of the line instead
+                            }
+                        } else {
+                            self.pending = Some(op);
+                            self.textarea.start_selection();
+                            return; // Edge case where `self.pending` should not be cleared
+                        }
+                    }
+                    Mode::Visual => {
+                        self.textarea.move_cursor(CursorMove::Forward); // Vim's text selection is inclusive
+                        op.operate(&mut self.textarea);
+                    }
+                    Mode::Insert => {}
+                }
+            }
+        }
+
+        if let Some(op) = self.pending.take() {
+            if action.is_operatable(self.mode) {
+                op.operate(&mut self.textarea);
+            }
+        }
+    }
+
+    fn dispatch(&mut self, input: KeyInput) -> Option<Action> {
+        let keybinds = match self.mode {
+            Mode::Normal => &mut self.normal,
             Mode::Visual => &mut self.visual,
             Mode::Insert => &mut self.insert,
         };
         keybinds.dispatch(input).copied()
     }
-}
 
-struct Vim<'a> {
-    mode: Mode,
-    keybinds: VimKeybinds,
-    textarea: TextArea<'a>,
-}
+    fn convert_key_input(&self, input: KeyInput) -> Option<Input> {
+        if self.mode != Mode::Insert {
+            return None;
+        }
 
-impl<'a> Vim<'a> {
-    fn new(textarea: TextArea<'a>) -> keybinds::Result<Self> {
-        Ok(Self {
-            mode: Mode::Normal,
-            keybinds: VimKeybinds::new()?,
-            textarea,
+        let key = match input.key() {
+            keybinds::Key::Char(c) => Key::Char(c),
+            keybinds::Key::Copy => Key::Copy,
+            keybinds::Key::Cut => Key::Cut,
+            keybinds::Key::Delete => Key::Delete,
+            keybinds::Key::Enter => Key::Enter,
+            keybinds::Key::Up => Key::Up,
+            keybinds::Key::Right => Key::Right,
+            keybinds::Key::Down => Key::Down,
+            keybinds::Key::Left => Key::Left,
+            keybinds::Key::Home => Key::Home,
+            keybinds::Key::End => Key::End,
+            keybinds::Key::PageUp => Key::PageUp,
+            keybinds::Key::PageDown => Key::PageDown,
+            keybinds::Key::Tab => Key::Tab,
+            _ => return None,
+        };
+
+        Some(Input {
+            key,
+            ctrl: input.mods().contains(Mods::CTRL),
+            alt: input.mods().contains(Mods::ALT),
+            shift: input.mods().contains(Mods::SHIFT),
         })
     }
 
-    fn handle_action(&mut self, action: Action) -> bool {
-        let Some(mode) = self.mode.transition(action, &mut self.textarea) else {
-            return true;
-        };
-        if self.mode != mode {
-            self.textarea.set_block(mode.block());
-            self.textarea.set_cursor_style(mode.cursor_style());
+    fn input(&mut self, input: KeyInput) -> bool {
+        if let Some(action) = self.dispatch(input) {
+            let Some(next) = self.transition(action) else {
+                return false;
+            };
+            self.edit(action);
+            if self.mode != next {
+                self.textarea.set_block(next.block());
+                self.textarea.set_cursor_style(next.cursor_style());
+            }
+            self.mode = next;
+        } else if let Some(input) = self.convert_key_input(input) {
+            self.textarea.input(input);
         }
-        self.mode = mode;
-        false
-    }
-
-    fn handle_input(&mut self, input: KeyInput) -> bool {
-        if let Some(action) = self.keybinds.dispatch(input, self.mode) {
-            return self.handle_action(action);
-        }
-        self.textarea.input(convert_key_input(input));
-        false
+        true
     }
 }
 
@@ -433,23 +454,20 @@ fn main() -> io::Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut term = Terminal::new(backend)?;
 
-    let mut textarea = if let Some(path) = env::args().nth(1) {
-        let file = fs::File::open(path)?;
-        io::BufReader::new(file)
+    let textarea = if let Some(path) = env::args().nth(1) {
+        io::BufReader::new(fs::File::open(path)?)
             .lines()
             .collect::<io::Result<_>>()?
     } else {
         TextArea::default()
     };
 
-    textarea.set_block(Mode::Normal.block());
-    textarea.set_cursor_style(Mode::Normal.cursor_style());
     let mut vim = Vim::new(textarea).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
     loop {
         term.draw(|f| f.render_widget(&vim.textarea, f.area()))?;
 
-        if vim.handle_input(crossterm::event::read()?.into()) {
+        if !vim.input(crossterm::event::read()?.into()) {
             break;
         }
     }
@@ -463,6 +481,5 @@ fn main() -> io::Result<()> {
     term.show_cursor()?;
 
     println!("Lines: {:?}", vim.textarea.lines());
-
     Ok(())
 }
