@@ -32,7 +32,7 @@ impl Operator {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Action {
+enum Cursor {
     Forward,
     Back,
     Down,
@@ -42,27 +42,42 @@ enum Action {
     WordBack,
     Head,
     End,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Insert {
+    Here,
+    Next,
+    Head,
+    End,
+    NextLine,
+    PrevLine,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Scroll {
+    Down,
+    Up,
+    HalfPageDown,
+    HalfPageUp,
+    PageDown,
+    PageUp,
+    Top,
+    Bottom,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Action {
+    Cursor(Cursor),
+    DeleteChar,
     DeleteEnd,
     ChangeEnd,
     Paste,
     Undo,
     Redo,
-    DeleteChar,
-    Insert,
-    InsertNext,
-    InsertEnd,
-    InsertNextLine,
-    InsertPrevLine,
-    InsertHead,
+    Insert(Insert),
     Quit,
-    ScrollDown,
-    ScrollUp,
-    ScrollHalfPageDown,
-    ScrollHalfPageUp,
-    ScrollPageDown,
-    ScrollPageUp,
-    ScrollTop,
-    ScrollBottom,
+    Scroll(Scroll),
     Visual,
     VisualLine,
     Normal,
@@ -74,24 +89,7 @@ impl Action {
         mode == Mode::Normal
             && matches!(
                 self,
-                Action::Back
-                    | Action::Down
-                    | Action::Up
-                    | Action::Forward
-                    | Action::WordForward
-                    | Action::WordEnd
-                    | Action::WordBack
-                    | Action::Head
-                    | Action::End
-                    | Action::ScrollDown
-                    | Action::ScrollUp
-                    | Action::ScrollHalfPageDown
-                    | Action::ScrollHalfPageUp
-                    | Action::ScrollPageDown
-                    | Action::ScrollPageUp
-                    | Action::ScrollTop
-                    | Action::ScrollBottom
-                    | Action::Operator(_)
+                Action::Cursor(_) | Action::Scroll(_) | Action::Operator(_)
             )
     }
 }
@@ -153,35 +151,36 @@ impl<'a> Vim<'a> {
         }
 
         let normal = keybinds(&[
-            ("h", Action::Back),
-            ("j", Action::Down),
-            ("k", Action::Up),
-            ("l", Action::Forward),
-            ("w", Action::WordForward),
-            ("e", Action::WordEnd),
-            ("b", Action::WordBack),
-            ("^", Action::Head),
-            ("$", Action::End),
+            ("h", Action::Cursor(Cursor::Back)),
+            ("j", Action::Cursor(Cursor::Down)),
+            ("k", Action::Cursor(Cursor::Up)),
+            ("l", Action::Cursor(Cursor::Forward)),
+            ("w", Action::Cursor(Cursor::WordForward)),
+            ("e", Action::Cursor(Cursor::WordEnd)),
+            ("b", Action::Cursor(Cursor::WordBack)),
+            ("^", Action::Cursor(Cursor::Head)),
+            ("$", Action::Cursor(Cursor::End)),
             ("D", Action::DeleteEnd),
             ("C", Action::ChangeEnd),
             ("p", Action::Paste),
             ("u", Action::Undo),
             ("Ctrl+r", Action::Redo),
             ("x", Action::DeleteChar),
-            ("i", Action::Insert),
-            ("a", Action::InsertNext),
-            ("A", Action::InsertEnd),
-            ("o", Action::InsertNextLine),
-            ("O", Action::InsertPrevLine),
+            ("i", Action::Insert(Insert::Here)),
+            ("a", Action::Insert(Insert::Next)),
+            ("I", Action::Insert(Insert::Head)),
+            ("A", Action::Insert(Insert::End)),
+            ("o", Action::Insert(Insert::NextLine)),
+            ("O", Action::Insert(Insert::PrevLine)),
             ("q", Action::Quit),
-            ("Ctrl+e", Action::ScrollDown),
-            ("Ctrl+y", Action::ScrollUp),
-            ("Ctrl+d", Action::ScrollHalfPageDown),
-            ("Ctrl+u", Action::ScrollHalfPageUp),
-            ("Ctrl+f", Action::ScrollPageDown),
-            ("Ctrl+b", Action::ScrollPageUp),
-            ("g g", Action::ScrollTop),
-            ("G", Action::ScrollBottom),
+            ("Ctrl+e", Action::Scroll(Scroll::Down)),
+            ("Ctrl+y", Action::Scroll(Scroll::Up)),
+            ("Ctrl+d", Action::Scroll(Scroll::HalfPageDown)),
+            ("Ctrl+u", Action::Scroll(Scroll::HalfPageUp)),
+            ("Ctrl+f", Action::Scroll(Scroll::PageDown)),
+            ("Ctrl+b", Action::Scroll(Scroll::PageUp)),
+            ("g g", Action::Scroll(Scroll::Top)),
+            ("G", Action::Scroll(Scroll::Bottom)),
             ("v", Action::Visual),
             ("V", Action::VisualLine),
             ("y", Action::Operator(Operator::Yank)),
@@ -190,36 +189,36 @@ impl<'a> Vim<'a> {
         ])?;
 
         let visual = keybinds(&[
-            ("h", Action::Back),
-            ("j", Action::Down),
-            ("k", Action::Up),
-            ("l", Action::Forward),
-            ("w", Action::WordForward),
-            ("e", Action::WordEnd),
-            ("b", Action::WordBack),
-            ("^", Action::Head),
-            ("$", Action::End),
+            ("h", Action::Cursor(Cursor::Back)),
+            ("j", Action::Cursor(Cursor::Down)),
+            ("k", Action::Cursor(Cursor::Up)),
+            ("l", Action::Cursor(Cursor::Forward)),
+            ("w", Action::Cursor(Cursor::WordForward)),
+            ("e", Action::Cursor(Cursor::WordEnd)),
+            ("b", Action::Cursor(Cursor::WordBack)),
+            ("^", Action::Cursor(Cursor::Head)),
+            ("$", Action::Cursor(Cursor::End)),
             ("D", Action::DeleteEnd),
             ("C", Action::ChangeEnd),
             ("p", Action::Paste),
             ("u", Action::Undo),
             ("Ctrl+r", Action::Redo),
             ("x", Action::DeleteChar),
-            ("i", Action::Insert),
-            ("a", Action::InsertNext),
-            ("I", Action::InsertHead),
-            ("A", Action::InsertEnd),
-            ("o", Action::InsertNextLine),
-            ("O", Action::InsertPrevLine),
+            ("i", Action::Insert(Insert::Here)),
+            ("a", Action::Insert(Insert::Next)),
+            ("I", Action::Insert(Insert::Head)),
+            ("A", Action::Insert(Insert::End)),
+            ("o", Action::Insert(Insert::NextLine)),
+            ("O", Action::Insert(Insert::PrevLine)),
             ("q", Action::Quit),
-            ("Ctrl+e", Action::ScrollDown),
-            ("Ctrl+y", Action::ScrollUp),
-            ("Ctrl+d", Action::ScrollHalfPageDown),
-            ("Ctrl+u", Action::ScrollHalfPageUp),
-            ("Ctrl+f", Action::ScrollPageDown),
-            ("Ctrl+b", Action::ScrollPageUp),
-            ("g g", Action::ScrollTop),
-            ("G", Action::ScrollBottom),
+            ("Ctrl+e", Action::Scroll(Scroll::Down)),
+            ("Ctrl+y", Action::Scroll(Scroll::Up)),
+            ("Ctrl+d", Action::Scroll(Scroll::HalfPageDown)),
+            ("Ctrl+u", Action::Scroll(Scroll::HalfPageUp)),
+            ("Ctrl+f", Action::Scroll(Scroll::PageDown)),
+            ("Ctrl+b", Action::Scroll(Scroll::PageUp)),
+            ("g g", Action::Scroll(Scroll::Top)),
+            ("G", Action::Scroll(Scroll::Bottom)),
             ("v", Action::Normal),
             ("V", Action::Normal),
             ("y", Action::Operator(Operator::Yank)),
@@ -228,7 +227,7 @@ impl<'a> Vim<'a> {
             ("Esc", Action::Normal),
         ])?;
 
-        let insert = keybinds(&[("Esc", Action::Normal)])?;
+        let insert = keybinds(&[("Esc", Action::Normal), ("Ctrl+c", Action::Normal)])?;
 
         let mode = Mode::Normal;
         textarea.set_block(mode.block());
@@ -252,45 +251,39 @@ impl<'a> Vim<'a> {
             | Action::Redo
             | Action::DeleteChar
             | Action::Normal => Some(Mode::Normal),
-            Action::ChangeEnd
-            | Action::Insert
-            | Action::InsertNext
-            | Action::InsertEnd
-            | Action::InsertNextLine
-            | Action::InsertPrevLine
-            | Action::InsertHead => Some(Mode::Insert),
+            Action::ChangeEnd | Action::Insert(_) => Some(Mode::Insert),
             Action::Visual | Action::VisualLine => Some(Mode::Visual),
             Action::Quit => None,
-            Action::Operator(op) if matches!(self.mode, Mode::Visual) => match op {
-                Operator::Yank => Some(Mode::Normal),
+            Action::Operator(op) if self.mode == Mode::Visual => match op {
+                Operator::Yank | Operator::Delete => Some(Mode::Normal),
                 Operator::Change => Some(Mode::Insert),
-                Operator::Delete => Some(Mode::Normal),
             },
-            _ => match self.pending {
-                Some(Operator::Yank) => Some(Mode::Normal),
-                Some(Operator::Delete) => Some(Mode::Normal),
+            Action::Cursor(_) | Action::Scroll(_) | Action::Operator(_) => match self.pending {
+                Some(Operator::Yank) | Some(Operator::Delete) => Some(Mode::Normal),
                 Some(Operator::Change) => Some(Mode::Insert),
-                _ => Some(self.mode),
+                None => Some(self.mode),
             },
         }
     }
 
     fn edit(&mut self, action: Action) {
         match action {
-            Action::Back => self.textarea.move_cursor(CursorMove::Back),
-            Action::Down => self.textarea.move_cursor(CursorMove::Down),
-            Action::Up => self.textarea.move_cursor(CursorMove::Up),
-            Action::Forward => self.textarea.move_cursor(CursorMove::Forward),
-            Action::WordForward => self.textarea.move_cursor(CursorMove::WordForward),
-            Action::WordEnd => {
-                self.textarea.move_cursor(CursorMove::WordEnd);
-                if self.pending.is_some() {
-                    self.textarea.move_cursor(CursorMove::Forward); // Include the text under the cursor
+            Action::Cursor(cursor) => match cursor {
+                Cursor::Back => self.textarea.move_cursor(CursorMove::Back),
+                Cursor::Down => self.textarea.move_cursor(CursorMove::Down),
+                Cursor::Up => self.textarea.move_cursor(CursorMove::Up),
+                Cursor::Forward => self.textarea.move_cursor(CursorMove::Forward),
+                Cursor::WordForward => self.textarea.move_cursor(CursorMove::WordForward),
+                Cursor::WordEnd => {
+                    self.textarea.move_cursor(CursorMove::WordEnd);
+                    if self.pending.is_some() {
+                        self.textarea.move_cursor(CursorMove::Forward); // Include the text under the cursor
+                    }
                 }
-            }
-            Action::WordBack => self.textarea.move_cursor(CursorMove::WordBack),
-            Action::Head => self.textarea.move_cursor(CursorMove::Head),
-            Action::End => self.textarea.move_cursor(CursorMove::End),
+                Cursor::WordBack => self.textarea.move_cursor(CursorMove::WordBack),
+                Cursor::Head => self.textarea.move_cursor(CursorMove::Head),
+                Cursor::End => self.textarea.move_cursor(CursorMove::End),
+            },
             Action::DeleteEnd => {
                 self.textarea.delete_line_by_end();
             }
@@ -310,39 +303,43 @@ impl<'a> Vim<'a> {
             Action::DeleteChar => {
                 self.textarea.delete_next_char();
             }
-            Action::Insert => {
-                self.textarea.cancel_selection();
-            }
-            Action::InsertNext => {
-                self.textarea.cancel_selection();
-                self.textarea.move_cursor(CursorMove::Forward);
-            }
-            Action::InsertEnd => {
-                self.textarea.cancel_selection();
-                self.textarea.move_cursor(CursorMove::End);
-            }
-            Action::InsertNextLine => {
-                self.textarea.move_cursor(CursorMove::End);
-                self.textarea.insert_newline();
-            }
-            Action::InsertPrevLine => {
-                self.textarea.move_cursor(CursorMove::Head);
-                self.textarea.insert_newline();
-                self.textarea.move_cursor(CursorMove::Up);
-            }
-            Action::InsertHead => {
-                self.textarea.cancel_selection();
-                self.textarea.move_cursor(CursorMove::Head);
-            }
+            Action::Insert(insert) => match insert {
+                Insert::Here => {
+                    self.textarea.cancel_selection();
+                }
+                Insert::Next => {
+                    self.textarea.cancel_selection();
+                    self.textarea.move_cursor(CursorMove::Forward);
+                }
+                Insert::Head => {
+                    self.textarea.cancel_selection();
+                    self.textarea.move_cursor(CursorMove::Head);
+                }
+                Insert::End => {
+                    self.textarea.cancel_selection();
+                    self.textarea.move_cursor(CursorMove::End);
+                }
+                Insert::NextLine => {
+                    self.textarea.move_cursor(CursorMove::End);
+                    self.textarea.insert_newline();
+                }
+                Insert::PrevLine => {
+                    self.textarea.move_cursor(CursorMove::Head);
+                    self.textarea.insert_newline();
+                    self.textarea.move_cursor(CursorMove::Up);
+                }
+            },
             Action::Quit => {}
-            Action::ScrollDown => self.textarea.scroll((1, 0)),
-            Action::ScrollUp => self.textarea.scroll((-1, 0)),
-            Action::ScrollHalfPageDown => self.textarea.scroll(Scrolling::HalfPageDown),
-            Action::ScrollHalfPageUp => self.textarea.scroll(Scrolling::HalfPageUp),
-            Action::ScrollPageDown => self.textarea.scroll(Scrolling::PageDown),
-            Action::ScrollPageUp => self.textarea.scroll(Scrolling::PageUp),
-            Action::ScrollTop => self.textarea.move_cursor(CursorMove::Top),
-            Action::ScrollBottom => self.textarea.move_cursor(CursorMove::Bottom),
+            Action::Scroll(scroll) => match scroll {
+                Scroll::Down => self.textarea.scroll((1, 0)),
+                Scroll::Up => self.textarea.scroll((-1, 0)),
+                Scroll::HalfPageDown => self.textarea.scroll(Scrolling::HalfPageDown),
+                Scroll::HalfPageUp => self.textarea.scroll(Scrolling::HalfPageUp),
+                Scroll::PageDown => self.textarea.scroll(Scrolling::PageDown),
+                Scroll::PageUp => self.textarea.scroll(Scrolling::PageUp),
+                Scroll::Top => self.textarea.move_cursor(CursorMove::Top),
+                Scroll::Bottom => self.textarea.move_cursor(CursorMove::Bottom),
+            },
             Action::Visual => {
                 self.textarea.start_selection();
             }
@@ -420,11 +417,12 @@ impl<'a> Vim<'a> {
             _ => return None,
         };
 
+        let mods = input.mods();
         Some(Input {
             key,
-            ctrl: input.mods().contains(Mods::CTRL),
-            alt: input.mods().contains(Mods::ALT),
-            shift: input.mods().contains(Mods::SHIFT),
+            ctrl: mods.contains(Mods::CTRL),
+            alt: mods.contains(Mods::ALT),
+            shift: mods.contains(Mods::SHIFT),
         })
     }
 
