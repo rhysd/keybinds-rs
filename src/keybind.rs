@@ -378,6 +378,36 @@ impl<A> Keybinds<A> {
         self.last_input.is_some()
     }
 
+    /// Get the ongoing key inputs being matched to some key sequence in the key bindings.
+    ///
+    /// ```
+    /// use keybinds::{Keybinds, KeyInput};
+    ///
+    /// struct Action;
+    ///
+    /// let mut keybinds = Keybinds::default();
+    /// keybinds.bind("a b c", Action).unwrap();
+    ///
+    /// // Initially there is no ongoing sequence.
+    /// assert_eq!(keybinds.ongoing_inputs(), &[]);
+    ///
+    /// // Matching to the key sequence "a b c" is ongoing.
+    /// keybinds.dispatch('a');
+    /// keybinds.dispatch('b');
+    /// assert_eq!(keybinds.ongoing_inputs(), &['a'.into(), 'b'.into()]);
+    ///
+    /// // The inputs matches to "a b c" and dispatches the action.
+    /// keybinds.dispatch('c');
+    /// assert_eq!(keybinds.ongoing_inputs(), &[]);
+    ///
+    /// // This input matches nothing so there is no ongoing match.
+    /// keybinds.dispatch('d');
+    /// assert_eq!(keybinds.ongoing_inputs(), &[]);
+    /// ```
+    pub fn ongoing_inputs(&self) -> &[KeyInput] {
+        self.ongoing.as_slice()
+    }
+
     /// Convert to the inner [`Vec`] of [`Keybind`] instances. This method is useful when you need to modify the key
     /// bindings.
     ///
@@ -532,22 +562,35 @@ mod tests {
     }
 
     #[test]
-    fn dispatcher_is_ongoing() {
+    fn dispatcher_ongoing_matching() {
         let mut keybinds = Keybinds::new(vec![Keybind::new(['a', 'b'], A::Action1)]);
 
         assert!(!keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &[]);
+
         keybinds.dispatch('x');
         assert!(!keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &[]);
+
         keybinds.dispatch('a');
         assert!(keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &['a'.into()]);
+
         keybinds.dispatch('b');
         assert!(!keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &[]);
+
         keybinds.dispatch('y');
         assert!(!keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &[]);
+
         keybinds.dispatch('a');
         assert!(keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &['a'.into()]);
+
         keybinds.dispatch('z');
         assert!(!keybinds.is_ongoing());
+        assert_eq!(keybinds.ongoing_inputs(), &[]);
     }
 
     #[test]
