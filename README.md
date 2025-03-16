@@ -63,7 +63,6 @@ struct Config {
 
 const CONFIG_FILE_CONTENT: &str = r#"
 [keyboard]
-"Esc" = "Exit"
 
 # Standard bindings
 "Up" = "Up"
@@ -74,6 +73,7 @@ const CONFIG_FILE_CONTENT: &str = r#"
 "PageDown" = "Bottom"
 "Home" = "Home"
 "End" = "End"
+"Mod+q" = "Exit"
 
 # Emacs-like bindings
 "Ctrl+p" = "Up"
@@ -84,6 +84,7 @@ const CONFIG_FILE_CONTENT: &str = r#"
 "Alt+>" = "Bottom"
 "Ctrl+a" = "Home"
 "Ctrl+e" = "End"
+"Ctrl+x Ctrl+c" = "Exit"
 
 # Vim-like bindings
 "k" = "Up"
@@ -94,6 +95,7 @@ const CONFIG_FILE_CONTENT: &str = r#"
 "G" = "Bottom"
 "^" = "Home"
 "$" = "End"
+"Esc" = "Exit"
 "#;
 
 fn main() -> io::Result<()> {
@@ -106,6 +108,8 @@ fn main() -> io::Result<()> {
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
+
+    // Read the crossterm's key events and pass it to `Keybinds::dispatch` directly.
     while let Ok(event) = event::read() {
         // If the event triggered some action, handle it using `match`
         if let Some(action) = keybinds.dispatch(&event) {
@@ -122,6 +126,7 @@ fn main() -> io::Result<()> {
             }
         }
     }
+
     disable_raw_mode()
 }
 ```
