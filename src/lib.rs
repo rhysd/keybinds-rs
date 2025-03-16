@@ -1,7 +1,7 @@
 //! # Overview
 //!
 //! [keybinds-rs][crates-io] is a small crate to parse/generate/dispatch key bindings (keyboard shortcuts) written
-//! in Safe Rust.
+//! in Safe Rust. You can easily introduce customizable key bindings to your application using this library.
 //!
 //! - Provide the syntax to easily define key bindings in a configuration file like `Ctrl+a`
 //! - Support key sequences like `Ctrl+x Ctrl+s` for complicated key bindings like Vim style
