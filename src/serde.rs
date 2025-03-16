@@ -37,7 +37,7 @@
 //!
 //! assert_eq!(&generated, configuration);
 //! ```
-use crate::{Key, KeyInput, KeySeq, Keybind, Keybinds, Mods};
+use crate::{KeyInput, KeySeq, Keybind, Keybinds};
 use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 use serde::ser::{Error as _, Serialize, SerializeMap, Serializer};
 use std::fmt;
@@ -108,18 +108,6 @@ impl<'de, A: Deserialize<'de>> Deserialize<'de> for Keybinds<A> {
     }
 }
 
-impl Serialize for Key {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.collect_str(self)
-    }
-}
-
-impl Serialize for Mods {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.collect_str(self)
-    }
-}
-
 impl Serialize for KeyInput {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_str(self)
@@ -148,7 +136,7 @@ impl<A: Serialize> Serialize for Keybinds<A> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{KeyInput, Mods};
+    use crate::{Key, KeyInput, Mods};
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Debug)]
@@ -200,7 +188,11 @@ mod tests {
     #[test]
     fn deserialize_error() {
         let tests = [
+            "hello",
+            "42",
+            "[[foo]]",
             r#""x" = 12"#,
+            r#"x = []"#,
             r#""x" = "Action123456""#,
             r#""" = "Action1""#,
             r#""     " = "Action1""#,
@@ -258,5 +250,107 @@ Up = "Action2"
     #[test]
     fn serialize_error() {
         let _ = toml::to_string_pretty(&KeySeq::default()).unwrap_err();
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct TestInput {
+        key: KeyInput,
+    }
+    impl TestInput {
+        fn new(k: impl Into<Key>, m: Mods) -> Self {
+            Self {
+                key: KeyInput::new(k.into(), m),
+            }
+        }
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct TestSeq {
+        seq: KeySeq,
+    }
+
+    #[test]
+    fn deserialize_key_input_ok() {
+        for (input, expected) in [
+            (r#"key = "a""#, KeyInput::from('a')),
+            (r#"key = "Enter""#, KeyInput::from(Key::Enter)),
+            (r#"key = "Ctrl+a""#, KeyInput::new('a', Mods::CTRL)),
+            (r#"key = "Shift+Up""#, KeyInput::new(Key::Up, Mods::SHIFT)),
+        ] {
+            assert_eq!(
+                toml::from_str::<TestInput>(input).unwrap().key,
+                expected,
+                "input={input:?}",
+            );
+        }
+    }
+
+    #[test]
+    fn deserialize_key_input_error() {
+        for input in [
+            r#"key = 42"#,
+            r#"key = """#,
+            r#"key = "Fooo""#,
+            r#"key = "Foo+a""#,
+        ] {
+            if let Ok(parsed) = toml::from_str::<TestInput>(input) {
+                panic!(
+                    "Input {:?} was parsed from invalid input {:?}",
+                    parsed.key, input
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn deserialize_key_seq_ok() {
+        for (input, expected) in [
+            (r#"seq = "a""#, KeySeq::from(['a'])),
+            (r#"seq = "a b c""#, KeySeq::from(['a', 'b', 'c'])),
+            (r#"seq = "Enter""#, KeySeq::from([Key::Enter])),
+            (
+                r#"seq = "Up Right Down Left""#,
+                KeySeq::from([Key::Up, Key::Right, Key::Down, Key::Left]),
+            ),
+        ] {
+            assert_eq!(
+                toml::from_str::<TestSeq>(input).unwrap().seq,
+                expected,
+                "input={input:?}",
+            );
+        }
+    }
+
+    #[test]
+    fn deserialize_key_seq_error() {
+        for input in [
+            r#"seq = 42"#,
+            r#"seq = """#,
+            r#"seq = "Fooo""#,
+            r#"seq = "Foo+a""#,
+        ] {
+            if let Ok(parsed) = toml::from_str::<TestSeq>(input) {
+                panic!(
+                    "Key sequence {:?} was parsed from invalid input {:?}",
+                    parsed.seq, input
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn serialize_key_input_ok() {
+        for (input, expected) in [
+            (TestInput::new('a', Mods::NONE), r#"key = "a""#),
+            (TestInput::new(Key::Enter, Mods::NONE), r#"key = "Enter""#),
+            (TestInput::new('a', Mods::CTRL), r#"key = "Ctrl+a""#),
+            (TestInput::new(Key::Tab, Mods::ALT), r#"key = "Alt+Tab""#),
+        ] {
+            assert_eq!(
+                toml::to_string(&input).unwrap().trim(),
+                expected,
+                "input={input:?}",
+            );
+        }
     }
 }
