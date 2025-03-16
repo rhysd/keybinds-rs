@@ -19,10 +19,22 @@ https://github.com/rhysd/keybinds-rs/pulls
 - `cargo bench -p keybinds-bench` runs the [benchmarks](./bench).
 - `cargo +nightly fuzz run` runs the [fuzz tests](./fuzz/README.md).
 
+## `pre-push` Git hook
+
 Setting the [`pre-push` hook](./.git-hooks/pre-push) is useful to run all checks on `git push`:
 
 ```sh
 git config core.hooksPath .git-hooks
+```
+
+## Code coverage
+
+Use [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) for getting a code coverage report for unit tests.
+
+Note that the report doesn't include doc tests. `--doctests` flag requires nightly toolchains and unstable.
+
+```sh
+cargo llvm-cov --all-features --open
 ```
 
 ## Steps to create a new release
