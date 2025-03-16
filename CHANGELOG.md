@@ -1,3 +1,20 @@
+<a id="v0.1.0"></a>
+# [v0.1.0](https://github.com/rhysd/keybinds-rs/releases/tag/v0.1.0) - 2025-03-16
+
+The first stable release :tada:
+
+- **BREAKING:** Remove `Key::Backtab` because it is actually not mapped to a single key. crossterm's `BackTab` key is now correctly mapped to <kbd>Shift</kbd> + <kbd>Tab</kbd>.
+- Define the [minimum supported Rust version](https://github.com/rhysd/keybinds-rs?tab=readme-ov-file#minimal-supported-rust-version-msrv) is **1.80.0**.
+- Clarify the [versioning of this crate](https://github.com/rhysd/keybinds-rs?tab=readme-ov-file#versioning) in documents.
+- Add the [contribution guide](https://github.com/rhysd/keybinds-rs/blob/main/CONTRIBUTING.md).
+- Add the [`vim` example](https://github.com/rhysd/keybinds-rs/blob/main/examples/vim.rs) to demonstrate how to use this crate for modal key bindings.
+- Add `Keybinds::ongoing_inputs` to get the key inputs matching to some key bindings.
+- Add `Key::Help` variant.
+- Fix parsing `NumLock` key.
+
+[Changes][v0.1.0]
+
+
 <a id="v0.0.9"></a>
 # [v0.0.9](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.9) - 2025-03-09
 
@@ -132,6 +149,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.1.0]: https://github.com/rhysd/keybinds-rs/compare/v0.0.9...v0.1.0
 [v0.0.9]: https://github.com/rhysd/keybinds-rs/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://github.com/rhysd/keybinds-rs/compare/v0.0.7...v0.0.8
 [v0.0.7]: https://github.com/rhysd/keybinds-rs/compare/v0.0.6...v0.0.7
