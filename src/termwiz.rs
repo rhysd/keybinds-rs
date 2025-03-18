@@ -144,6 +144,10 @@ impl From<KeyCode> for Key {
             KeyCode::KeyPadEnd => Self::End,
             KeyCode::KeyPadPageUp => Self::PageUp,
             KeyCode::KeyPadPageDown => Self::PageDown,
+            KeyCode::ApplicationLeftArrow => Self::Left,
+            KeyCode::ApplicationRightArrow => Self::Right,
+            KeyCode::ApplicationUpArrow => Self::Up,
+            KeyCode::ApplicationDownArrow => Self::Down,
             _ => Self::Unidentified,
         }
     }
