@@ -140,6 +140,10 @@ impl From<KeyCode> for Key {
             KeyCode::MediaPrevTrack => Self::PrevTrack,
             KeyCode::MediaStop => Self::Stop,
             KeyCode::MediaPlayPause => Self::PlayPause,
+            KeyCode::KeyPadHome => Self::Home,
+            KeyCode::KeyPadEnd => Self::End,
+            KeyCode::KeyPadPageUp => Self::PageUp,
+            KeyCode::KeyPadPageDown => Self::PageDown,
             _ => Self::Unidentified,
         }
     }
