@@ -1,3 +1,13 @@
+<a id="v0.1.1"></a>
+# [v0.1.1](https://github.com/rhysd/keybinds-rs/releases/tag/v0.1.1) - 2025-03-21
+
+- Handle keypad keys and application keys from termwiz's key events.
+- Add `Key::Help` and `Key::ZoomToggle` keys.
+- Fix `ZoomIn` and `ZoomOut` keys are not converted while handling iced and winit key events.
+
+[Changes][v0.1.1]
+
+
 <a id="v0.1.0"></a>
 # [v0.1.0](https://github.com/rhysd/keybinds-rs/releases/tag/v0.1.0) - 2025-03-16
 
@@ -144,11 +154,12 @@ The first stable release :tada:
 <a id="v0.0.0"></a>
 # [v0.0.0](https://github.com/rhysd/keybinds-rs/releases/tag/v0.0.0) - 2025-02-13
 
-The first pre-release with incomplete minimal implementation. Note that the development is still ongoing and many bugs and API changes will be expected until v1.0.0 stable release.
+The first pre-release with incomplete minimal implementation. Note that the development is still ongoing and many bugs and API changes will be expected until v0.1.0 first stable release.
 
 [Changes][v0.0.0]
 
 
+[v0.1.1]: https://github.com/rhysd/keybinds-rs/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/rhysd/keybinds-rs/compare/v0.0.9...v0.1.0
 [v0.0.9]: https://github.com/rhysd/keybinds-rs/compare/v0.0.8...v0.0.9
 [v0.0.8]: https://github.com/rhysd/keybinds-rs/compare/v0.0.7...v0.0.8

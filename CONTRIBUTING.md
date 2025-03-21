@@ -42,7 +42,7 @@ cargo llvm-cov --all-features --open
 1. Determine the next version following the [versioning document](./doc/versioning.md).
 2. Confirm all tests and checks pass.
 3. Create a new Git tag and push it. (e.g. `git tag v0.1.2 && git push origin v0.1.2`).
-4. Write up the release note at the [releases page](https://github.com/rhysd/keybinds-rs/releases) on GitHub.
+4. Write up the release note at the [releases page](https://github.com/rhysd/keybinds-rs/releases/new) on GitHub.
 5. Update the [changelog](./CHANGELOG.md) with `changelog-from-release -p > CHANGELOG.md` using [changelog-from-release](https://github.com/rhysd/changelog-from-release)
    and commit it.
 6. Publish the release to [crates.io](https://crates.io/crates/keybinds) with `cargo publish`.
