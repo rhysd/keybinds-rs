@@ -108,6 +108,8 @@ impl From<&IcedKey> for Key {
                 Named::Undo => Self::Undo,
                 Named::Redo => Self::Redo,
                 Named::Help => Self::Help,
+                Named::ZoomIn => Self::ZoomIn,
+                Named::ZoomOut => Self::ZoomOut,
                 Named::ScrollLock => Self::ScrollLock,
                 Named::NumLock => Self::NumLock,
                 Named::PrintScreen => Self::PrintScreen,
