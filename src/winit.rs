@@ -102,6 +102,7 @@ impl From<&WinitKey> for Key {
                 NamedKey::Help => Self::Help,
                 NamedKey::ZoomIn => Self::ZoomIn,
                 NamedKey::ZoomOut => Self::ZoomOut,
+                NamedKey::ZoomToggle => Self::ZoomToggle,
                 NamedKey::ScrollLock => Self::ScrollLock,
                 NamedKey::NumLock => Self::NumLock,
                 NamedKey::PrintScreen => Self::PrintScreen,

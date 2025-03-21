@@ -110,6 +110,7 @@ impl From<&IcedKey> for Key {
                 Named::Help => Self::Help,
                 Named::ZoomIn => Self::ZoomIn,
                 Named::ZoomOut => Self::ZoomOut,
+                Named::ZoomToggle => Self::ZoomToggle,
                 Named::ScrollLock => Self::ScrollLock,
                 Named::NumLock => Self::NumLock,
                 Named::PrintScreen => Self::PrintScreen,
