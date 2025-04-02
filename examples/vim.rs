@@ -1,4 +1,4 @@
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use crossterm::event::{read, DisableMouseCapture, EnableMouseCapture};
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
@@ -21,7 +21,7 @@ enum Operator {
 }
 
 impl Operator {
-    fn operate(self, textarea: &mut TextArea<'_>) {
+    fn edit(self, textarea: &mut TextArea<'_>) {
         match self {
             Operator::Yank => textarea.copy(),
             Operator::Change | Operator::Delete => {
@@ -353,25 +353,24 @@ impl<'a> Vim<'a> {
             }
             Action::Operator(op) => {
                 match self.mode {
-                    Mode::Normal => {
-                        if self.pending == Some(op) {
-                            // Handle yy, dd, cc. (This is not strictly the same behavior as Vim)
-                            self.textarea.move_cursor(CursorMove::Head);
-                            self.textarea.start_selection();
-                            let cursor = self.textarea.cursor();
-                            self.textarea.move_cursor(CursorMove::Down);
-                            if cursor == self.textarea.cursor() {
-                                self.textarea.move_cursor(CursorMove::End); // At the last line, move to end of the line instead
-                            }
-                        } else {
-                            self.pending = Some(op);
-                            self.textarea.start_selection();
-                            return; // Edge case where `self.pending` should not be cleared
+                    Mode::Normal if self.pending == Some(op) => {
+                        // Handle yy, dd, cc. (This is not strictly the same behavior as Vim)
+                        self.textarea.move_cursor(CursorMove::Head);
+                        self.textarea.start_selection();
+                        let cursor = self.textarea.cursor();
+                        self.textarea.move_cursor(CursorMove::Down);
+                        if cursor == self.textarea.cursor() {
+                            self.textarea.move_cursor(CursorMove::End); // At the last line, move to end of the line instead
                         }
+                    }
+                    Mode::Normal => {
+                        self.pending = Some(op);
+                        self.textarea.start_selection();
+                        return; // Edge case where `self.pending` should not be cleared
                     }
                     Mode::Visual => {
                         self.textarea.move_cursor(CursorMove::Forward); // Vim's text selection is inclusive
-                        op.operate(&mut self.textarea);
+                        op.edit(&mut self.textarea);
                     }
                     Mode::Insert => {}
                 }
@@ -380,7 +379,7 @@ impl<'a> Vim<'a> {
 
         if let Some(op) = self.pending.take() {
             if action.is_operatable(self.mode) {
-                op.operate(&mut self.textarea);
+                op.edit(&mut self.textarea);
             }
         }
     }
@@ -403,6 +402,8 @@ impl<'a> Vim<'a> {
             keybinds::Key::Char(c) => Key::Char(c),
             keybinds::Key::Copy => Key::Copy,
             keybinds::Key::Cut => Key::Cut,
+            keybinds::Key::Paste => Key::Paste,
+            keybinds::Key::Backspace => Key::Backspace,
             keybinds::Key::Delete => Key::Delete,
             keybinds::Key::Enter => Key::Enter,
             keybinds::Key::Up => Key::Up,
@@ -465,7 +466,8 @@ fn main() -> io::Result<()> {
     loop {
         term.draw(|f| f.render_widget(&vim.textarea, f.area()))?;
 
-        if !vim.input(crossterm::event::read()?.into()) {
+        let Ok(event) = read() else { break };
+        if !vim.input(event.into()) {
             break;
         }
     }
