@@ -17,7 +17,7 @@ fn main() -> io::Result<()> {
     keybinds.bind("Esc", Action::ExitApp).unwrap();
 
     println!("Type inputs and send it by hitting Enter key. Send Esc to exit");
-    for b in io::stdin().bytes() {
+    for b in io::stdin().lock().bytes() {
         // Convert your key input into `KeyInput` struct
         let input = match b? {
             b'\x1b' => KeyInput::from(Key::Esc),

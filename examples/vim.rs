@@ -461,7 +461,7 @@ fn main() -> io::Result<()> {
         TextArea::default()
     };
 
-    let mut vim = Vim::new(textarea).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut vim = Vim::new(textarea).map_err(io::Error::other)?;
 
     loop {
         term.draw(|f| f.render_widget(&vim.textarea, f.area()))?;
