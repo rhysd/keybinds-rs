@@ -12,4 +12,4 @@ harness = false
 keybinds = { path = ".." }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = "0.6.0"
