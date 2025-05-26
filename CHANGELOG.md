@@ -1,8 +1,19 @@
+<a id="v0.2.0"></a>
+# [v0.2.0](https://github.com/rhysd/keybinds-rs/releases/tag/v0.2.0) - 2025-05-26
+
+- **BREAKING:** Upgrade dependencies
+  - bitflags v2.9.0
+  - crossterm v0.29.0 ([#1](https://github.com/rhysd/keybinds-rs/issues/1))
+- Fix warnings in `minimal` and `vim` examples
+
+[Changes][v0.2.0]
+
+
 <a id="v0.1.1"></a>
 # [v0.1.1](https://github.com/rhysd/keybinds-rs/releases/tag/v0.1.1) - 2025-03-21
 
 - Handle keypad keys and application keys from termwiz's key events.
-- Add `Key::Help` and `Key::ZoomToggle` keys.
+- Add `Key::ZoomToggle` key.
 - Fix `ZoomIn` and `ZoomOut` keys are not converted while handling iced and winit key events.
 
 [Changes][v0.1.1]
@@ -159,6 +170,7 @@ The first pre-release with incomplete minimal implementation. Note that the deve
 [Changes][v0.0.0]
 
 
+[v0.2.0]: https://github.com/rhysd/keybinds-rs/compare/v0.1.1...v0.2.0
 [v0.1.1]: https://github.com/rhysd/keybinds-rs/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/rhysd/keybinds-rs/compare/v0.0.9...v0.1.0
 [v0.0.9]: https://github.com/rhysd/keybinds-rs/compare/v0.0.8...v0.0.9
