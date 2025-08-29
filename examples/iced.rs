@@ -105,7 +105,7 @@ impl Example {
         Task::none()
     }
 
-    fn view(&self) -> impl Into<Element<Message>> {
+    fn view(&self) -> impl Into<Element<'_, Message>> {
         let help: Column<_> = self
             .help
             .iter()
